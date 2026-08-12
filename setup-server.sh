@@ -41,6 +41,11 @@ echo "🛠️ [3/6] Installing npm packages & building Vite frontend..."
 npm install
 npm run build
 
+# Fix permissions so Nginx (www-data) can read static files in /home/ubuntu
+chmod +x $HOME
+chmod -R 755 $APP_DIR
+
+
 # 4. Install PM2 and start Express backend
 echo "⚡ [4/6] Setting up PM2 for Express SQLite backend..."
 sudo npm install -g pm2
