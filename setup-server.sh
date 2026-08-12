@@ -21,11 +21,12 @@ echo "📦 [1/6] Updating packages & installing Node.js 20 + build tools..."
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl build-essential git nginx certbot python3-certbot-nginx netfilter-persistent
 
-if ! command -v node &> /dev/null || [[ $(node -v | cut -d'.' -f1 | tr -d 'v') -lt 18 ]]; then
-    echo "Installing Node.js 20 LTS..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+if ! command -v node &> /dev/null || [[ $(node -v | cut -d'.' -f1 | tr -d 'v') -lt 22 ]]; then
+    echo "Installing Node.js 22 LTS..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt install -y nodejs
 fi
+
 
 echo "✅ Node version: $(node -v)"
 echo "✅ NPM version: $(npm -v)"
