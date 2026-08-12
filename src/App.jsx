@@ -205,6 +205,11 @@ export default function App() {
   const [bookingPurohit, setBookingPurohit]     = useState(null);
   const [appMode, setAppMode]       = useState('public'); // 'public' | 'admin'
 
+  const showToast = useCallback((msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 5000);
+  }, []);
+
   const handleOpenBookingModal = useCallback((purohit = null) => {
     if (!auth?.isLoggedIn) {
       showToast('🔒 Please Sign In or Register to schedule a sacred ritual booking.', 'info');
@@ -229,11 +234,6 @@ export default function App() {
   useEffect(() => {
     setTasks(backgroundQueue.getTasks());
     return backgroundQueue.subscribe(t => setTasks(t));
-  }, []);
-
-  const showToast = useCallback((msg, type = 'info') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 5000);
   }, []);
 
   const handleTriggerSOS = useCallback(() => {
