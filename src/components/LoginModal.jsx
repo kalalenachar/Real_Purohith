@@ -374,31 +374,31 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                 <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                   Select Account Role
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                   {[
-                    { id: 'devotee', label: 'Devotee', icon: '🕉️' },
-                    { id: 'purohit', label: 'Vedic Acharya', icon: '🪔' },
-                    { id: 'admin',   label: 'Admin', icon: '👑' }
+                    { id: 'devotee', label: 'Devotee / Householder', icon: '🕉️' },
+                    { id: 'purohit', label: 'Vedic Acharya', icon: '🪔' }
                   ].map(r => (
                     <button
                       key={r.id}
                       type="button"
                       onClick={() => setRole(r.id)}
                       style={{
-                        padding: '10px 6px', borderRadius: 12,
+                        padding: '12px 8px', borderRadius: 12,
                         background: role === r.id ? 'rgba(245,158,11,0.18)' : 'rgba(255,255,255,0.03)',
                         border: role === r.id ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.08)',
                         color: role === r.id ? '#fbbf24' : '#94a3b8',
-                        cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                        cursor: 'pointer', fontSize: 12, fontWeight: 700,
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4
                       }}
                     >
-                      <span style={{ fontSize: 18 }}>{r.icon}</span>
+                      <span style={{ fontSize: 20 }}>{r.icon}</span>
                       <span>{r.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
+
 
               {/* Full Name */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

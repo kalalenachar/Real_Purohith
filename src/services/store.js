@@ -122,7 +122,12 @@ export class DataStore {
       return { success: false, error: 'Please fill in all required fields.' };
     }
 
+    if (role === 'admin') {
+      return { success: false, error: 'Admin account creation is restricted. Only single system administrator is permitted.' };
+    }
+
     const users = this.getUsers();
+
     const existing = users.find(u =>
       (u.username && u.username.toLowerCase() === cleanUsername) ||
       (u.email && u.email.toLowerCase() === cleanEmail)
