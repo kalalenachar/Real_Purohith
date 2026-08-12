@@ -206,9 +206,14 @@ export default function App() {
   const [appMode, setAppMode]       = useState('public'); // 'public' | 'admin'
 
   const handleOpenBookingModal = useCallback((purohit = null) => {
+    if (!auth?.isLoggedIn) {
+      showToast('🔒 Please Sign In or Register to schedule a sacred ritual booking.', 'info');
+      setShowLogin(true);
+      return;
+    }
     setBookingPurohit(purohit);
     setShowBookingModal(true);
-  }, []);
+  }, [auth, showToast]);
 
   // Check auth and load feedbacks on mount from database
   useEffect(() => {
