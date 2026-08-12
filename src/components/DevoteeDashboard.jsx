@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
 import { calculateNextTithiAllotments } from '../services/aiTimeAllotmentEngine.js';
+import { DataStore } from '../services/store.js';
 
 const SUB_TABS = [
   { id: 'vault',    label: 'Ancestral Vault',      icon: Users },
@@ -40,6 +41,13 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
   const [samagri, setSamagri] = useState(SAMAGRI_DEFAULT);
   const [delivery, setDelivery] = useState('handCarried');
   const [booked, setBooked] = useState(false);
+  const [myBookings, setMyBookings] = useState([]);
+
+  React.useEffect(() => {
+    DataStore.getBookings().then(res => {
+      if (Array.isArray(res)) setMyBookings(res);
+    });
+  }, []);
 
   if (!auth?.isLoggedIn) {
     return (
@@ -162,7 +170,85 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
 
       {/* ── VAULT TAB ── */}
       {subTab === 'vault' && (
-        <div className="animate-fade-up">
+        <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Active Seva Bookings & In-App Google Meet Links Section */}
+          <div className="card" style={{ padding: 28, borderColor: 'rgba(14,165,233,0.3)', background: 'rgba(14,165,233,0.03)' }}>
+            <div className="section-header">
+              <div className="section-title" style={{ color: '#38bdf8' }}>
+                📱 Active Seva Bookings & Live Session Links
+              </div>
+              <span className="badge badge-uttaradhi">In-App Vault Delivery</span>
+            </div>
+
+            {(() => {
+              const activeSevas = myBookings.filter(b => b.status !== 'Completed' && b.status !== 'Cancelled');
+              if (activeSevas.length === 0) {
+                return (
+                  <p style={{ fontSize: 12, color: '#94a3b8' }}>
+                    No active live sevas currently scheduled. Register for a Free Seva or schedule a ritual to view your live meeting link here.
+                  </p>
+                );
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {activeSevas.map((b, idx) => {
+                    const hasMeetUrl = Boolean(b.location && (b.location.startsWith('http://') || b.location.startsWith('https://')));
+                    const meetUrl = hasMeetUrl ? b.location.match(/https?:\/\/[^\s]+/)?.[0] : null;
+
+                    return (
+                      <div key={b.id || idx} className="card-premium" style={{ padding: '18px 22px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                              <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#f59e0b', fontWeight: 700 }}>{b.id}</span>
+                              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontWeight: 700 }}>
+                                {b.status || 'Scheduled'}
+                              </span>
+                              <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700 }}>
+                                {b.dakshinaAmount}
+                              </span>
+                            </div>
+
+                            <h4 style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc', fontFamily: 'Outfit,sans-serif' }}>
+                              {b.ritualName}
+                            </h4>
+
+                            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 12 }}>
+                              <span>📅 Date: <strong style={{ color: '#e2e8f0' }}>{b.date}</strong></span>
+                              <span>⏰ Slot: <strong style={{ color: '#fbbf24' }}>{b.muhurtaTime}</strong></span>
+                            </p>
+                          </div>
+
+                          <div>
+                            {hasMeetUrl && meetUrl ? (
+                              <a
+                                href={meetUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-primary"
+                                style={{
+                                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                                  color: 'white', textDecoration: 'none', fontWeight: 800,
+                                  display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px'
+                                }}
+                              >
+                                📹 Join Live Google Meet Session
+                              </a>
+                            ) : (
+                              <span style={{ fontSize: 11, padding: '6px 14px', borderRadius: 12, background: 'rgba(245,158,11,0.08)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.25)', fontWeight: 700 }}>
+                                ⏳ Meet Link Pending Admin Dispatch
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
           <div className="card" style={{ padding: 28 }}>
             <div className="section-header">
               <div className="section-title"><Users size={20} style={{ color: '#f59e0b' }} /> Ancestral Shraaddha Ledger</div>
@@ -286,7 +372,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                     <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700 }}>0% Platform Fee</span>
                     <button
                       className={`btn btn-sm ${r.isApara ? 'btn-danger' : 'btn-primary'}`}
-                      onClick={r.isApara ? onTriggerSOS : (onOpenBooking || handleBook)}
+                      onClick={r.isApara ? onTriggerSOS : () => onOpenBooking && onOpenBooking(r.title)}
                     >
                       {r.isApara ? 'Request Apara' : 'Book Now'}
                     </button>

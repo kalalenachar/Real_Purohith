@@ -1,42 +1,68 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, ShieldCheck, Flame, X, Check, Heart, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Clock, MapPin, ShieldCheck, Flame, X, Check, Heart, Sparkles, UserCheck } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
+import { SAMPRADAYA_MATRIX } from '../services/systemData.js';
 
-export default function BookingModal({ purohit: initialPurohit, auth, onClose, onBookingSuccess }) {
-  const [purohits, setPurohits] = useState([initialPurohit || INITIAL_PUROHITS[0]]);
-  const [selectedPurohit, setSelectedPurohit] = useState(initialPurohit || INITIAL_PUROHITS[0]);
-  const [ritualName, setRitualName] = useState('Satyanarayana Swamy Pooja & Vrata');
+export default function BookingModal({ initialRitual, auth, onClose, onBookingSuccess }) {
+  const RITUAL_OPTIONS = [
+    // Standard Poojas & Homams
+    { title: 'Satyanarayana Swamy Pooja & Vrata', isApara: false, isFree: false, dakshina: '₹3,500' },
+    { title: 'Mahasudarshana & Dhanvantari Homam', isApara: false, isFree: false, dakshina: '₹6,500' },
+    { title: 'Navagraha Shanti & Ayushya Homam', isApara: false, isFree: false, dakshina: '₹5,500' },
+    { title: 'Griha Pravesham & Vastu Shanti', isApara: false, isFree: false, dakshina: '₹8,500' },
+    { title: 'Namakarana (Baby Naming)', isApara: false, isFree: false, dakshina: '₹3,000' },
+
+    // Upanyasam & Pravachanams
+    { title: 'Srimad Bhagavatha Sapthaham', isApara: false, isFree: false, dakshina: '₹15,000' },
+    { title: 'Srimad Ramayana Pravachanam', isApara: false, isFree: false, dakshina: '₹7,500' },
+    { title: 'Mahabharatam & Bhagavad Gita', isApara: false, isFree: false, dakshina: '₹5,000' },
+    { title: 'Purana & Stotra Pravachanams', isApara: false, isFree: false, dakshina: '₹4,000' },
+    { title: 'Online HD Virtual Pravachanam', isApara: false, isFree: false, dakshina: '₹5,000' },
+
+    // Apara Karyams
+    { title: 'Varshika Shraaddha (Pitru Karyam)', isApara: true, isFree: false, dakshina: '₹5,000' },
+    { title: 'Garuda Purana Pravachanam Discourse', isApara: true, isFree: false, dakshina: '₹4,000' },
+    { title: '10–13 Day Apara Kriya (Final Rites Protocol)', isApara: true, isFree: false, dakshina: '₹12,000' },
+    { title: 'Remote E-Pinda Daan', isApara: true, isFree: false, dakshina: '₹6,000' },
+
+    // Noble Free Sevas (100% Free)
+    { title: 'Free 1-on-1 Vishnu Sahasranama Parayanam', isApara: false, isFree: true, dakshina: '₹0 (100% Free Seva)' },
+    { title: 'Free 1-on-1 Jyotisha Vedic Astrology', isApara: false, isFree: true, dakshina: '₹0 (100% Free Seva)' },
+  ];
+
+  const findMatch = (targetTitle) => {
+    if (!targetTitle) return RITUAL_OPTIONS[0];
+    const match = RITUAL_OPTIONS.find(r =>
+      r.title.toLowerCase() === targetTitle.toLowerCase() ||
+      r.title.toLowerCase().includes(targetTitle.toLowerCase()) ||
+      targetTitle.toLowerCase().includes(r.title.toLowerCase())
+    );
+    if (match) return match;
+    const isFree = targetTitle.toLowerCase().includes('free');
+    const isApara = targetTitle.toLowerCase().includes('apara') || targetTitle.toLowerCase().includes('pinda') || targetTitle.toLowerCase().includes('shraaddha');
+    return { title: targetTitle, isApara, isFree, dakshina: isFree ? '₹0 (100% Free Seva)' : '₹4,500' };
+  };
+
+  const initialMatch = findMatch(initialRitual);
+
+  // If initialMatch title is not in RITUAL_OPTIONS, add it to options list
+  const allOptions = RITUAL_OPTIONS.some(r => r.title === initialMatch.title)
+    ? RITUAL_OPTIONS
+    : [initialMatch, ...RITUAL_OPTIONS];
+
+  const [ritualName, setRitualName] = useState(initialMatch.title);
+  const [sampradaya, setSampradaya] = useState(auth?.user?.sampradaya || 'uttaradhi');
   const [date, setDate] = useState(new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]);
   const [muhurtaTime, setMuhurtaTime] = useState('06:30 AM – 09:00 AM (Pratah Kala)');
-  const [dakshinaAmount, setDakshinaAmount] = useState('₹4,500');
+  const [dakshinaAmount, setDakshinaAmount] = useState(initialMatch.dakshina);
   const [samagriMode, setSamagriMode] = useState('Pandit Hand-Carried Custom Kit (100% Pure Dravya)');
   const [location, setLocation] = useState('Flat 402, Sri Vatsa Enclave, Jayanagar, Bengaluru');
-  const [isApara, setIsApara] = useState(false);
+  const [isApara, setIsApara] = useState(initialMatch.isApara);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    DataStore.getPurohits().then(data => {
-      if (Array.isArray(data) && data.length > 0) {
-        setPurohits(data);
-        if (!initialPurohit) setSelectedPurohit(data[0]);
-      }
-    });
-  }, [initialPurohit]);
-
-  const RITUAL_OPTIONS = [
-    { title: 'Satyanarayana Swamy Pooja & Vrata', isApara: false, dakshina: '₹3,500' },
-    { title: 'Mahasudarshana & Dhanvantari Homam', isApara: false, dakshina: '₹6,500' },
-    { title: 'Navagraha Shanti & Ayushya Homam', isApara: false, dakshina: '₹5,500' },
-    { title: 'Griha Pravesham & Vastu Shanti', isApara: false, dakshina: '₹8,500' },
-    { title: 'Varshika Shraaddha (Pitru Karyam)', isApara: true, dakshina: '₹5,000' },
-    { title: 'Garuda Purana Pravachanam Discourse', isApara: true, dakshina: '₹4,000' },
-    { title: '10–13 Day Apara Kriya (Final Rites Protocol)', isApara: true, dakshina: '₹12,000' },
-  ];
 
   const handleSelectRitual = (rName) => {
     setRitualName(rName);
-    const rMatch = RITUAL_OPTIONS.find(r => r.title === rName);
+    const rMatch = allOptions.find(r => r.title === rName);
     if (rMatch) {
       setIsApara(rMatch.isApara);
       setDakshinaAmount(rMatch.dakshina);
@@ -54,32 +80,32 @@ export default function BookingModal({ purohit: initialPurohit, auth, onClose, o
       const bookingPayload = {
         devoteeId,
         devoteeName,
-        purohitId: selectedPurohit.id,
-        purohitName: selectedPurohit.name,
-        sampradaya: selectedPurohit.sampradaya || 'uttaradhi',
+        purohitId: 'unassigned',
+        purohitName: 'Pending Admin Assignment',
+        sampradaya,
         ritualName,
         date,
         muhurtaTime,
         dakshinaAmount,
         dakshinaStatus: 'Direct On-the-Spot (0% Platform Fee)',
         samagriMode,
-        status: 'Scheduled',
+        status: 'Pending Admin Review',
         isAparaKaryam: isApara ? 1 : 0,
         location
       };
 
       await DataStore.createBooking(bookingPayload);
       setSubmitting(false);
-      onBookingSuccess(`Sacred ritual "${ritualName}" scheduled successfully for ${date} with ${selectedPurohit.name}. Recorded in database!`);
+      onBookingSuccess(`Sacred ritual booking request for "${ritualName}" submitted to Admin for ${date}. Admin will assign & confirm your request!`);
       onClose();
     } catch (err) {
       console.error('Booking submission error:', err);
       setSubmitting(false);
-      alert('Failed to save booking to SQLite database: ' + err.message);
+      alert('Failed to save booking request to SQLite database: ' + err.message);
     }
   };
 
-  const sm = SAMPRADAYA_MATRIX[selectedPurohit?.sampradaya || 'uttaradhi'];
+  const sm = SAMPRADAYA_MATRIX[sampradaya] || SAMPRADAYA_MATRIX['uttaradhi'];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -99,10 +125,10 @@ export default function BookingModal({ purohit: initialPurohit, auth, onClose, o
             <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,#f59e0b,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, boxShadow: '0 4px 15px rgba(245,158,11,0.3)' }}>🪔</div>
             <div>
               <h2 style={{ fontSize: 20, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
-                Schedule Sacred Vedic Ritual
+                Request Sacred Vedic Ritual Booking
               </h2>
               <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                Direct Honorarium · 0% Platform Fee · SQLite Database Persistence
+                Submitted directly to Admin · Type-Based Booking · 0% Platform Fee
               </p>
             </div>
           </div>
@@ -111,58 +137,61 @@ export default function BookingModal({ purohit: initialPurohit, auth, onClose, o
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {/* Select Acharya */}
-          <div>
-            <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-              Selected Veda Pandit / Acharya
-            </label>
-            <select
-              className="select"
-              value={selectedPurohit?.id}
-              onChange={e => {
-                const p = purohits.find(x => x.id === e.target.value);
-                if (p) setSelectedPurohit(p);
-              }}
-            >
-              {purohits.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.sampradaya?.toUpperCase()}) — {p.vedaShakha || 'Rigveda'}
-                </option>
-              ))}
-            </select>
-            {selectedPurohit && (
-              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#94a3b8' }}>
-                {sm && <span className={`badge badge-${selectedPurohit.sampradaya}`}>{sm.icon} {sm.name}</span>}
-                <span>·</span>
-                <span style={{ color: '#34d399', fontWeight: 700 }}>🛡️ {selectedPurohit.trustScore || 98}% Trust Score</span>
-              </div>
-            )}
-          </div>
+        {/* Direct Admin Notice */}
+        <div style={{ padding: '12px 16px', borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <UserCheck size={18} style={{ color: '#fbbf24', flexShrink: 0 }} />
+          <p style={{ fontSize: 12, color: '#fcd34d', lineHeight: 1.5 }}>
+            <strong>Direct Admin Request Protocol:</strong> You select the ritual type and date. Your request is submitted directly to the Admin desk, who assigns an authentic Acharya matching your tradition.
+          </p>
+        </div>
 
-          {/* Select Ritual */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Select Ritual Category / Type */}
           <div>
             <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-              Sacred Ritual / Karyam Type
+              Sacred Ritual / Pooja / Service Type *
             </label>
             <select
               className="select"
               value={ritualName}
               onChange={e => handleSelectRitual(e.target.value)}
             >
-              {RITUAL_OPTIONS.map((r, i) => (
+              {allOptions.map((r, i) => (
                 <option key={i} value={r.title}>
-                  {r.title} {r.isApara ? ' (Apara Karyam)' : ''}
+                  {r.title} {r.isFree ? ' (100% Free Seva)' : r.isApara ? ' (Apara Karyam)' : ''}
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Select Sampradaya Tradition */}
+          <div>
+            <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+              Family Tradition / Sampradaya Lineage
+            </label>
+            <select
+              className="select"
+              value={sampradaya}
+              onChange={e => setSampradaya(e.target.value)}
+            >
+              {Object.entries(SAMPRADAYA_MATRIX).map(([key, item]) => (
+                <option key={key} value={key}>
+                  {item.icon} {item.name}
+                </option>
+              ))}
+            </select>
+            {sm && (
+              <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>
+                <span className={`badge badge-${sampradaya}`}>{sm.icon} {sm.name}</span> — {sm.description}
+              </div>
+            )}
           </div>
 
           {/* Date & Muhurta Time */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                Sacred Muhurta Date
+                Sacred Muhurta Date *
               </label>
               <input
                 type="date"
@@ -213,7 +242,7 @@ export default function BookingModal({ purohit: initialPurohit, auth, onClose, o
           {/* Address / Location */}
           <div>
             <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-              Ritual Venue / Residence Address
+              Ritual Venue / Residence Address *
             </label>
             <input
               type="text"
@@ -228,10 +257,10 @@ export default function BookingModal({ purohit: initialPurohit, auth, onClose, o
           {/* Platform Policy Footer */}
           <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700 }}>
-              0% Platform Fee · 100% Direct Honorarium to Acharya
+              0% Platform Fee · Submitted Directly to Admin Console
             </span>
             <span style={{ fontSize: 11, color: '#94a3b8' }}>
-              Direct SQLite Record
+              SQLite Persistent Record
             </span>
           </div>
 
@@ -241,7 +270,7 @@ export default function BookingModal({ purohit: initialPurohit, auth, onClose, o
               Cancel
             </button>
             <button type="submit" className="btn btn-primary btn-lg" disabled={submitting}>
-              {submitting ? 'Saving to Database...' : 'Confirm & Schedule Booking'}
+              {submitting ? 'Submitting to Admin...' : 'Submit Request to Admin'}
             </button>
           </div>
         </form>
@@ -249,3 +278,4 @@ export default function BookingModal({ purohit: initialPurohit, auth, onClose, o
     </div>
   );
 }
+

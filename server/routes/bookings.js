@@ -66,15 +66,29 @@ router.post('/', (req, res) => {
   }
 });
 
-// UPDATE booking status
+// UPDATE booking status and/or meet link location
 router.put('/:id/status', (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(status, id);
-    res.json({ message: `Booking status updated to ${status} in database.` });
+    const { status, location } = req.body;
+    if (location !== undefined) {
+      db.prepare('UPDATE bookings SET status = ?, location = ? WHERE id = ?').run(status, location, id);
+    } else {
+      db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(status, id);
+    }
+    res.json({ message: `Booking status/location updated in database.` });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update booking status.' });
+  }
+});
+
+// CLEAR ALL MEET LINKS (Admin Control)
+router.post('/clear-links', (req, res) => {
+  try {
+    db.prepare("UPDATE bookings SET location = 'Venue Address / In-App Vault' WHERE location LIKE 'http%'").run();
+    res.json({ message: 'All live Google Meet links cleared by Admin.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear meet links.' });
   }
 });
 

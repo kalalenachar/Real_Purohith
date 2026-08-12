@@ -341,20 +341,6 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                     <span>🕉️ Devotee</span>
                     <span style={{ fontSize: 9, color: '#94a3b8' }}>venkatesh</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('acharyar', 'user123')}
-                    style={{
-                      padding: '8px 6px', borderRadius: 10,
-                      background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
-                      fontSize: 11, color: '#34d399', cursor: 'pointer', textAlign: 'center',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
-                    }}
-                  >
-                    <span>🪔 Acharya</span>
-                    <span style={{ fontSize: 9, color: '#94a3b8' }}>acharyar</span>
-                  </button>
                 </div>
               </div>
             </form>
@@ -365,34 +351,9 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
           {/* ────────────────────────────────────────────────────────── */}
           {mode === 'register' && (
             <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Account Type Selector */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                  Select Account Role
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                  {[
-                    { id: 'devotee', label: 'Devotee / Householder', icon: '🕉️' },
-                    { id: 'purohit', label: 'Vedic Acharya', icon: '🪔' }
-                  ].map(r => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setRole(r.id)}
-                      style={{
-                        padding: '12px 8px', borderRadius: 12,
-                        background: role === r.id ? 'rgba(245,158,11,0.18)' : 'rgba(255,255,255,0.03)',
-                        border: role === r.id ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.08)',
-                        color: role === r.id ? '#fbbf24' : '#94a3b8',
-                        cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4
-                      }}
-                    >
-                      <span style={{ fontSize: 20 }}>{r.icon}</span>
-                      <span>{r.label}</span>
-                    </button>
-                  ))}
-                </div>
+              <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#fbbf24' }}>
+                <span>🕉️</span>
+                <span>Registering Devotee / Householder Account</span>
               </div>
 
 

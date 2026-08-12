@@ -141,13 +141,22 @@ export const API = {
     return res.json();
   },
 
-  async updateBookingStatus(id, status) {
+  async updateBookingStatus(id, status, location) {
     const res = await fetch(`${API_BASE}/bookings/${id}/status`, {
       method: 'PUT',
       headers: getHeaders(),
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, location })
     });
     if (!res.ok) throw new Error('Failed to update booking status');
+    return res.json();
+  },
+
+  async clearAllMeetLinks() {
+    const res = await fetch(`${API_BASE}/bookings/clear-links`, {
+      method: 'POST',
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error('Failed to clear meet links');
     return res.json();
   },
 

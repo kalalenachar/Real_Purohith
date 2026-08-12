@@ -17,11 +17,9 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
     { id: 'freeSeva',    label: 'Noble Free Seva', icon: Heart,     accent: 'heart' },
   ];
 
-  // Add user portal tabs depending on login state & role
+  // Add user portal tab for logged in devotees
   if (isLoggedIn) {
-    if (role === 'purohit') {
-      mainTabs.unshift({ id: 'purohit', label: 'Purohit Portal', icon: User, protected: true });
-    } else if (role === 'devotee') {
+    if (role !== 'admin') {
       mainTabs.unshift({ id: 'devotee', label: 'Devotee Vault', icon: UserCheck, protected: true });
     }
   }
@@ -110,7 +108,7 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
                       {auth?.user?.name || auth?.user?.username || ''}
                     </span>
                     <span style={{ fontSize: 9, color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase' }}>
-                      {role === 'admin' ? '👑 Admin' : role === 'purohit' ? '🪔 Acharya' : '🕉️ Devotee'}
+                      {role === 'admin' ? '👑 Admin' : '🕉️ Devotee'}
                     </span>
                   </div>
                 </div>

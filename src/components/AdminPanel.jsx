@@ -337,75 +337,146 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
 }
 
 /* ──────────────────────────── Bookings Tab ─────────────────────── */
-function BookingsTab({ bookings, onUpdateStatus, onDelete }) {
+function BookingsTab({ bookings, onUpdateStatus, onDelete, onClearAllMeetLinks }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [meetInputs, setMeetInputs] = useState({});
 
   const filtered = bookings.filter(b => {
     const matchSearch = b.devoteeName.toLowerCase().includes(search.toLowerCase()) ||
-      b.purohitName.toLowerCase().includes(search.toLowerCase()) ||
+      (b.purohitName || '').toLowerCase().includes(search.toLowerCase()) ||
       b.ritualName.toLowerCase().includes(search.toLowerCase()) ||
       b.id.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || b.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const statuses = ['all', ...new Set(bookings.map(b => b.status))];
+  const statusList = ['all', 'Pending Admin Review', 'Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'];
+
+  const handleSendMeetLink = (bId, currentStatus) => {
+    const meetUrl = meetInputs[bId] || 'https://meet.google.com/real-purohit-seva';
+    onUpdateStatus(bId, currentStatus, meetUrl);
+  };
+
+  const handleClearMeetLink = (bId, currentStatus) => {
+    onUpdateStatus(bId, currentStatus, 'In-App Vault Delivery (Link Cleared)');
+    setMeetInputs(prev => ({ ...prev, [bId]: '' }));
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Header Banner */}
+      <div style={{ padding: '16px 20px', borderRadius: 16, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
+            📥 Incoming User Booking Requests
+          </h3>
+          <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+            All ritual requests land at Admin Desk. Admin controls Google Meet link dispatch and time-based link clearing.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {onClearAllMeetLinks && (
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={onClearAllMeetLinks}
+              style={{ fontSize: 11, padding: '6px 14px', borderRadius: 10 }}
+            >
+              🧹 Clear All Active Meet Links
+            </button>
+          )}
+          <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>
+            {bookings.filter(b => b.status === 'Pending Admin Review' || b.purohitId === 'unassigned').length} Pending Requests
+          </span>
+        </div>
+      </div>
+
       {/* Toolbar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-          <input className="input" style={{ paddingLeft: 38 }} placeholder="Search by devotee, purohit, ritual, or ID…"
+          <input className="input" style={{ paddingLeft: 38 }} placeholder="Search by devotee, ritual, or ID…"
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select className="select" style={{ width: 'auto', minWidth: 160 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-          {statuses.map(s => <option key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</option>)}
+        <select className="select" style={{ width: 'auto', minWidth: 180 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          {statusList.map(s => <option key={s} value={s}>{s === 'all' ? 'All Request Statuses' : s}</option>)}
         </select>
       </div>
 
-      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {bookings.length} bookings</p>
+      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {bookings.length} user booking requests</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {filtered.map(b => {
           const sm = SAMPRADAYA_MATRIX[b.sampradaya];
+          const isPending = b.status === 'Pending Admin Review' || b.purohitId === 'unassigned';
+          const hasMeetUrl = Boolean(b.location && (b.location.startsWith('http://') || b.location.startsWith('https://')));
+
           return (
-            <div key={b.id} className="card" style={{ padding: '18px 22px' }}>
+            <div key={b.id} className="card" style={{ padding: '18px 22px', borderLeft: isPending ? '4px solid #f59e0b' : '4px solid #10b981' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                 <div style={{ flex: 1, minWidth: 240 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
                     <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>{b.id}</span>
                     {sm && <span className={`badge badge-${b.sampradaya}`}>{sm.icon} {sm.name.split(' ')[0]}</span>}
-                    {b.isAparaKaryam && <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#dc2626', color: 'white', fontWeight: 700 }}>APARA</span>}
+                    {isPending && <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>⚡ PENDING ADMIN REVIEW</span>}
+                    {b.isAparaKaryam ? <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#dc2626', color: 'white', fontWeight: 700 }}>APARA</span> : null}
                   </div>
                   <h4 style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginBottom: 6 }}>{b.ritualName}</h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: 12, color: '#94a3b8' }}>
-                    <span>👤 {b.devoteeName}</span>
-                    <span>🧘 {b.purohitName}</span>
+                    <span>👤 Devotee: <strong style={{ color: '#e2e8f0' }}>{b.devoteeName}</strong></span>
+                    <span>🪔 Status: <strong style={{ color: isPending ? '#fbbf24' : '#34d399' }}>{b.purohitName || 'Pending Admin Assignment'}</strong></span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {b.date} · {b.muhurtaTime}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} /> {b.location}</span>
                   </div>
-                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Samagri: {b.samagriMode}</p>
+                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Logistics: {b.samagriMode}</p>
+                  
+                  {/* Google Meet Link Dispatch & Clear Controls */}
+                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Video size={12} /> Google Meet Link:
+                    </span>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ fontSize: 11, padding: '4px 10px', height: 30, flex: 1, minWidth: 220 }}
+                      value={meetInputs[b.id] !== undefined ? meetInputs[b.id] : (hasMeetUrl ? b.location : '')}
+                      placeholder="Enter Google Meet link (e.g. https://meet.google.com/xyz-pdqr-abc)"
+                      onChange={e => setMeetInputs({ ...meetInputs, [b.id]: e.target.value })}
+                    />
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#10b981', color: 'white', fontSize: 11, padding: '4px 12px' }}
+                      onClick={() => handleSendMeetLink(b.id, b.status)}
+                    >
+                      🚀 Dispatch Link
+                    </button>
+                    {hasMeetUrl && (
+                      <button
+                        className="btn btn-sm btn-ghost"
+                        style={{ color: '#f87171', fontSize: 11, padding: '4px 10px', borderColor: 'rgba(220,38,38,0.3)' }}
+                        onClick={() => handleClearMeetLink(b.id, b.status)}
+                      >
+                        ❌ Clear Link
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>{b.dakshinaAmount}</div>
                   <span style={{ fontSize: 10, color: '#64748b' }}>{b.dakshinaStatus}</span>
 
-                  {/* Status Selector */}
-                  <select className="select" style={{ width: 'auto', padding: '5px 10px', fontSize: 11 }}
+                  {/* Admin Action Status Selector */}
+                  <select className="select" style={{ width: 'auto', padding: '6px 12px', fontSize: 11, background: isPending ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)', borderColor: isPending ? '#f59e0b' : '#10b981', color: isPending ? '#fbbf24' : '#34d399', fontWeight: 700 }}
                     value={b.status}
                     onChange={e => onUpdateStatus(b.id, e.target.value)}>
-                    {['Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'].map(s =>
+                    {['Pending Admin Review', 'Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'].map(s =>
                       <option key={s} value={s}>{s}</option>)}
                   </select>
 
                   <button onClick={() => setConfirmDelete(b.id)}
                     style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#f87171', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Trash2 size={12} /> Delete
+                    <Trash2 size={12} /> Remove
                   </button>
                 </div>
               </div>
@@ -416,7 +487,7 @@ function BookingsTab({ bookings, onUpdateStatus, onDelete }) {
 
       {confirmDelete && (
         <ConfirmDialog
-          message="Are you sure you want to delete this booking record?"
+          message="Are you sure you want to delete this booking request record?"
           onConfirm={() => { onDelete(confirmDelete); setConfirmDelete(null); }}
           onCancel={() => setConfirmDelete(null)}
         />
@@ -760,10 +831,18 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
     if (Array.isArray(updated)) setPurohits(updated);
   }, []);
 
-  const handleUpdateBookingStatus = useCallback(async (id, status) => {
-    await DataStore.updateBookingStatus(id, status);
+  const handleUpdateBookingStatus = useCallback(async (id, status, location) => {
+    await DataStore.updateBookingStatus(id, status, location);
     const updated = await DataStore.getBookings();
     if (Array.isArray(updated)) setBookings(updated);
+  }, []);
+
+  const handleClearAllMeetLinks = useCallback(async () => {
+    if (window.confirm('Clear all active Google Meet links across all user bookings in SQLite database?')) {
+      await DataStore.clearAllMeetLinks();
+      const updated = await DataStore.getBookings();
+      if (Array.isArray(updated)) setBookings(updated);
+    }
   }, []);
 
   const handleDeleteBooking = useCallback(async (id) => {
@@ -791,9 +870,9 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
 
   const SIDEBAR_ITEMS = [
     { id: 'overview',     label: 'Overview',              icon: LayoutDashboard },
+    { id: 'bookings',     label: 'User Booking Requests', icon: CalendarCheck },
     { id: 'sampradayas',  label: 'Sampradaya Traditions', icon: Award },
-    { id: 'purohits',     label: 'Acharya Management',    icon: Users },
-    { id: 'bookings',     label: 'Booking Management',    icon: CalendarCheck },
+    { id: 'purohits',     label: 'Acharya Directory',     icon: Users },
     { id: 'devotees',     label: 'Devotee Records',       icon: BookOpen },
     { id: 'reviews',      label: 'Reviews & Feedback',    icon: Star },
     { id: 'settings',     label: 'Settings',              icon: Settings },
@@ -909,7 +988,7 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
             <PurohitsTab purohits={purohits} onSave={handleSavePurohit} onDelete={handleDeletePurohit} />
           )}
           {activeTab === 'bookings' && (
-            <BookingsTab bookings={bookings} onUpdateStatus={handleUpdateBookingStatus} onDelete={handleDeleteBooking} />
+            <BookingsTab bookings={bookings} onUpdateStatus={handleUpdateBookingStatus} onDelete={handleDeleteBooking} onClearAllMeetLinks={handleClearAllMeetLinks} />
           )}
           {activeTab === 'devotees' && (
             <DevoteesTab devotees={devotees} onDelete={handleDeleteDevotee} />

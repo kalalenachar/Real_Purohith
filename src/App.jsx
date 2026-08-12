@@ -6,12 +6,12 @@ import Navbar from './components/Navbar.jsx';
 import HomePage from './components/HomePage.jsx';
 import DevoteeDashboard from './components/DevoteeDashboard.jsx';
 import AdminAIHub from './components/AdminAIHub.jsx';
-import PurohitDashboard from './components/PurohitDashboard.jsx';
 import BackgroundWorkerMonitor from './components/BackgroundWorkerMonitor.jsx';
 import FeedbackModal from './components/FeedbackModal.jsx';
 import LoginModal from './components/LoginModal.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import BookingModal from './components/BookingModal.jsx';
+import FreeSevaModal from './components/FreeSevaModal.jsx';
 
 import { INITIAL_FEEDBACKS } from './services/systemData.js';
 import { backgroundQueue } from './services/backgroundQueue.js';
@@ -21,7 +21,7 @@ import { DataStore } from './services/store.js';
 /*  Inline Page Views (Pravachanam, Apara, Free Seva)          */
 /* ──────────────────────────────────────────────────────────── */
 
-function PravachanamView({ onTriggerSOS }) {
+function PravachanamView({ onTriggerSOS, onOpenBooking }) {
   const ITEMS = [
     { icon: '📖', title: 'Srimad Bhagavatha Sapthaham', duration: '7-Day Katha', desc: 'Sri Krishna Avathara & Rukmini Kalyana. Full immersive Pravachanam for home, apartment complex, or community hall.' },
     { icon: '🏹', title: 'Srimad Ramayana Pravachanam', duration: 'Single / 3-Day / 7-Day', desc: 'Sundarakanda, Seetha Rama Kalyana, and Sampoorna Ramayana by senior Pauranika scholars only.' },
@@ -61,7 +61,7 @@ function PravachanamView({ onTriggerSOS }) {
             <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, flex: 1 }}>{item.desc}</p>
             <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700 }}>0% Platform Fee</span>
-              <button className={`btn btn-sm ${item.isApara ? 'btn-danger' : 'btn-primary'}`} onClick={item.isApara ? onTriggerSOS : undefined}>
+              <button className={`btn btn-sm ${item.isApara ? 'btn-danger' : 'btn-primary'}`} onClick={item.isApara ? onTriggerSOS : () => onOpenBooking && onOpenBooking(item.title)}>
                 {item.isApara ? 'Request Apara' : 'Book Pravachanam'}
               </button>
             </div>
@@ -72,7 +72,7 @@ function PravachanamView({ onTriggerSOS }) {
   );
 }
 
-function AparaView({ onTriggerSOS }) {
+function AparaView({ onTriggerSOS, onOpenBooking }) {
   const TIRTHAS = ['Gaya (Vishnupad — Pinda Daan)', 'Rameswaram (Sethu Snanam & Til Tarpana)', 'Kashi / Varanasi (Ganga Ghats)', 'Gokarna / Trimbakeshwar (Narayan Nagbali)', 'Haridwar / Rishikesh (Ganga Pinda Daan)'];
   const LIFECYCLE = ['Antyeshti (Final Rites & Instant Pandit Dispatch)', 'Sanchayanam (Bone Collection Rites)', 'Dasha Dina Kriyas (Day 1–10 Pinda Daanam)', 'Ekodishta Shraaddha (11th & 12th Day)', 'Sapindakarana (13th Day Ritual)', 'Subha Sweekaram / Vaikunta Samaradhana'];
   return (
@@ -127,7 +127,7 @@ function AparaView({ onTriggerSOS }) {
             <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, marginBottom: 14 }}>
               For NRIs unable to travel, authorized Acharyas perform the Pitru Kriya at holy river banks with live video stream and individualized Sankalpam.
             </p>
-            <button className="btn btn-ghost btn-sm">Request E-Pinda Daan</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => onOpenBooking && onOpenBooking('Remote E-Pinda Daan')}>Request E-Pinda Daan</button>
           </div>
         </div>
       </div>
@@ -135,7 +135,7 @@ function AparaView({ onTriggerSOS }) {
   );
 }
 
-function FreeSeva() {
+function FreeSeva({ onOpenFreeSeva }) {
   return (
     <div className="container" style={{ paddingTop: 32, paddingBottom: 48 }}>
       <div className="hero-banner" style={{ marginBottom: 32, borderColor: 'rgba(16,185,129,0.35)', background: 'rgba(16,185,129,0.05)' }}>
@@ -162,7 +162,7 @@ function FreeSeva() {
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#6ee7b7' }}><CheckCircle2 size={13} /> {s}</div>
             ))}
           </div>
-          <button className="btn btn-lg" style={{ background: '#10b981', color: 'white', justifyContent: 'center', width: '100%', boxShadow: '0 4px 15px rgba(16,185,129,0.35)' }}>
+          <button className="btn btn-lg" onClick={() => onOpenFreeSeva && onOpenFreeSeva('parayanam')} style={{ background: '#10b981', color: 'white', justifyContent: 'center', width: '100%', boxShadow: '0 4px 15px rgba(16,185,129,0.35)', cursor: 'pointer' }}>
             <Video size={16} /> Register for Free Seva
           </button>
         </div>
@@ -177,7 +177,7 @@ function FreeSeva() {
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#38bdf8' }}><CheckCircle2 size={13} /> {s}</div>
             ))}
           </div>
-          <button className="btn btn-lg" style={{ background: '#0ea5e9', color: 'white', justifyContent: 'center', width: '100%', boxShadow: '0 4px 15px rgba(14,165,233,0.35)' }}>
+          <button className="btn btn-lg" onClick={() => onOpenFreeSeva && onOpenFreeSeva('astrology')} style={{ background: '#0ea5e9', color: 'white', justifyContent: 'center', width: '100%', boxShadow: '0 4px 15px rgba(14,165,233,0.35)', cursor: 'pointer' }}>
             <Phone size={16} /> Book Free Consultation
           </button>
         </div>
@@ -202,7 +202,8 @@ export default function App() {
   const [auth, setAuth] = useState({ isLoggedIn: false, user: null, role: 'guest' });
   const [showLogin, setShowLogin]   = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookingPurohit, setBookingPurohit]     = useState(null);
+  const [bookingRitual, setBookingRitual]       = useState(null);
+  const [freeSevaType, setFreeSevaType]         = useState(null); // 'parayanam' | 'astrology' | null
   const [appMode, setAppMode]       = useState('public'); // 'public' | 'admin'
 
   const showToast = useCallback((msg, type = 'info') => {
@@ -210,14 +211,23 @@ export default function App() {
     setTimeout(() => setToast(null), 5000);
   }, []);
 
-  const handleOpenBookingModal = useCallback((purohit = null) => {
+  const handleOpenBookingModal = useCallback((ritual = null) => {
     if (!auth?.isLoggedIn) {
       showToast('🔒 Please Sign In or Register to schedule a sacred ritual booking.', 'info');
       setShowLogin(true);
       return;
     }
-    setBookingPurohit(purohit);
+    setBookingRitual(typeof ritual === 'string' ? ritual : null);
     setShowBookingModal(true);
+  }, [auth, showToast]);
+
+  const handleOpenFreeSevaModal = useCallback((type) => {
+    if (!auth?.isLoggedIn) {
+      showToast('🔒 Please Sign In or Register to register for Free Digital Sevas.', 'info');
+      setShowLogin(true);
+      return;
+    }
+    setFreeSevaType(type);
   }, [auth, showToast]);
 
   // Check auth and load feedbacks on mount from database
@@ -285,8 +295,6 @@ export default function App() {
     const userRole = newAuth.user?.role || newAuth.role;
     if (userRole === 'admin') {
       setAppMode('admin');
-    } else if (userRole === 'purohit') {
-      setActiveTab('purohit');
     } else {
       setActiveTab('devotee');
     }
@@ -304,8 +312,6 @@ export default function App() {
     if (auth?.isLoggedIn) {
       if (auth.user?.role === 'admin' || auth.role === 'admin') {
         setAppMode('admin');
-      } else if (auth.user?.role === 'purohit') {
-        setActiveTab('purohit');
       } else {
         setActiveTab('devotee');
       }
@@ -345,10 +351,20 @@ export default function App() {
       {/* Booking Gate */}
       {showBookingModal && (
         <BookingModal
-          purohit={bookingPurohit}
+          initialRitual={bookingRitual}
           auth={auth}
           onClose={() => setShowBookingModal(false)}
           onBookingSuccess={(msg) => showToast(msg, 'success')}
+        />
+      )}
+
+      {/* Standalone Free Seva Gate */}
+      {freeSevaType && (
+        <FreeSevaModal
+          sevaType={freeSevaType}
+          auth={auth}
+          onClose={() => setFreeSevaType(null)}
+          onSuccess={(msg) => showToast(msg, 'success')}
         />
       )}
 
@@ -376,11 +392,10 @@ export default function App() {
       <main style={{ flex: 1 }}>
         {activeTab === 'home'        && <HomePage onNavigate={handleSetTab} onTriggerSOS={handleTriggerSOS} onOpenBooking={handleOpenBookingModal} />}
         {activeTab === 'devotee'     && <DevoteeDashboard auth={auth} onOpenLogin={handleAdminLoginClick} onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} onOpenBooking={handleOpenBookingModal} />}
-        {activeTab === 'pravachanam' && <PravachanamView onTriggerSOS={handleTriggerSOS} />}
-        {activeTab === 'apara'       && <AparaView onTriggerSOS={handleTriggerSOS} />}
-        {activeTab === 'freeSeva'    && <FreeSeva />}
+        {activeTab === 'pravachanam' && <PravachanamView onTriggerSOS={handleTriggerSOS} onOpenBooking={handleOpenBookingModal} />}
+        {activeTab === 'apara'       && <AparaView onTriggerSOS={handleTriggerSOS} onOpenBooking={handleOpenBookingModal} />}
+        {activeTab === 'freeSeva'    && <FreeSeva onOpenFreeSeva={handleOpenFreeSevaModal} />}
         {activeTab === 'admin'       && <AdminAIHub feedbacks={feedbacks} />}
-        {activeTab === 'purohit'     && <PurohitDashboard auth={auth} />}
       </main>
 
 

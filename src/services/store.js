@@ -95,8 +95,12 @@ export class DataStore {
     return await API.createBooking(booking);
   }
 
-  static async updateBookingStatus(id, status) {
-    return await API.updateBookingStatus(id, status);
+  static async updateBookingStatus(id, status, location) {
+    return await API.updateBookingStatus(id, status, location);
+  }
+
+  static async clearAllMeetLinks() {
+    return await API.clearAllMeetLinks();
   }
 
   static async deleteBooking(id) {

@@ -39,14 +39,14 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
 
           {/* Action CTAs */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            <button className="btn btn-primary btn-lg" onClick={() => onNavigate('pravachanam')}>
-              <BookOpen size={18} /> Explore Pravachanam
+            <button className="btn btn-primary btn-lg" onClick={() => onOpenBooking && onOpenBooking('Satyanarayana Swamy Pooja & Vrata')}>
+              <BookOpen size={18} /> Schedule Ritual Booking
             </button>
             <button className="btn btn-danger btn-lg sos-btn" onClick={onTriggerSOS}>
               <Flame size={18} /> 30-Min Emergency SOS
             </button>
-            <button className="btn btn-ghost btn-lg" onClick={() => onNavigate('purohit')}>
-              <User size={18} /> Book Verified Acharya
+            <button className="btn btn-ghost btn-lg" onClick={() => onNavigate('pravachanam')}>
+              <BookOpen size={18} /> Explore Pravachanam
             </button>
             <button className="btn btn-ghost btn-lg" onClick={() => onNavigate('freeSeva')} style={{ borderColor: 'rgba(16,185,129,0.3)', color: '#6ee7b7' }}>
               <Heart size={18} /> Noble Free Seva
@@ -61,11 +61,11 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 48 }}>
         <div className="kpi-card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span className="kpi-label">Verified Pandits</span>
+            <span className="kpi-label">Direct Admin Desk</span>
             <Award size={18} style={{ color: '#fbbf24' }} />
           </div>
-          <div className="kpi-value text-gold-gradient">1,240+</div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Authentic Veda Bhashya Pandits</div>
+          <div className="kpi-value text-gold-gradient">Centralized</div>
+          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Verified Admin Desk Allocation</div>
         </div>
 
         <div className="kpi-card">
@@ -109,8 +109,8 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
               Explore Supported Sampradaya Traditions
             </h2>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('purohit')}>
-            View All Acharyas <ArrowRight size={14} />
+          <button className="btn btn-ghost btn-sm" onClick={() => onOpenBooking && onOpenBooking('Satyanarayana Swamy Pooja & Vrata')}>
+            Request Ritual Booking <ArrowRight size={14} />
           </button>
         </div>
 
@@ -131,10 +131,10 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
               </div>
               <button
                 className="btn btn-ghost btn-sm"
-                onClick={() => onNavigate('purohit')}
+                onClick={() => onOpenBooking && onOpenBooking('Satyanarayana Swamy Pooja & Vrata')}
                 style={{ width: '100%', justifyContent: 'space-between' }}
               >
-                <span>Find {item.name.split(' ')[0]} Acharya</span>
+                <span>Book {item.name.split(' ')[0]} Ritual</span>
                 <ArrowRight size={13} />
               </button>
             </div>
@@ -231,57 +231,49 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
       </section>
 
       {/* ──────────────────────────────────────────────────────────── */}
-      {/*  FEATURED ACHARYAS SHOWCASE                                  */}
+      {/*  FEATURED RITUAL SERVICES SHOWCASE                            */}
       {/* ──────────────────────────────────────────────────────────── */}
       <section style={{ marginBottom: 48 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>
-              Master Veda Scholars
+              Direct Admin Fulfillment
             </div>
             <h2 style={{ fontSize: 24, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
-              Featured Verified Acharyas
+              Featured Sacred Ceremony Services
             </h2>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('purohit')}>
-            Browse All Acharyas <ArrowRight size={14} />
+          <button className="btn btn-ghost btn-sm" onClick={() => onOpenBooking && onOpenBooking('Satyanarayana Swamy Pooja & Vrata')}>
+            View All Ritual Types <ArrowRight size={14} />
           </button>
         </div>
 
         <div className="grid-3">
-          {featuredAcharyas.map((purohit) => (
-            <div key={purohit.id} className="card acharya-card" style={{ padding: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                <div>
-                  <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 700, color: '#f8fafc' }}>
-                    {purohit.name}
-                  </h3>
-                  <div style={{ fontSize: 11, color: '#fbbf24', fontWeight: 600, marginTop: 2 }}>
-                    {purohit.mutt}
-                  </div>
+          {[
+            { title: 'Satyanarayana Swamy Pooja & Vrata', badge: 'Popular Vrata', desc: 'Full Katha, Ashtothram, and Archana per family paddhati.', dakshina: '₹3,500', icon: '🪔' },
+            { title: 'Mahasudarshana & Dhanvantari Homam', badge: 'Divine Protection', desc: 'Elaborate fire ritual invoking health, peace & prosperity with 108 Ahutis.', dakshina: '₹6,500', icon: '🔥' },
+            { title: 'Griha Pravesham & Vastu Shanti', badge: 'House Warming', desc: 'Vastu Shanti, Ganapati Homam, and house blessing per planetary muhurta.', dakshina: '₹8,500', icon: '🏠' }
+          ].map((item, idx) => (
+            <div key={idx} className="card acharya-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                  <div style={{ fontSize: 32 }}>{item.icon}</div>
+                  <span className="badge badge-uttaradhi">{item.badge}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(251,191,36,0.12)', padding: '4px 8px', borderRadius: 8, border: '1px solid rgba(251,191,36,0.3)' }}>
-                  <Star size={12} style={{ fill: '#fbbf24', color: '#fbbf24' }} />
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#fbbf24' }}>{purohit.rating}</span>
-                </div>
+                <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                  {item.title}
+                </h3>
+                <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5, marginBottom: 16 }}>
+                  {item.desc}
+                </p>
               </div>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-                <span className="badge badge-uttaradhi">{purohit.vedaShakha}</span>
-                <span className="badge badge-secular">{purohit.sutram}</span>
-                <span className="badge badge-shankara">{purohit.experienceYears} Yrs Exp</span>
-              </div>
-
-              <p style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.5, marginBottom: 16 }}>
-                Specialties: {purohit.specialties.slice(0, 2).join(', ')}
-              </p>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
-                <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <ShieldCheck size={13} /> {purohit.trustScore}% Trust Score
+                <span style={{ fontSize: 13, color: '#34d399', fontWeight: 800, fontFamily: 'monospace' }}>
+                  {item.dakshina}
                 </span>
-                <button className="btn btn-primary btn-sm" onClick={() => onOpenBooking && onOpenBooking(purohit)}>
-                  Book Acharya
+                <button className="btn btn-primary btn-sm" onClick={() => onOpenBooking && onOpenBooking(item.title)}>
+                  Book Ritual
                 </button>
               </div>
             </div>
