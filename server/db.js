@@ -133,6 +133,8 @@ export function initDb() {
       sla_expires_at DATETIME NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+  `);
+
   // 8. Sampradayas table (Vedic Traditions under Admin Control)
   db.exec(`
     CREATE TABLE IF NOT EXISTS sampradayas (
