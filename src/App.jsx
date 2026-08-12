@@ -4,7 +4,6 @@ import { Flame, Heart, Video, Phone, CheckCircle2, X, BookOpen, ShieldCheck, Glo
 import { Starfield } from './components/Starfield.jsx';
 import Navbar from './components/Navbar.jsx';
 import DevoteeDashboard from './components/DevoteeDashboard.jsx';
-import MobileAppView from './components/MobileAppView.jsx';
 import AdminAIHub from './components/AdminAIHub.jsx';
 import PurohitDashboard from './components/PurohitDashboard.jsx';
 import BackgroundWorkerMonitor from './components/BackgroundWorkerMonitor.jsx';
@@ -328,7 +327,6 @@ export default function App() {
       {/* Main Views */}
       <main style={{ flex: 1 }}>
         {activeTab === 'devotee'     && <DevoteeDashboard onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} />}
-        {activeTab === 'mobile'      && <MobileAppView onTriggerSOS={handleTriggerSOS} onOpenFeedback={setFeedbackPurohit} />}
         {activeTab === 'pravachanam' && <PravachanamView onTriggerSOS={handleTriggerSOS} />}
         {activeTab === 'apara'       && <AparaView onTriggerSOS={handleTriggerSOS} />}
         {activeTab === 'freeSeva'    && <FreeSeva />}

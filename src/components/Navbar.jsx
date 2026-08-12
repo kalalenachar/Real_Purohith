@@ -1,12 +1,11 @@
 import React from 'react';
 import {
-  Home, Smartphone, BookOpen, Flame,
+  Home, BookOpen, Flame,
   Heart, ShieldCheck, User, Activity, LogIn, Crown, LogOut
 } from 'lucide-react';
 
 const TABS = [
   { id: 'devotee',     label: 'Devotee Portal',    icon: Home },
-  { id: 'mobile',      label: 'Android & iOS',     icon: Smartphone },
   { id: 'pravachanam', label: 'Pravachanam',        icon: BookOpen },
   { id: 'apara',       label: '30-Min SOS',         icon: Flame,       danger: true },
   { id: 'freeSeva',    label: 'Noble Free Seva',    icon: Heart },
