@@ -4,7 +4,7 @@ import {
   AlertCircle, CheckCircle2, X, Sparkles, KeyRound, UserPlus, LogIn, ArrowLeft
 } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { SAMPRADAYA_MATRIX } from '../services/mockData.js';
+import { SAMPRADAYA_MATRIX } from '../services/systemData.js';
 
 export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'login' }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'forgot'
@@ -43,9 +43,8 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
     }
     setLoading(true);
     setError('');
-    await new Promise(r => setTimeout(r, 600));
 
-    const result = DataStore.login(identifier, password);
+    const result = await DataStore.login(identifier, password);
     setLoading(false);
     if (result.success) {
       onLoginSuccess(result.auth);
@@ -54,22 +53,20 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
     }
   };
 
-  // Quick demo credential fill
-  const handleQuickLogin = (demoIdentifier, demoPassword) => {
-    setIdentifier(demoIdentifier);
-    setPassword(demoPassword);
+  // Quick system credential fill
+  const handleQuickLogin = async (accountIdentifier, accountPassword) => {
+    setIdentifier(accountIdentifier);
+    setPassword(accountPassword);
     setError('');
-    // Auto submit
     setLoading(true);
-    setTimeout(() => {
-      const result = DataStore.login(demoIdentifier, demoPassword);
-      setLoading(false);
-      if (result.success) {
-        onLoginSuccess(result.auth);
-      } else {
-        setError(result.error);
-      }
-    }, 400);
+
+    const result = await DataStore.login(accountIdentifier, accountPassword);
+    setLoading(false);
+    if (result.success) {
+      onLoginSuccess(result.auth);
+    } else {
+      setError(result.error);
+    }
   };
 
   // Handle Register submission
@@ -84,9 +81,8 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
     if (regPassword !== regConfirmPwd) return setError('Passwords do not match.');
 
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600));
 
-    const result = DataStore.registerUser({
+    const result = await DataStore.registerUser({
       name: fullName.trim(),
       username: regUsername.trim(),
       email: regEmail.trim(),
@@ -312,15 +308,15 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                 )}
               </button>
 
-              {/* Quick Demo Accounts Header */}
+              {/* Quick System Accounts Header */}
               <div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
                 <p style={{ fontSize: 11, color: '#64748b', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>
-                  ⚡ Quick Demo Login (Click to Fill)
+                  🔑 Database Test Accounts
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   <button
                     type="button"
-                    onClick={() => handleQuickLogin('admin', 'admin')}
+                    onClick={() => handleQuickLogin('admin', 'admin123')}
                     style={{
                       padding: '8px 6px', borderRadius: 10,
                       background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
@@ -329,7 +325,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                     }}
                   >
                     <span>👑 Admin</span>
-                    <span style={{ fontSize: 9, color: '#94a3b8' }}>admin / admin</span>
+                    <span style={{ fontSize: 9, color: '#94a3b8' }}>admin</span>
                   </button>
 
                   <button

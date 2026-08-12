@@ -3,9 +3,9 @@ import {
   Flame, Heart, BookOpen, User, ShieldCheck, Star,
   CheckCircle2, Globe, Clock, ArrowRight, Sparkles, Award, Compass, Zap
 } from 'lucide-react';
-import { SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/mockData.js';
+import { SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
 
-export default function HomePage({ onNavigate, onTriggerSOS }) {
+export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
   const sampradayaList = Object.values(SAMPRADAYA_MATRIX);
   const featuredAcharyas = INITIAL_PUROHITS.slice(0, 3);
 
@@ -18,7 +18,7 @@ export default function HomePage({ onNavigate, onTriggerSOS }) {
         <div className="orb orb-gold" style={{ width: 450, height: 450, top: -140, right: -100, opacity: 0.2 }} />
         <div className="orb orb-red" style={{ width: 350, height: 350, bottom: -120, left: -80, opacity: 0.12 }} />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 840 }}>
+        <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
           {/* Top Sacred Pill */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 9999, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', marginBottom: 20 }}>
             <span style={{ fontSize: 14 }}>🪔</span>
@@ -33,7 +33,7 @@ export default function HomePage({ onNavigate, onTriggerSOS }) {
             <span className="text-gold-gradient">Sampradaya Ecosystem</span>
           </h1>
 
-          <p style={{ fontSize: 15, color: '#cbd5e1', lineHeight: 1.7, marginBottom: 32, maxWidth: 720 }}>
+          <p style={{ fontSize: 15, color: '#cbd5e1', lineHeight: 1.7, marginBottom: 32, maxWidth: 960 }}>
             Directly connect with authenticated Veda Pandits & Pauranikas adhering strictly to your family’s tradition: <span className="serif" style={{ color: '#fbbf24', fontStyle: 'italic', fontWeight: 600 }}>Uttaradhi Mutt (Dvaita)</span>, <span className="serif" style={{ color: '#f59e0b', fontStyle: 'italic', fontWeight: 600 }}>Udupi Ashta Mutts</span>, <span className="serif" style={{ color: '#f97316', fontStyle: 'italic', fontWeight: 600 }}>Sri Vaishnava</span>, <span className="serif" style={{ color: '#c4b5fd', fontStyle: 'italic', fontWeight: 600 }}>Smartha Shankara</span>, and <span className="serif" style={{ color: '#6ee7b7', fontStyle: 'italic', fontWeight: 600 }}>Secular / Universal</span>.
           </p>
 
@@ -280,7 +280,7 @@ export default function HomePage({ onNavigate, onTriggerSOS }) {
                 <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
                   <ShieldCheck size={13} /> {purohit.trustScore}% Trust Score
                 </span>
-                <button className="btn btn-primary btn-sm" onClick={() => onNavigate('purohit')}>
+                <button className="btn btn-primary btn-sm" onClick={() => onOpenBooking && onOpenBooking(purohit)}>
                   Book Acharya
                 </button>
               </div>

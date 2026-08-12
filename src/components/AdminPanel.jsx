@@ -7,7 +7,7 @@ import {
   Phone, MapPin, Clock, Award
 } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { SAMPRADAYA_MATRIX, INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS, INITIAL_FEEDBACKS } from '../services/mockData.js';
+import { SAMPRADAYA_MATRIX, INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS, INITIAL_FEEDBACKS } from '../services/systemData.js';
 
 /* ──────────────────────────── helpers ─────────────────────────── */
 const generateId = prefix => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -37,24 +37,29 @@ function ConfirmDialog({ message, onConfirm, onCancel }) {
 }
 
 /* ──────────────────────────── Overview Tab ─────────────────────── */
-function OverviewTab({ purohits, devotees, bookings, feedbacks }) {
-  const avgRating = feedbacks.length
-    ? (feedbacks.reduce((acc, f) => {
+function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = [] }) {
+  const safePurohits = Array.isArray(purohits) ? purohits : [];
+  const safeDevotees = Array.isArray(devotees) ? devotees : [];
+  const safeBookings = Array.isArray(bookings) ? bookings : [];
+  const safeFeedbacks = Array.isArray(feedbacks) ? feedbacks : [];
+
+  const avgRating = safeFeedbacks.length
+    ? (safeFeedbacks.reduce((acc, f) => {
         const vals = typeof f.ratings === 'object' ? Object.values(f.ratings) : [5];
         return acc + vals.reduce((a, b) => a + b, 0) / vals.length;
-      }, 0) / feedbacks.length).toFixed(2)
+      }, 0) / safeFeedbacks.length).toFixed(2)
     : '4.92';
 
   const kpis = [
-    { label: 'Total Purohits',    value: purohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    { label: 'Total Devotees',    value: devotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
-    { label: 'Active Bookings',   value: bookings.length,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
-    { label: 'Reviews Received',  value: feedbacks.length,  icon: Star,          color: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+    { label: 'Total Purohits',    value: safePurohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    { label: 'Total Devotees',    value: safeDevotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
+    { label: 'Active Bookings',   value: safeBookings.length,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
+    { label: 'Reviews Received',  value: safeFeedbacks.length,  icon: Star,          color: '#f97316', bg: 'rgba(249,115,22,0.1)' },
     { label: 'Avg Rating',        value: avgRating + ' ⭐', icon: Award,         color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
     { label: 'Platform Fee',      value: '0% Pure Bridge',  icon: Wallet,        color: '#34d399', bg: 'rgba(16,185,129,0.08)' },
   ];
 
-  const recentBookings = bookings.slice(0, 5);
+  const recentBookings = safeBookings.slice(0, 5);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -581,29 +586,138 @@ function ReviewsTab({ feedbacks, onDelete }) {
 }
 
 /* ──────────────────────────── Settings Tab ─────────────────────── */
-function SettingsTab({ onResetData }) {
-  const [confirmReset, setConfirmReset] = useState(false);
+function SettingsTab() {
+  return (
+    <div style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="card" style={{ padding: 28 }}>
+        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 17, fontWeight: 800, color: '#f8fafc', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <ShieldCheck size={20} style={{ color: '#34d399' }} /> System Security & Database Integrity
+        </h3>
+        <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, marginBottom: 20 }}>
+          Real-Purohit operates with strict database persistence, hashed credential security, and 0% platform commission controls. Production database data is protected from unauthorized resets.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Database Engine</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc', marginTop: 4 }}>SQLite (WAL Mode Enabled)</div>
+            <div style={{ fontSize: 11, color: '#34d399', marginTop: 4 }}>● Connected (`server/database.db`)</div>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Password Encryption</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc', marginTop: 4 }}>Bcrypt Hashing (10 rounds)</div>
+            <div style={{ fontSize: 11, color: '#fbbf24', marginTop: 4 }}>● High Security Salt Active</div>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Session Protocol</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc', marginTop: 4 }}>JSON Web Token (JWT)</div>
+            <div style={{ fontSize: 11, color: '#38bdf8', marginTop: 4 }}>● 24-Hour Token Lifetime</div>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Platform Honorarium Policy</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#34d399', marginTop: 4 }}>0% Platform Commission</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>100% Direct Scholar Dakshina</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────── Sampradayas Tab ───────────────────── */
+function SampradayasTab({ sampradayas = [], onRefresh }) {
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕' });
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+
+  const handleEdit = (samp) => {
+    setEditing(samp);
+    setForm({ id: samp.id, name: samp.name, badgeClass: samp.badgeClass || 'badge-secular', description: samp.description || '', icon: samp.icon || '🛕' });
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    await DataStore.saveSampradaya(form);
+    setEditing(null);
+    setForm({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕' });
+    onRefresh();
+  };
+
+  const handleDelete = async (id) => {
+    await DataStore.deleteSampradaya(id);
+    setDeleteConfirmId(null);
+    onRefresh();
+  };
 
   return (
-    <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-      <div className="card" style={{ padding: 28, borderColor: 'rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.03)' }}>
-        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: '#f87171', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <AlertTriangle size={18} /> Danger Zone
-        </h3>
-        <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, marginBottom: 18 }}>
-          Resetting data will clear all custom entries added during this session and restore the original demo dataset.
-        </p>
-        <button className="btn btn-danger btn-sm" onClick={() => setConfirmReset(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <RefreshCw size={14} /> Reset to Demo Data
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>Vedic Sampradaya Traditions</h2>
+          <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Directly stored in SQLite Database under Admin Control</p>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={() => { setEditing('new'); setForm({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕' }); }}>
+          <Plus size={14} /> Add Sampradaya Tradition
         </button>
       </div>
 
-      {confirmReset && (
+      {editing && (
+        <form onSubmit={handleSave} className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <h3 style={{ fontSize: 15, fontFamily: 'Outfit,sans-serif', fontWeight: 700, color: '#fbbf24' }}>
+            {editing === 'new' ? 'Create New Sampradaya Tradition' : `Edit ${editing.name}`}
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#94a3b8' }}>ID Identifier</label>
+              <input className="input" value={form.id} disabled={editing !== 'new'} onChange={e => setForm({...form, id: e.target.value})} placeholder="e.g. kanchi-mutt" required />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#94a3b8' }}>Tradition Name</label>
+              <input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Kanchi Kamakoti Peetham" required />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#94a3b8' }}>Icon Emoji</label>
+              <input className="input" value={form.icon} onChange={e => setForm({...form, icon: e.target.value})} placeholder="🛕" />
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: 11, color: '#94a3b8' }}>Lineage Description</label>
+            <input className="input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Brief lineage description" />
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(null)}>Cancel</button>
+            <button type="submit" className="btn btn-primary btn-sm">Save Tradition to Database</button>
+          </div>
+        </form>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        {sampradayas.map(s => (
+          <div key={s.id} className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 24 }}>{s.icon}</span>
+                <span className={`badge ${s.badgeClass || 'badge-secular'}`}>{s.id}</span>
+              </div>
+              <h4 style={{ fontSize: 15, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>{s.name}</h4>
+              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 6, lineHeight: 1.5 }}>{s.description}</p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', justifyContent: 'flex-end' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(s)}><Edit2 size={12} /> Edit</button>
+              <button className="btn btn-danger btn-sm" onClick={() => setDeleteConfirmId(s.id)}><Trash2 size={12} /> Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {deleteConfirmId && (
         <ConfirmDialog
-          message="This will clear all your custom data (added purohits, bookings, reviews) and restore the original demo dataset. Are you sure?"
-          onConfirm={() => { onResetData(); setConfirmReset(false); }}
-          onCancel={() => setConfirmReset(false)}
+          message={`Are you sure you want to delete Sampradaya tradition "${deleteConfirmId}" from the SQLite database?`}
+          onConfirm={() => handleDelete(deleteConfirmId)}
+          onCancel={() => setDeleteConfirmId(null)}
         />
       )}
     </div>
@@ -614,64 +728,75 @@ function SettingsTab({ onResetData }) {
 export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Live state from store
-  const [purohits, setPurohits] = useState(() => DataStore.getPurohits());
-  const [devotees, setDevotees] = useState(() => DataStore.getDevotees());
-  const [bookings, setBookings] = useState(() => DataStore.getBookings());
-  const [feedbacks, setFeedbacks] = useState(() => DataStore.getFeedbacks());
+  const [purohits, setPurohits] = useState(INITIAL_PUROHITS);
+  const [devotees, setDevotees] = useState(INITIAL_DEVOTEES);
+  const [bookings, setBookings] = useState(INITIAL_BOOKINGS);
+  const [feedbacks, setFeedbacks] = useState(INITIAL_FEEDBACKS);
+  const [sampradayas, setSampradayas] = useState([]);
 
-  // Persist whenever state changes
-  const updatePurohits = useCallback((next) => { setPurohits(next); DataStore.savePurohits(next); }, []);
-  const updateBookings = useCallback((next) => { setBookings(next); DataStore.saveBookings(next); }, []);
-  const updateDevotees = useCallback((next) => { setDevotees(next); DataStore.saveDevotees(next); }, []);
-  const updateFeedbacks = useCallback((next) => { setFeedbacks(next); DataStore.saveFeedbacks(next); }, []);
+  const loadSampradayas = useCallback(() => {
+    DataStore.getSampradayas().then(res => { if (Array.isArray(res)) setSampradayas(res); });
+  }, []);
 
-  // Purohit CRUD
-  const handleSavePurohit = useCallback((purohit, isEdit) => {
-    updatePurohits(isEdit
-      ? purohits.map(p => p.id === purohit.id ? purohit : p)
-      : [purohit, ...purohits]
-    );
-  }, [purohits, updatePurohits]);
+  // Fetch live from database API on mount
+  React.useEffect(() => {
+    DataStore.getPurohits().then(res => { if (Array.isArray(res)) setPurohits(res); });
+    DataStore.getDevotees().then(res => { if (Array.isArray(res)) setDevotees(res); });
+    DataStore.getBookings().then(res => { if (Array.isArray(res)) setBookings(res); });
+    DataStore.getFeedbacks().then(res => { if (Array.isArray(res)) setFeedbacks(res); });
+    loadSampradayas();
+  }, [loadSampradayas]);
 
-  const handleDeletePurohit = useCallback((id) => {
-    updatePurohits(purohits.filter(p => p.id !== id));
-  }, [purohits, updatePurohits]);
+  // CRUD handlers updating state & backend
+  const handleSavePurohit = useCallback(async (purohit, isEdit) => {
+    await DataStore.savePurohit(purohit);
+    const updated = await DataStore.getPurohits();
+    if (Array.isArray(updated)) setPurohits(updated);
+  }, []);
 
-  // Booking ops
-  const handleUpdateBookingStatus = useCallback((id, status) => {
-    updateBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
-  }, [bookings, updateBookings]);
+  const handleDeletePurohit = useCallback(async (id) => {
+    await DataStore.deletePurohit(id);
+    const updated = await DataStore.getPurohits();
+    if (Array.isArray(updated)) setPurohits(updated);
+  }, []);
 
-  const handleDeleteBooking = useCallback((id) => {
-    updateBookings(bookings.filter(b => b.id !== id));
-  }, [bookings, updateBookings]);
+  const handleUpdateBookingStatus = useCallback(async (id, status) => {
+    await DataStore.updateBookingStatus(id, status);
+    const updated = await DataStore.getBookings();
+    if (Array.isArray(updated)) setBookings(updated);
+  }, []);
 
+  const handleDeleteBooking = useCallback(async (id) => {
+    await DataStore.deleteBooking(id);
+    const updated = await DataStore.getBookings();
+    if (Array.isArray(updated)) setBookings(updated);
+  }, []);
   // Devotee ops
   const handleDeleteDevotee = useCallback((id) => {
-    updateDevotees(devotees.filter(d => d.id !== id));
-  }, [devotees, updateDevotees]);
+    setDevotees(prev => prev.filter(d => d.id !== id));
+  }, []);
 
   // Review ops
   const handleDeleteReview = useCallback((idOrIdx) => {
-    updateFeedbacks(feedbacks.filter((f, i) => f.id !== idOrIdx && i !== idOrIdx));
-  }, [feedbacks, updateFeedbacks]);
+    setFeedbacks(prev => prev.filter((f, i) => f.id !== idOrIdx && i !== idOrIdx));
+  }, []);
 
-  // Reset
-  const handleResetData = useCallback(() => {
-    updatePurohits([...INITIAL_PUROHITS]);
-    updateDevotees([...INITIAL_DEVOTEES]);
-    updateBookings([...INITIAL_BOOKINGS]);
-    updateFeedbacks([...INITIAL_FEEDBACKS]);
-  }, [updatePurohits, updateDevotees, updateBookings, updateFeedbacks]);
+  // Reset to initial system seed data
+  const handleResetData = useCallback(async () => {
+    setPurohits(INITIAL_PUROHITS);
+    setDevotees(INITIAL_DEVOTEES);
+    setBookings(INITIAL_BOOKINGS);
+    setFeedbacks(INITIAL_FEEDBACKS);
+  }, []);
 
   const SIDEBAR_ITEMS = [
-    { id: 'overview',  label: 'Overview',          icon: LayoutDashboard },
-    { id: 'purohits',  label: 'Acharya Management', icon: Users },
-    { id: 'bookings',  label: 'Booking Management', icon: CalendarCheck },
-    { id: 'devotees',  label: 'Devotee Records',    icon: BookOpen },
-    { id: 'reviews',   label: 'Reviews & Feedback', icon: Star },
-    { id: 'settings',  label: 'Settings',           icon: Settings },
+    { id: 'overview',     label: 'Overview',              icon: LayoutDashboard },
+    { id: 'sampradayas',  label: 'Sampradaya Traditions', icon: Award },
+    { id: 'purohits',     label: 'Acharya Management',    icon: Users },
+    { id: 'bookings',     label: 'Booking Management',    icon: CalendarCheck },
+    { id: 'devotees',     label: 'Devotee Records',       icon: BookOpen },
+    { id: 'reviews',      label: 'Reviews & Feedback',    icon: Star },
+    { id: 'settings',     label: 'Settings',              icon: Settings },
   ];
 
   return (
@@ -693,9 +818,9 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
           {/* Admin User Badge */}
           <div style={{ padding: '10px 12px', borderRadius: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 22 }}>{auth.user.avatar}</span>
+              <span style={{ fontSize: 22 }}>{auth?.user?.avatar || '👑'}</span>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#f8fafc' }}>{auth.user.name}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#f8fafc' }}>{auth?.user?.name || 'Administrator'}</div>
                 <div style={{ fontSize: 10, color: '#f59e0b', fontFamily: 'monospace', fontWeight: 700 }}>● ADMIN</div>
               </div>
             </div>
@@ -776,6 +901,9 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
         <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
           {activeTab === 'overview' && (
             <OverviewTab purohits={purohits} devotees={devotees} bookings={bookings} feedbacks={feedbacks} />
+          )}
+          {activeTab === 'sampradayas' && (
+            <SampradayasTab sampradayas={sampradayas} onRefresh={loadSampradayas} />
           )}
           {activeTab === 'purohits' && (
             <PurohitsTab purohits={purohits} onSave={handleSavePurohit} onDelete={handleDeletePurohit} />

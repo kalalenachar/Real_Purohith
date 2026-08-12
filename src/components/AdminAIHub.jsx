@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   ShieldCheck, PhoneCall, Star, Award, Sparkles, CheckCircle2, TrendingUp, Filter
 } from 'lucide-react';
-import { SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/mockData.js';
+import { SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
 
 export default function AdminAIHub({ feedbacks }) {
   const [muttFilter, setMuttFilter] = useState('all');

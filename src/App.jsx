@@ -11,8 +11,9 @@ import BackgroundWorkerMonitor from './components/BackgroundWorkerMonitor.jsx';
 import FeedbackModal from './components/FeedbackModal.jsx';
 import LoginModal from './components/LoginModal.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
+import BookingModal from './components/BookingModal.jsx';
 
-import { INITIAL_FEEDBACKS } from './services/mockData.js';
+import { INITIAL_FEEDBACKS } from './services/systemData.js';
 import { backgroundQueue } from './services/backgroundQueue.js';
 import { DataStore } from './services/store.js';
 
@@ -191,21 +192,33 @@ function FreeSeva() {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [feedbacks, setFeedbacks]   = useState(() => DataStore.getFeedbacks());
+  const [feedbacks, setFeedbacks]   = useState(INITIAL_FEEDBACKS);
   const [tasks, setTasks]           = useState([]);
   const [queueOpen, setQueueOpen]   = useState(false);
   const [feedbackPurohit, setFeedbackPurohit] = useState(null);
   const [toast, setToast]           = useState(null);
 
   // Auth state from store
-  const [auth, setAuth] = useState(() => DataStore.getAuth());
+  const [auth, setAuth] = useState({ isLoggedIn: false, user: null, role: 'guest' });
   const [showLogin, setShowLogin]   = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingPurohit, setBookingPurohit]     = useState(null);
   const [appMode, setAppMode]       = useState('public'); // 'public' | 'admin'
 
-  // Sync feedbacks to store when they change externally
+  const handleOpenBookingModal = useCallback((purohit = null) => {
+    setBookingPurohit(purohit);
+    setShowBookingModal(true);
+  }, []);
+
+  // Check auth and load feedbacks on mount from database
   useEffect(() => {
-    if (feedbacks.length > 0) DataStore.saveFeedbacks(feedbacks);
-  }, [feedbacks]);
+    DataStore.checkAuth().then(res => {
+      if (res && res.isLoggedIn) setAuth(res);
+    });
+    DataStore.getFeedbacks().then(data => {
+      if (Array.isArray(data)) setFeedbacks(data);
+    });
+  }, []);
 
   // Background queue subscription
   useEffect(() => {
@@ -277,13 +290,13 @@ export default function App() {
 
   const handleLogout = useCallback(() => {
     const cleared = DataStore.logout();
-    setAuth(cleared);
+    setAuth(cleared || { isLoggedIn: false, user: null, role: 'guest' });
     setAppMode('public');
     showToast('Signed out of Real-Purohit platform.', 'info');
   }, [showToast]);
 
   const handleAdminLoginClick = useCallback(() => {
-    if (auth.isLoggedIn) {
+    if (auth?.isLoggedIn) {
       if (auth.user?.role === 'admin' || auth.role === 'admin') {
         setAppMode('admin');
       } else if (auth.user?.role === 'purohit') {
@@ -299,7 +312,7 @@ export default function App() {
   const queueCount = tasks.filter(t => t.status === 'RUNNING').length;
 
   /* ── Admin Mode ── */
-  if (appMode === 'admin' && auth.isLoggedIn && (auth.user?.role === 'admin' || auth.role === 'admin')) {
+  if (appMode === 'admin' && auth?.isLoggedIn && (auth?.user?.role === 'admin' || auth?.role === 'admin')) {
     return (
       <>
         <AdminPanel
@@ -321,6 +334,16 @@ export default function App() {
         <LoginModal
           onLoginSuccess={handleLoginSuccess}
           onClose={() => setShowLogin(false)}
+        />
+      )}
+
+      {/* Booking Gate */}
+      {showBookingModal && (
+        <BookingModal
+          purohit={bookingPurohit}
+          auth={auth}
+          onClose={() => setShowBookingModal(false)}
+          onBookingSuccess={(msg) => showToast(msg, 'success')}
         />
       )}
 
@@ -346,13 +369,13 @@ export default function App() {
 
       {/* Main Views */}
       <main style={{ flex: 1 }}>
-        {activeTab === 'home'        && <HomePage onNavigate={handleSetTab} onTriggerSOS={handleTriggerSOS} />}
-        {activeTab === 'devotee'     && <DevoteeDashboard auth={auth} onOpenLogin={handleAdminLoginClick} onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} />}
+        {activeTab === 'home'        && <HomePage onNavigate={handleSetTab} onTriggerSOS={handleTriggerSOS} onOpenBooking={handleOpenBookingModal} />}
+        {activeTab === 'devotee'     && <DevoteeDashboard auth={auth} onOpenLogin={handleAdminLoginClick} onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} onOpenBooking={handleOpenBookingModal} />}
         {activeTab === 'pravachanam' && <PravachanamView onTriggerSOS={handleTriggerSOS} />}
         {activeTab === 'apara'       && <AparaView onTriggerSOS={handleTriggerSOS} />}
         {activeTab === 'freeSeva'    && <FreeSeva />}
         {activeTab === 'admin'       && <AdminAIHub feedbacks={feedbacks} />}
-        {activeTab === 'purohit'     && <PurohitDashboard />}
+        {activeTab === 'purohit'     && <PurohitDashboard auth={auth} />}
       </main>
 
 

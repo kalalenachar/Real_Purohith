@@ -12,7 +12,6 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
 
   // Build dynamic navigation tabs based on auth status
   const mainTabs = [
-    { id: 'home',        label: 'Home',            icon: Home },
     { id: 'pravachanam', label: 'Pravachanam',     icon: BookOpen },
     { id: 'apara',       label: '30-Min SOS',      icon: Flame,     danger: true },
     { id: 'freeSeva',    label: 'Noble Free Seva', icon: Heart,     accent: 'heart' },
@@ -20,11 +19,10 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
 
   // Add user portal tabs depending on login state & role
   if (isLoggedIn) {
-    if (role === 'devotee' || role === 'admin') {
-      mainTabs.splice(1, 0, { id: 'devotee', label: 'Devotee Vault', icon: UserCheck, protected: true });
-    }
-    if (role === 'purohit' || role === 'admin') {
-      mainTabs.push({ id: 'purohit', label: 'Purohit Portal', icon: User, protected: true });
+    if (role === 'purohit') {
+      mainTabs.unshift({ id: 'purohit', label: 'Purohit Portal', icon: User, protected: true });
+    } else if (role === 'devotee') {
+      mainTabs.unshift({ id: 'devotee', label: 'Devotee Vault', icon: UserCheck, protected: true });
     }
   }
 
@@ -89,10 +87,12 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
 
         {/* Right Action Controls */}
         <div className="nav-right-actions">
-          <div className="fee-pill-wrapper" title="100% Direct Scholar Honorarium — Zero Commission Platform">
-            <span className="fee-live-pulse" />
-            <span className="fee-pill">0% PLATFORM FEE</span>
-          </div>
+          {!isLoggedIn && (
+            <div className="fee-pill-wrapper" title="100% Direct Scholar Honorarium — Zero Commission Platform">
+              <span className="fee-live-pulse" />
+              <span className="fee-pill">0% PLATFORM FEE</span>
+            </div>
+          )}
 
           {isLoggedIn ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -103,10 +103,10 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
                 background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(245,158,11,0.25)',
                 fontSize: 12, color: '#f8fafc'
               }}>
-                <span style={{ fontSize: 16 }}>{auth.user?.avatar || '👤'}</span>
+                <span style={{ fontSize: 16 }}>{auth?.user?.avatar || '👤'}</span>
                 <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
                   <span style={{ fontWeight: 700, fontSize: 12, color: '#f8fafc' }}>
-                    {auth.user?.name || auth.user?.username}
+                    {auth?.user?.name || auth?.user?.username || ''}
                   </span>
                   <span style={{ fontSize: 9, color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase' }}>
                     {role === 'admin' ? '👑 Admin' : role === 'purohit' ? '🪔 Acharya' : '🕉️ Devotee'}
@@ -114,20 +114,11 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
                 </div>
               </div>
 
-              {/* Portal Access Button */}
-              {role === 'admin' ? (
+              {/* Admin Panel Access Button */}
+              {role === 'admin' && (
                 <button onClick={onAdminClick} className="admin-btn logged-in" id="nav-admin-btn">
                   <Crown size={14} className="crown-glow" />
                   <span>Admin Panel</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleTabClick(role === 'purohit' ? 'purohit' : 'devotee')}
-                  className="admin-btn logged-in"
-                  id="nav-user-portal-btn"
-                >
-                  <UserCheck size={14} />
-                  <span>{role === 'purohit' ? 'My Portal' : 'My Vault'}</span>
                 </button>
               )}
 
@@ -218,7 +209,7 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer'
                   }}
                 >
-                  <LogOut size={16} /> Sign Out ({auth.user?.name || auth.user?.username})
+                  <LogOut size={16} /> Sign Out ({auth?.user?.name || auth?.user?.username || ''})
                 </button>
               ) : (
                 <button

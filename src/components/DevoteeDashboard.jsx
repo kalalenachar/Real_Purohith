@@ -4,7 +4,7 @@ import {
   ChevronRight, Flame, CheckCircle2, ShieldCheck, Plus,
   MapPin, Clock, Check, Star
 } from 'lucide-react';
-import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/mockData.js';
+import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
 import { calculateNextTithiAllotments } from '../services/aiTimeAllotmentEngine.js';
 
 const SUB_TABS = [
@@ -34,7 +34,7 @@ const RITUAL_CARDS = [
   { icon: '📖', title: 'Garuda Purana Pravachanam',  desc: 'STRICTLY APARA ONLY — 10–13 day Apara Karyam discourse providing solace to grieving families.', isApara: true },
 ];
 
-export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, onOpenFeedback, auth, onOpenLogin }) {
+export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, onOpenFeedback, auth, onOpenLogin, onOpenBooking }) {
   const [selectedDevotee, setSelectedDevotee] = useState(INITIAL_DEVOTEES[0]);
   const [subTab, setSubTab] = useState('vault');
   const [samagri, setSamagri] = useState(SAMAGRI_DEFAULT);
@@ -286,7 +286,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                     <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700 }}>0% Platform Fee</span>
                     <button
                       className={`btn btn-sm ${r.isApara ? 'btn-danger' : 'btn-primary'}`}
-                      onClick={r.isApara ? onTriggerSOS : handleBook}
+                      onClick={r.isApara ? onTriggerSOS : (onOpenBooking || handleBook)}
                     >
                       {r.isApara ? 'Request Apara' : 'Book Now'}
                     </button>

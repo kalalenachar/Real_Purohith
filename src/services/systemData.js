@@ -3,35 +3,35 @@ export const SAMPRADAYA_MATRIX = {
     id: 'uttaradhi',
     name: 'Uttaradhi Mutt (Dvaita)',
     badgeClass: 'badge-uttaradhi',
-    description: 'Adhering strictly to Uttaradhi Mutt lineage, Sri Jayatirthar Nyaya Sudha paddhati.',
+    description: 'Adhering strictly to Uttaradhi Mutt lineage.',
     icon: '🛕'
   },
   udupi: {
     id: 'udupi',
     name: 'Udupi Madhva (Ashta Mutts)',
     badgeClass: 'badge-udupi',
-    description: 'Trained under Udupi Ashta Mutts (Palimaru, Pejavara, Sodhe, etc.) paddhati.',
+    description: 'Trained under Udupi Ashta Mutts (Palimaru, Pejavara, Sodhe, etc.).',
     icon: '🚩'
   },
   vadagalai: {
     id: 'vadagalai',
     name: 'Sri Vaishnava (Vadagalai)',
     badgeClass: 'badge-vadagalai',
-    description: 'Following Swami Desikan tradition, Sri Bhashyam, and Desika Prabhandam.',
+    description: 'Following Vedanta Desika tradition.',
     icon: '🪔'
   },
   thengalai: {
     id: 'thengalai',
     name: 'Sri Vaishnava (Thengalai)',
     badgeClass: 'badge-thengalai',
-    description: 'Following Manavala Mamunigal tradition and Nalayira Divya Prabhandam.',
+    description: 'Following Manavala Mahamuni tradition.',
     icon: '⚜️'
   },
   shankara: {
     id: 'shankara',
     name: 'Shankara Mutt (Smartha / Advaita)',
     badgeClass: 'badge-shankara',
-    description: 'Following Sringeri, Kanchi, or Kudli Shankara Mutt traditions & Apastamba/Ashvalayana Sutram.',
+    description: 'Following Sringeri, Kanchi, or other Sankara traditions.',
     icon: '☸️'
   },
   secular: {
@@ -65,34 +65,6 @@ export const INITIAL_DEVOTEES = [
       { id: 'anc-1', relation: 'Paternal Grandfather', name: 'Late Ramachandra Rao', month: 'Bhadrapada', paksha: 'Krishna', tithi: 'Navami', passingYear: 2018 },
       { id: 'anc-2', relation: 'Paternal Grandmother', name: 'Late Sita Bai', month: 'Kartika', paksha: 'Shukla', tithi: 'Ekadashi', passingYear: 2021 }
     ]
-  },
-  {
-    id: 'dev-2',
-    name: 'Sriman Soundararajan Iyengar',
-    gotram: 'Bharadwaja',
-    vedaShakha: 'Yajurveda (Krishna)',
-    sutram: 'Apastamba Sutram',
-    sampradaya: 'vadagalai',
-    mutt: 'Ahobila Mutt',
-    kulaDaivam: 'Oppiliappan Swamy',
-    location: 'Chennai, Tamil Nadu',
-    ancestors: [
-      { id: 'anc-3', relation: 'Father', name: 'Late Ananthachariar', month: 'Ashwayuja', paksha: 'Shukla', tithi: 'Panchami', passingYear: 2019 }
-    ]
-  },
-  {
-    id: 'dev-3',
-    name: 'Dr. Subramanya Shastri',
-    gotram: 'Vasishta',
-    vedaShakha: 'Yajurveda (Shukla)',
-    sutram: 'Katyayana Sutram',
-    sampradaya: 'shankara',
-    mutt: 'Sringeri Sharada Peetham',
-    kulaDaivam: 'Sharadamba',
-    location: 'Hyderabad, Telangana',
-    ancestors: [
-      { id: 'anc-4', relation: 'Mother', name: 'Late Gayatri Devi', month: 'Magha', paksha: 'Krishna', tithi: 'Thritheeya', passingYear: 2020 }
-    ]
   }
 ];
 
@@ -123,7 +95,7 @@ export const INITIAL_PUROHITS = [
     rating: 4.85,
     reviewsCount: 98,
     languages: ['Kannada', 'Tulu', 'Sanskrit'],
-    specialties: ['Madrhva Devara Pooja', 'Koti Gayatri Parayanam', 'Vastu Shanti'],
+    specialties: ['Madhva Devara Pooja', 'Koti Gayatri Parayanam', 'Vastu Shanti'],
     trustScore: 96,
     status: 'Verified Acharya'
   },
@@ -209,8 +181,8 @@ export const INITIAL_BOOKINGS = [
   },
   {
     id: 'BK-8902',
-    devoteeName: 'Sriman Soundararajan Iyengar',
-    devoteeId: 'dev-2',
+    devoteeName: 'Sri Venkatesh Rao',
+    devoteeId: 'dev-1',
     purohitName: 'Srinivasa Sampath Kumaran Acharya',
     purohitId: 'pur-103',
     sampradaya: 'vadagalai',
@@ -249,37 +221,3 @@ export const INITIAL_FEEDBACKS = [
     dateSubmitted: '2026-08-10'
   }
 ];
-
-export const INITIAL_USERS = [
-  {
-    id: 'user-admin',
-    username: 'admin',
-    email: 'admin@real-purohit.org',
-    password: 'admin',
-    name: 'Chief Administrator',
-    role: 'admin',
-    avatar: '👑'
-  },
-  {
-    id: 'user-devotee-1',
-    username: 'venkatesh',
-    email: 'venkatesh@real-purohit.org',
-    password: 'user123',
-    name: 'Sri Venkatesh Rao',
-    role: 'devotee',
-    gotram: 'Kashyapa',
-    sampradaya: 'uttaradhi',
-    avatar: '🕉️'
-  },
-  {
-    id: 'user-purohit-1',
-    username: 'acharyar',
-    email: 'acharyar@real-purohit.org',
-    password: 'user123',
-    name: 'Vidwan Raghavendra Acharya',
-    role: 'purohit',
-    sampradaya: 'uttaradhi',
-    avatar: '🪔'
-  }
-];
-

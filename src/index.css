@@ -129,9 +129,9 @@ h1, h2, h3, h4, .heading { font-family: 'Outfit', sans-serif; line-height: 1.2; 
 
 .container {
   width: 100%;
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
 /* ========================
@@ -566,11 +566,16 @@ h1, h2, h3, h4, .heading { font-family: 'Outfit', sans-serif; line-height: 1.2; 
 /* ========================
    NAVBAR (REDESIGNED LUXURY SACRED HEADER)
 ======================== */
+.hero-banner {
+  position: relative;
+  overflow: hidden;
+}
+
 .navbar-container {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(5, 8, 16, 0.88);
+  background: rgba(5, 8, 16, 0.94);
   backdrop-filter: blur(24px) saturate(1.8);
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -586,14 +591,15 @@ h1, h2, h3, h4, .heading { font-family: 'Outfit', sans-serif; line-height: 1.2; 
 }
 
 .navbar-inner {
-  max-width: 1340px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   height: 66px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
 .logo-mark {
@@ -701,6 +707,11 @@ h1, h2, h3, h4, .heading { font-family: 'Outfit', sans-serif; line-height: 1.2; 
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   flex-shrink: 0;
+  outline: none;
+}
+
+.nav-tab:focus, .nav-tab:focus-visible {
+  outline: none;
 }
 
 .nav-tab:hover {

@@ -25,3 +25,9 @@ dist-ssr/
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Environment & Database
+.env
+.env.*
+*.db-wal
+*.db-shm
