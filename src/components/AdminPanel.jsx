@@ -1,0 +1,821 @@
+import React, { useState, useCallback } from 'react';
+import {
+  LayoutDashboard, Users, CalendarCheck, Star, Settings,
+  LogOut, Plus, Edit2, Trash2, Check, X, Search,
+  ShieldCheck, BookOpen, Wallet, Bell,
+  CheckCircle2, AlertTriangle, Filter, Eye, RefreshCw, UserPlus,
+  Phone, MapPin, Clock, Award
+} from 'lucide-react';
+import { DataStore } from '../services/store.js';
+import { SAMPRADAYA_MATRIX, INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS, INITIAL_FEEDBACKS } from '../services/mockData.js';
+
+/* ──────────────────────────── helpers ─────────────────────────── */
+const generateId = prefix => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+function ConfirmDialog({ message, onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div style={{
+        background: '#111827', border: '1px solid rgba(220,38,38,0.4)', borderRadius: 20,
+        padding: '28px 32px', maxWidth: 380, width: '100%',
+        animation: 'fadeInUp 0.3s ease', boxShadow: '0 0 40px rgba(220,38,38,0.2)'
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(220,38,38,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <AlertTriangle size={20} style={{ color: '#f87171' }} />
+          </div>
+          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>Confirm Action</h3>
+        </div>
+        <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, marginBottom: 24 }}>{message}</p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-danger btn-sm" onClick={onConfirm}>Confirm Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────── Overview Tab ─────────────────────── */
+function OverviewTab({ purohits, devotees, bookings, feedbacks }) {
+  const avgRating = feedbacks.length
+    ? (feedbacks.reduce((acc, f) => {
+        const vals = typeof f.ratings === 'object' ? Object.values(f.ratings) : [5];
+        return acc + vals.reduce((a, b) => a + b, 0) / vals.length;
+      }, 0) / feedbacks.length).toFixed(2)
+    : '4.92';
+
+  const kpis = [
+    { label: 'Total Purohits',    value: purohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    { label: 'Total Devotees',    value: devotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
+    { label: 'Active Bookings',   value: bookings.length,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
+    { label: 'Reviews Received',  value: feedbacks.length,  icon: Star,          color: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+    { label: 'Avg Rating',        value: avgRating + ' ⭐', icon: Award,         color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
+    { label: 'Platform Fee',      value: '0% Pure Bridge',  icon: Wallet,        color: '#34d399', bg: 'rgba(16,185,129,0.08)' },
+  ];
+
+  const recentBookings = bookings.slice(0, 5);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      {/* KPI Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+        {kpis.map((k, i) => {
+          const Icon = k.icon;
+          return (
+            <div key={i} className="kpi-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <span className="kpi-label">{k.label}</span>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon size={18} style={{ color: k.color }} />
+                </div>
+              </div>
+              <div className="kpi-value" style={{ fontSize: typeof k.value === 'string' ? 16 : 28 }}>{k.value}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Sampradaya Matrix Summary */}
+      <div className="card" style={{ padding: 24 }}>
+        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: '#f8fafc', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ShieldCheck size={18} style={{ color: '#f59e0b' }} /> Multi-Sampradaya Taxonomy Coverage
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+          {Object.entries(SAMPRADAYA_MATRIX).map(([key, val]) => {
+            const count = purohits.filter(p => p.sampradaya === key).length;
+            return (
+              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontSize: 20 }}>{val.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{val.name}</div>
+                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{count} Acharya{count !== 1 ? 's' : ''}</div>
+                </div>
+                <span className={`badge badge-${key}`}>{count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Bookings */}
+      <div className="card" style={{ padding: 24 }}>
+        <div className="section-header" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ fontSize: 16 }}><CalendarCheck size={18} style={{ color: '#f59e0b' }} /> Recent Bookings</div>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                {['ID', 'Devotee', 'Purohit', 'Ritual', 'Date', 'Dakshina', 'Status'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.8, whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recentBookings.map(b => (
+                <tr key={b.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <td style={{ padding: '12px 12px', fontSize: 11, fontFamily: 'monospace', color: '#f59e0b' }}>{b.id}</td>
+                  <td style={{ padding: '12px 12px', fontSize: 12, color: '#e2e8f0', whiteSpace: 'nowrap' }}>{b.devoteeName}</td>
+                  <td style={{ padding: '12px 12px', fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>{b.purohitName}</td>
+                  <td style={{ padding: '12px 12px', fontSize: 12, color: '#94a3b8', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.ritualName}</td>
+                  <td style={{ padding: '12px 12px', fontSize: 11, fontFamily: 'monospace', color: '#64748b', whiteSpace: 'nowrap' }}>{b.date}</td>
+                  <td style={{ padding: '12px 12px', fontSize: 12, fontWeight: 700, color: '#34d399', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{b.dakshinaAmount}</td>
+                  <td style={{ padding: '12px 12px' }}>
+                    <span style={{
+                      padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      background: b.status === 'Scheduled' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)',
+                      color: b.status === 'Scheduled' ? '#fbbf24' : '#34d399',
+                      border: `1px solid ${b.status === 'Scheduled' ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)'}`
+                    }}>{b.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────── Purohit Management Tab ────────────── */
+function PurohitsTab({ purohits, onSave, onDelete }) {
+  const [search, setSearch] = useState('');
+  const [filterSampradaya, setFilterSampradaya] = useState('all');
+  const [editingId, setEditingId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [form, setForm] = useState({
+    name: '', sampradaya: 'uttaradhi', mutt: '', vedaShakha: '', sutram: '',
+    experienceYears: '', rating: 5.0, reviewsCount: 0,
+    languages: '', specialties: '', trustScore: 95, status: 'Verified Acharya'
+  });
+
+  const filtered = purohits.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.mutt.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filterSampradaya === 'all' || p.sampradaya === filterSampradaya;
+    return matchSearch && matchFilter;
+  });
+
+  const openNew = () => {
+    setForm({ name: '', sampradaya: 'uttaradhi', mutt: '', vedaShakha: '', sutram: '', experienceYears: '', rating: 5.0, reviewsCount: 0, languages: '', specialties: '', trustScore: 95, status: 'Verified Acharya' });
+    setEditingId(null);
+    setShowForm(true);
+  };
+
+  const openEdit = (p) => {
+    setForm({
+      ...p,
+      languages: Array.isArray(p.languages) ? p.languages.join(', ') : p.languages,
+      specialties: Array.isArray(p.specialties) ? p.specialties.join(', ') : p.specialties,
+    });
+    setEditingId(p.id);
+    setShowForm(true);
+  };
+
+  const handleSave = () => {
+    if (!form.name.trim() || !form.mutt.trim()) return;
+    const purohit = {
+      ...form,
+      id: editingId || generateId('pur'),
+      experienceYears: parseInt(form.experienceYears) || 0,
+      rating: parseFloat(form.rating) || 5.0,
+      reviewsCount: parseInt(form.reviewsCount) || 0,
+      trustScore: parseInt(form.trustScore) || 95,
+      languages: typeof form.languages === 'string' ? form.languages.split(',').map(s => s.trim()).filter(Boolean) : form.languages,
+      specialties: typeof form.specialties === 'string' ? form.specialties.split(',').map(s => s.trim()).filter(Boolean) : form.specialties,
+    };
+    onSave(purohit, !!editingId);
+    setShowForm(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+          <input className="input" style={{ paddingLeft: 38 }} placeholder="Search Acharyas by name or mutt…"
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <select className="select" style={{ width: 'auto', minWidth: 180 }} value={filterSampradaya} onChange={e => setFilterSampradaya(e.target.value)}>
+          <option value="all">All Sampradayas</option>
+          {Object.entries(SAMPRADAYA_MATRIX).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+        </select>
+        <button className="btn btn-primary btn-sm" onClick={openNew} style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <UserPlus size={14} /> Add Acharya
+        </button>
+      </div>
+
+      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {purohits.length} Acharyas</p>
+
+      {/* Purohit Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+        {filtered.map(p => {
+          const sm = SAMPRADAYA_MATRIX[p.sampradaya];
+          return (
+            <div key={p.id} className="card" style={{ padding: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(234,88,12,0.12))', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                    {sm?.icon || '🧘'}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif' }}>{p.name}</h4>
+                    <span className={`badge badge-${p.sampradaya}`} style={{ marginTop: 4, fontSize: 10 }}>{p.mutt}</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => openEdit(p)} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Edit2 size={13} />
+                  </button>
+                  <button onClick={() => setConfirmDelete(p.id)} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#f87171', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#94a3b8' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{p.vedaShakha} · {p.sutram}</span>
+                  <span style={{ color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>⭐ {p.rating}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{p.experienceYears} yrs exp · {p.reviewsCount} reviews</span>
+                  <span style={{ color: '#34d399', fontFamily: 'monospace', fontSize: 11, fontWeight: 700 }}>{p.trustScore}% Trust</span>
+                </div>
+                <div className="progress-track" style={{ marginTop: 4 }}>
+                  <div className="progress-bar" style={{ width: `${p.trustScore}%`, background: p.trustScore >= 98 ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#f59e0b,#ea580c)' }} />
+                </div>
+                <p style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{p.status}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add/Edit Form Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ fontSize: 18, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
+                {editingId ? '✏️ Edit Acharya' : '➕ Add New Acharya'}
+              </h3>
+              <button onClick={() => setShowForm(false)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, padding: 7, cursor: 'pointer', color: '#94a3b8', display: 'flex' }}><X size={16} /></button>
+            </div>
+            <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                {[
+                  { label: 'Full Name *', key: 'name', placeholder: 'Vidwan Raghavendra Acharya' },
+                  { label: 'Mutt Affiliation *', key: 'mutt', placeholder: 'Uttaradhi Mutt' },
+                  { label: 'Veda Shakha', key: 'vedaShakha', placeholder: 'Rigveda' },
+                  { label: 'Sutram', key: 'sutram', placeholder: 'Ashvalayana Sutram' },
+                  { label: 'Experience (Years)', key: 'experienceYears', placeholder: '15', type: 'number' },
+                  { label: 'Trust Score (0–100)', key: 'trustScore', placeholder: '95', type: 'number' },
+                  { label: 'Rating (0–5)', key: 'rating', placeholder: '4.9', type: 'number', step: '0.1' },
+                  { label: 'Reviews Count', key: 'reviewsCount', placeholder: '0', type: 'number' },
+                ].map(f => (
+                  <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>{f.label}</label>
+                    <input className="input" type={f.type || 'text'} step={f.step} placeholder={f.placeholder}
+                      value={form[f.key]} onChange={e => setForm(v => ({ ...v, [f.key]: e.target.value }))} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Sampradaya</label>
+                  <select className="select" value={form.sampradaya} onChange={e => setForm(v => ({ ...v, sampradaya: e.target.value }))}>
+                    {Object.entries(SAMPRADAYA_MATRIX).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Verification Status</label>
+                  <select className="select" value={form.status} onChange={e => setForm(v => ({ ...v, status: e.target.value }))}>
+                    {['Verified Acharya', 'Verified Master Acharya', 'High-Level Orthodox Veda Rathna', 'Verified Modern Acharya', 'Pending Verification'].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Languages (comma-separated)</label>
+                <input className="input" placeholder="Kannada, Sanskrit, Telugu, English" value={form.languages} onChange={e => setForm(v => ({ ...v, languages: e.target.value }))} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Specialties (comma-separated)</label>
+                <input className="input" placeholder="Satyanarayana Pooja, Shraaddha Karma, Homam" value={form.specialties} onChange={e => setForm(v => ({ ...v, specialties: e.target.value }))} />
+              </div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancel</button>
+                <button className="btn btn-primary btn-sm" onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Check size={14} /> {editingId ? 'Save Changes' : 'Add Acharya'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Delete */}
+      {confirmDelete && (
+        <ConfirmDialog
+          message={`Are you sure you want to remove this Acharya? This action cannot be undone.`}
+          onConfirm={() => { onDelete(confirmDelete); setConfirmDelete(null); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────── Bookings Tab ─────────────────────── */
+function BookingsTab({ bookings, onUpdateStatus, onDelete }) {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const filtered = bookings.filter(b => {
+    const matchSearch = b.devoteeName.toLowerCase().includes(search.toLowerCase()) ||
+      b.purohitName.toLowerCase().includes(search.toLowerCase()) ||
+      b.ritualName.toLowerCase().includes(search.toLowerCase()) ||
+      b.id.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === 'all' || b.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const statuses = ['all', ...new Set(bookings.map(b => b.status))];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+          <input className="input" style={{ paddingLeft: 38 }} placeholder="Search by devotee, purohit, ritual, or ID…"
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <select className="select" style={{ width: 'auto', minWidth: 160 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          {statuses.map(s => <option key={s} value={s}>{s === 'all' ? 'All Statuses' : s}</option>)}
+        </select>
+      </div>
+
+      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {bookings.length} bookings</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {filtered.map(b => {
+          const sm = SAMPRADAYA_MATRIX[b.sampradaya];
+          return (
+            <div key={b.id} className="card" style={{ padding: '18px 22px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ flex: 1, minWidth: 240 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>{b.id}</span>
+                    {sm && <span className={`badge badge-${b.sampradaya}`}>{sm.icon} {sm.name.split(' ')[0]}</span>}
+                    {b.isAparaKaryam && <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#dc2626', color: 'white', fontWeight: 700 }}>APARA</span>}
+                  </div>
+                  <h4 style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginBottom: 6 }}>{b.ritualName}</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: 12, color: '#94a3b8' }}>
+                    <span>👤 {b.devoteeName}</span>
+                    <span>🧘 {b.purohitName}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {b.date} · {b.muhurtaTime}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} /> {b.location}</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Samagri: {b.samagriMode}</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>{b.dakshinaAmount}</div>
+                  <span style={{ fontSize: 10, color: '#64748b' }}>{b.dakshinaStatus}</span>
+
+                  {/* Status Selector */}
+                  <select className="select" style={{ width: 'auto', padding: '5px 10px', fontSize: 11 }}
+                    value={b.status}
+                    onChange={e => onUpdateStatus(b.id, e.target.value)}>
+                    {['Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'].map(s =>
+                      <option key={s} value={s}>{s}</option>)}
+                  </select>
+
+                  <button onClick={() => setConfirmDelete(b.id)}
+                    style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#f87171', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Trash2 size={12} /> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          message="Are you sure you want to delete this booking record?"
+          onConfirm={() => { onDelete(confirmDelete); setConfirmDelete(null); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────── Devotees Tab ─────────────────────── */
+function DevoteesTab({ devotees, onDelete }) {
+  const [search, setSearch] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const filtered = devotees.filter(d =>
+    d.name.toLowerCase().includes(search.toLowerCase()) ||
+    d.gotram.toLowerCase().includes(search.toLowerCase()) ||
+    d.location?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ position: 'relative', maxWidth: 400 }}>
+        <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+        <input className="input" style={{ paddingLeft: 38 }} placeholder="Search devotees…"
+          value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+
+      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {devotees.length} devotees</p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+        {filtered.map(d => {
+          const sm = SAMPRADAYA_MATRIX[d.sampradaya];
+          return (
+            <div key={d.id} className="card" style={{ padding: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,rgba(124,58,237,0.2),rgba(245,158,11,0.1))', border: '1px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🕉️</div>
+                  <div>
+                    <h4 style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif' }}>{d.name}</h4>
+                    {sm && <span className={`badge badge-${d.sampradaya}`} style={{ marginTop: 4, fontSize: 10 }}>{sm.icon} {sm.name.split(' ')[0]}</span>}
+                  </div>
+                </div>
+                <button onClick={() => setConfirmDelete(d.id)}
+                  style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', color: '#f87171', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 12, color: '#94a3b8' }}>
+                <div><span style={{ color: '#64748b' }}>Gotram:</span> {d.gotram}</div>
+                <div><span style={{ color: '#64748b' }}>Shakha:</span> {d.vedaShakha} · {d.sutram}</div>
+                <div><span style={{ color: '#64748b' }}>Kula Daivam:</span> {d.kulaDaivam}</div>
+                {d.location && <div><span style={{ color: '#64748b' }}>Location:</span> {d.location}</div>}
+                <div style={{ marginTop: 6, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <span style={{ color: '#64748b' }}>Ancestors:</span>{' '}
+                  <span style={{ color: '#fbbf24' }}>{d.ancestors?.length || 0} entries</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          message="Are you sure you want to remove this devotee record? All associated ancestor data will be lost."
+          onConfirm={() => { onDelete(confirmDelete); setConfirmDelete(null); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────── Reviews Tab ──────────────────────── */
+function ReviewsTab({ feedbacks, onDelete }) {
+  const [search, setSearch] = useState('');
+  const [sentimentFilter, setSentimentFilter] = useState('all');
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const filtered = feedbacks.filter(f => {
+    const matchSearch = f.purohitName.toLowerCase().includes(search.toLowerCase()) ||
+      f.devoteeName.toLowerCase().includes(search.toLowerCase()) ||
+      (f.reviewText || '').toLowerCase().includes(search.toLowerCase());
+    const matchSentiment = sentimentFilter === 'all' || (f.aiSentiment || '').includes(sentimentFilter);
+    return matchSearch && matchSentiment;
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+          <input className="input" style={{ paddingLeft: 38 }} placeholder="Search reviews…"
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <select className="select" style={{ width: 'auto', minWidth: 160 }} value={sentimentFilter} onChange={e => setSentimentFilter(e.target.value)}>
+          <option value="all">All Sentiments</option>
+          <option value="Extremely Positive">Extremely Positive</option>
+          <option value="Positive">Positive</option>
+          <option value="Alert">Alert / Action Required</option>
+        </select>
+      </div>
+
+      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {feedbacks.length} reviews</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {filtered.map((fb, i) => {
+          const sm = SAMPRADAYA_MATRIX[fb.sampradaya];
+          const avg = typeof fb.ratings === 'object'
+            ? (Object.values(fb.ratings).reduce((a, b) => a + b, 0) / Object.values(fb.ratings).length).toFixed(1)
+            : '5.0';
+          return (
+            <div key={fb.id || i} className="card" style={{ padding: '18px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#f59e0b' }}>{fb.id}</span>
+                    {sm && <span className={`badge badge-${fb.sampradaya}`}>{sm.icon} {sm.name.split(' ')[0]}</span>}
+                    <span style={{
+                      fontSize: 10, padding: '2px 10px', borderRadius: 20, fontWeight: 700,
+                      background: (fb.aiSentiment || '').includes('Alert') ? 'rgba(220,38,38,0.15)' : 'rgba(16,185,129,0.12)',
+                      color: (fb.aiSentiment || '').includes('Alert') ? '#f87171' : '#34d399',
+                      border: `1px solid ${(fb.aiSentiment || '').includes('Alert') ? 'rgba(220,38,38,0.3)' : 'rgba(16,185,129,0.25)'}`
+                    }}>{fb.aiSentiment || 'Positive'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#94a3b8', marginBottom: 8, flexWrap: 'wrap' }}>
+                    <span>🧘 {fb.purohitName}</span>
+                    <span>👤 {fb.devoteeName}</span>
+                    <span>📅 {fb.dateSubmitted}</span>
+                  </div>
+                  <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, fontStyle: 'italic', color: '#e2e8f0', lineHeight: 1.6 }}>
+                    "{fb.reviewText}"
+                  </p>
+                  {fb.sampradayaPaddhatiAccuracy && (
+                    <p style={{ fontSize: 11, color: '#34d399', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <CheckCircle2 size={12} /> {fb.sampradayaPaddhatiAccuracy}
+                    </p>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.1)', padding: '5px 12px', borderRadius: 20, border: '1px solid rgba(245,158,11,0.2)' }}>
+                    <Star size={13} style={{ fill: '#fbbf24', color: '#fbbf24' }} />
+                    <span style={{ fontSize: 15, fontWeight: 800, color: '#fbbf24', fontFamily: 'monospace' }}>{avg}</span>
+                  </div>
+                  <button onClick={() => setConfirmDelete(fb.id || i)}
+                    style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#f87171', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Trash2 size={12} /> Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {confirmDelete !== null && (
+        <ConfirmDialog
+          message="Are you sure you want to delete this review?"
+          onConfirm={() => { onDelete(confirmDelete); setConfirmDelete(null); }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────── Settings Tab ─────────────────────── */
+function SettingsTab({ onResetData }) {
+  const [saved, setSaved] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
+  return (
+    <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="card" style={{ padding: 28 }}>
+        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: '#f8fafc', marginBottom: 20 }}>⚙️ Platform Configuration</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {[
+            { label: 'Platform Name', value: 'Real-Purohit' },
+            { label: 'Admin Email', value: 'admin@real-purohit.org' },
+            { label: 'Support Phone', value: '+91 98765 43210' },
+            { label: 'Emergency SOS SLA (Minutes)', value: '30' },
+          ].map(f => (
+            <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8' }}>{f.label}</label>
+              <input className="input" defaultValue={f.value} />
+            </div>
+          ))}
+          <button className="btn btn-primary btn-sm" style={{ width: 'fit-content', display: 'flex', alignItems: 'center', gap: 6 }} onClick={handleSave}>
+            {saved ? <><CheckCircle2 size={14} /> Saved!</> : <><Check size={14} /> Save Settings</>}
+          </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 28, borderColor: 'rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.03)' }}>
+        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: '#f87171', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertTriangle size={18} /> Danger Zone
+        </h3>
+        <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, marginBottom: 18 }}>
+          Resetting data will clear all custom entries added during this session and restore the original demo dataset.
+        </p>
+        <button className="btn btn-danger btn-sm" onClick={() => setConfirmReset(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <RefreshCw size={14} /> Reset to Demo Data
+        </button>
+      </div>
+
+      {confirmReset && (
+        <ConfirmDialog
+          message="This will clear all your custom data (added purohits, bookings, reviews) and restore the original demo dataset. Are you sure?"
+          onConfirm={() => { onResetData(); setConfirmReset(false); }}
+          onCancel={() => setConfirmReset(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────── MAIN ADMIN PANEL ─────────────────── */
+export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Live state from store
+  const [purohits, setPurohits] = useState(() => DataStore.getPurohits());
+  const [devotees, setDevotees] = useState(() => DataStore.getDevotees());
+  const [bookings, setBookings] = useState(() => DataStore.getBookings());
+  const [feedbacks, setFeedbacks] = useState(() => DataStore.getFeedbacks());
+
+  // Persist whenever state changes
+  const updatePurohits = useCallback((next) => { setPurohits(next); DataStore.savePurohits(next); }, []);
+  const updateBookings = useCallback((next) => { setBookings(next); DataStore.saveBookings(next); }, []);
+  const updateDevotees = useCallback((next) => { setDevotees(next); DataStore.saveDevotees(next); }, []);
+  const updateFeedbacks = useCallback((next) => { setFeedbacks(next); DataStore.saveFeedbacks(next); }, []);
+
+  // Purohit CRUD
+  const handleSavePurohit = useCallback((purohit, isEdit) => {
+    updatePurohits(isEdit
+      ? purohits.map(p => p.id === purohit.id ? purohit : p)
+      : [purohit, ...purohits]
+    );
+  }, [purohits, updatePurohits]);
+
+  const handleDeletePurohit = useCallback((id) => {
+    updatePurohits(purohits.filter(p => p.id !== id));
+  }, [purohits, updatePurohits]);
+
+  // Booking ops
+  const handleUpdateBookingStatus = useCallback((id, status) => {
+    updateBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
+  }, [bookings, updateBookings]);
+
+  const handleDeleteBooking = useCallback((id) => {
+    updateBookings(bookings.filter(b => b.id !== id));
+  }, [bookings, updateBookings]);
+
+  // Devotee ops
+  const handleDeleteDevotee = useCallback((id) => {
+    updateDevotees(devotees.filter(d => d.id !== id));
+  }, [devotees, updateDevotees]);
+
+  // Review ops
+  const handleDeleteReview = useCallback((idOrIdx) => {
+    updateFeedbacks(feedbacks.filter((f, i) => f.id !== idOrIdx && i !== idOrIdx));
+  }, [feedbacks, updateFeedbacks]);
+
+  // Reset
+  const handleResetData = useCallback(() => {
+    updatePurohits([...INITIAL_PUROHITS]);
+    updateDevotees([...INITIAL_DEVOTEES]);
+    updateBookings([...INITIAL_BOOKINGS]);
+    updateFeedbacks([...INITIAL_FEEDBACKS]);
+  }, [updatePurohits, updateDevotees, updateBookings, updateFeedbacks]);
+
+  const SIDEBAR_ITEMS = [
+    { id: 'overview',  label: 'Overview',          icon: LayoutDashboard },
+    { id: 'purohits',  label: 'Acharya Management', icon: Users },
+    { id: 'bookings',  label: 'Booking Management', icon: CalendarCheck },
+    { id: 'devotees',  label: 'Devotee Records',    icon: BookOpen },
+    { id: 'reviews',   label: 'Reviews & Feedback', icon: Star },
+    { id: 'settings',  label: 'Settings',           icon: Settings },
+  ];
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#050810' }}>
+      {/* ── Sidebar ── */}
+      <aside style={{
+        width: 240, background: 'rgba(8,12,23,0.97)', borderRight: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 50
+      }}>
+        {/* Brand */}
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg,#f59e0b,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🪔</div>
+            <div>
+              <div style={{ fontSize: 14, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>REAL-PUROHIT</div>
+              <div style={{ fontSize: 10, color: '#64748b' }}>Admin Console</div>
+            </div>
+          </div>
+          {/* Admin User Badge */}
+          <div style={{ padding: '10px 12px', borderRadius: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 22 }}>{auth.user.avatar}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#f8fafc' }}>{auth.user.name}</div>
+                <div style={{ fontSize: 10, color: '#f59e0b', fontFamily: 'monospace', fontWeight: 700 }}>● ADMIN</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Nav Items */}
+        <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {SIDEBAR_ITEMS.map(item => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                fontFamily: 'Outfit,sans-serif', fontSize: 13, fontWeight: isActive ? 700 : 500,
+                textAlign: 'left',
+                background: isActive ? 'rgba(245,158,11,0.12)' : 'transparent',
+                color: isActive ? '#fbbf24' : '#64748b',
+                borderLeft: isActive ? '2px solid #f59e0b' : '2px solid transparent',
+                transition: 'all 0.2s'
+              }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#94a3b8'; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } }}
+              >
+                <Icon size={16} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom Actions */}
+        <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <button onClick={onSwitchToPublic} style={{
+            width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)',
+            background: 'transparent', color: '#64748b', cursor: 'pointer', fontSize: 12, fontFamily: 'Outfit,sans-serif',
+            display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s'
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#94a3b8'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}>
+            <Eye size={14} /> View Public App
+          </button>
+          <button onClick={onLogout} style={{
+            width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(220,38,38,0.2)',
+            background: 'rgba(220,38,38,0.06)', color: '#f87171', cursor: 'pointer', fontSize: 12, fontFamily: 'Outfit,sans-serif',
+            display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s'
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.12)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.06)'; }}>
+            <LogOut size={14} /> Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main Content ── */}
+      <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        {/* Top Header */}
+        <header style={{
+          height: 60, background: 'rgba(8,12,23,0.95)', backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 40
+        }}>
+          <div>
+            <h2 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 17, fontWeight: 800, color: '#f8fafc' }}>
+              {SIDEBAR_ITEMS.find(s => s.id === activeTab)?.label || 'Admin Panel'}
+            </h2>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ padding: '4px 12px', borderRadius: 20, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', fontSize: 11, color: '#34d399', fontFamily: 'monospace', fontWeight: 700 }}>
+              ● LIVE
+            </div>
+            <span style={{ fontSize: 12, color: '#64748b' }}>{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+          {activeTab === 'overview' && (
+            <OverviewTab purohits={purohits} devotees={devotees} bookings={bookings} feedbacks={feedbacks} />
+          )}
+          {activeTab === 'purohits' && (
+            <PurohitsTab purohits={purohits} onSave={handleSavePurohit} onDelete={handleDeletePurohit} />
+          )}
+          {activeTab === 'bookings' && (
+            <BookingsTab bookings={bookings} onUpdateStatus={handleUpdateBookingStatus} onDelete={handleDeleteBooking} />
+          )}
+          {activeTab === 'devotees' && (
+            <DevoteesTab devotees={devotees} onDelete={handleDeleteDevotee} />
+          )}
+          {activeTab === 'reviews' && (
+            <ReviewsTab feedbacks={feedbacks} onDelete={handleDeleteReview} />
+          )}
+          {activeTab === 'settings' && (
+            <SettingsTab onResetData={handleResetData} />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
