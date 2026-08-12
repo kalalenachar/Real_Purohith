@@ -249,3 +249,37 @@ export const INITIAL_FEEDBACKS = [
     dateSubmitted: '2026-08-10'
   }
 ];
+
+export const INITIAL_USERS = [
+  {
+    id: 'user-admin',
+    username: 'admin',
+    email: 'admin@real-purohit.org',
+    password: 'admin',
+    name: 'Chief Administrator',
+    role: 'admin',
+    avatar: '👑'
+  },
+  {
+    id: 'user-devotee-1',
+    username: 'venkatesh',
+    email: 'venkatesh@real-purohit.org',
+    password: 'user123',
+    name: 'Sri Venkatesh Rao',
+    role: 'devotee',
+    gotram: 'Kashyapa',
+    sampradaya: 'uttaradhi',
+    avatar: '🕉️'
+  },
+  {
+    id: 'user-purohit-1',
+    username: 'acharyar',
+    email: 'acharyar@real-purohit.org',
+    password: 'user123',
+    name: 'Vidwan Raghavendra Acharya',
+    role: 'purohit',
+    sampradaya: 'uttaradhi',
+    avatar: '🪔'
+  }
+];
+

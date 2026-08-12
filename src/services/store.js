@@ -1,4 +1,4 @@
-import { INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS, INITIAL_FEEDBACKS, SAMPRADAYA_MATRIX } from './mockData.js';
+import { INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS, INITIAL_FEEDBACKS, INITIAL_USERS, SAMPRADAYA_MATRIX } from './mockData.js';
 
 const STORAGE_KEYS = {
   DEVOTEES: 'rp_devotees_v1',
@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   BOOKINGS: 'rp_bookings_v1',
   FEEDBACKS: 'rp_feedbacks_v1',
   AUTH: 'rp_auth_v1',
+  USERS: 'rp_users_v1',
   SETTINGS: 'rp_settings_v1'
 };
 
@@ -30,6 +31,14 @@ function saveData(key, value) {
 }
 
 export class DataStore {
+  static getUsers() {
+    return loadData(STORAGE_KEYS.USERS, INITIAL_USERS);
+  }
+
+  static saveUsers(users) {
+    saveData(STORAGE_KEYS.USERS, users);
+  }
+
   static getDevotees() {
     return loadData(STORAGE_KEYS.DEVOTEES, INITIAL_DEVOTEES);
   }
@@ -65,7 +74,7 @@ export class DataStore {
   static getAuth() {
     return loadData(STORAGE_KEYS.AUTH, {
       isLoggedIn: false,
-      user: null, // { username: 'admin', role: 'admin', name: 'System Administrator' }
+      user: null,
       role: 'guest'
     });
   }
@@ -74,23 +83,111 @@ export class DataStore {
     saveData(STORAGE_KEYS.AUTH, auth);
   }
 
-  static login(username, password) {
-    if (username.trim().toLowerCase() === 'admin' && password === 'admin') {
+  static login(identifier, password) {
+    const term = (identifier || '').trim().toLowerCase();
+    const users = this.getUsers();
+
+    const matchedUser = users.find(u =>
+      (u.username && u.username.toLowerCase() === term) ||
+      (u.email && u.email.toLowerCase() === term)
+    );
+
+    if (matchedUser && matchedUser.password === password) {
       const authState = {
         isLoggedIn: true,
-        role: 'admin',
+        role: matchedUser.role || 'devotee',
         user: {
-          username: 'admin',
-          name: 'Chief Administrator',
-          email: 'admin@real-purohit.org',
-          role: 'admin',
-          avatar: '👑'
+          id: matchedUser.id,
+          username: matchedUser.username,
+          email: matchedUser.email,
+          name: matchedUser.name,
+          role: matchedUser.role || 'devotee',
+          gotram: matchedUser.gotram || '',
+          sampradaya: matchedUser.sampradaya || '',
+          avatar: matchedUser.avatar || (matchedUser.role === 'admin' ? '👑' : matchedUser.role === 'purohit' ? '🪔' : '🕉️')
         }
       };
       this.saveAuth(authState);
       return { success: true, auth: authState };
     }
-    return { success: false, error: 'Invalid username or password. Use credentials: admin / admin' };
+
+    return { success: false, error: 'Invalid Username/Email ID or password.' };
+  }
+
+  static registerUser({ name, username, email, password, role = 'devotee', gotram = '', sampradaya = '' }) {
+    const cleanUsername = (username || '').trim().toLowerCase();
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    if (!cleanUsername || !cleanEmail || !password || !name) {
+      return { success: false, error: 'Please fill in all required fields.' };
+    }
+
+    const users = this.getUsers();
+    const existing = users.find(u =>
+      (u.username && u.username.toLowerCase() === cleanUsername) ||
+      (u.email && u.email.toLowerCase() === cleanEmail)
+    );
+
+    if (existing) {
+      return { success: false, error: 'An account with that Username or Email ID already exists.' };
+    }
+
+    const avatar = role === 'admin' ? '👑' : role === 'purohit' ? '🪔' : '🕉️';
+    const newUser = {
+      id: `user-${Date.now()}`,
+      name,
+      username: cleanUsername,
+      email: cleanEmail,
+      password,
+      role,
+      gotram,
+      sampradaya,
+      avatar
+    };
+
+    const updatedUsers = [...users, newUser];
+    this.saveUsers(updatedUsers);
+
+    // Auto log in after registration
+    const authState = {
+      isLoggedIn: true,
+      role: newUser.role,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        gotram: newUser.gotram,
+        sampradaya: newUser.sampradaya,
+        avatar: newUser.avatar
+      }
+    };
+    this.saveAuth(authState);
+
+    return { success: true, auth: authState };
+  }
+
+  static resetPassword(identifier, newPassword) {
+    const term = (identifier || '').trim().toLowerCase();
+    if (!term || !newPassword) {
+      return { success: false, error: 'Please provide both user identifier and a new password.' };
+    }
+
+    const users = this.getUsers();
+    const index = users.findIndex(u =>
+      (u.username && u.username.toLowerCase() === term) ||
+      (u.email && u.email.toLowerCase() === term)
+    );
+
+    if (index === -1) {
+      return { success: false, error: 'No account found matching that Username or Email ID.' };
+    }
+
+    users[index].password = newPassword;
+    this.saveUsers(users);
+
+    return { success: true, message: 'Password updated successfully! You can now log in with your new password.' };
   }
 
   static logout() {
@@ -99,3 +196,4 @@ export class DataStore {
     return authState;
   }
 }
+

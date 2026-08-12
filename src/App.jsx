@@ -3,6 +3,7 @@ import { Flame, Heart, Video, Phone, CheckCircle2, X, BookOpen, ShieldCheck, Glo
 
 import { Starfield } from './components/Starfield.jsx';
 import Navbar from './components/Navbar.jsx';
+import HomePage from './components/HomePage.jsx';
 import DevoteeDashboard from './components/DevoteeDashboard.jsx';
 import AdminAIHub from './components/AdminAIHub.jsx';
 import PurohitDashboard from './components/PurohitDashboard.jsx';
@@ -189,7 +190,7 @@ function FreeSeva() {
 /* ──────────────────────────────────────────────────────────── */
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('devotee');
+  const [activeTab, setActiveTab] = useState('home');
   const [feedbacks, setFeedbacks]   = useState(() => DataStore.getFeedbacks());
   const [tasks, setTasks]           = useState([]);
   const [queueOpen, setQueueOpen]   = useState(false);
@@ -263,27 +264,42 @@ export default function App() {
   const handleLoginSuccess = useCallback((newAuth) => {
     setAuth(newAuth);
     setShowLogin(false);
-    setAppMode('admin');
-  }, []);
+    const userRole = newAuth.user?.role || newAuth.role;
+    if (userRole === 'admin') {
+      setAppMode('admin');
+    } else if (userRole === 'purohit') {
+      setActiveTab('purohit');
+    } else {
+      setActiveTab('devotee');
+    }
+    showToast(` Namaste ${newAuth.user?.name || newAuth.user?.username || ''}! Logged in successfully.`, 'success');
+  }, [showToast]);
 
   const handleLogout = useCallback(() => {
     const cleared = DataStore.logout();
     setAuth(cleared);
     setAppMode('public');
-  }, []);
+    showToast('Signed out of Real-Purohit platform.', 'info');
+  }, [showToast]);
 
   const handleAdminLoginClick = useCallback(() => {
     if (auth.isLoggedIn) {
-      setAppMode('admin');
+      if (auth.user?.role === 'admin' || auth.role === 'admin') {
+        setAppMode('admin');
+      } else if (auth.user?.role === 'purohit') {
+        setActiveTab('purohit');
+      } else {
+        setActiveTab('devotee');
+      }
     } else {
       setShowLogin(true);
     }
-  }, [auth.isLoggedIn]);
+  }, [auth]);
 
   const queueCount = tasks.filter(t => t.status === 'RUNNING').length;
 
   /* ── Admin Mode ── */
-  if (appMode === 'admin' && auth.isLoggedIn) {
+  if (appMode === 'admin' && auth.isLoggedIn && (auth.user?.role === 'admin' || auth.role === 'admin')) {
     return (
       <>
         <AdminPanel
@@ -291,29 +307,33 @@ export default function App() {
           onLogout={handleLogout}
           onSwitchToPublic={() => setAppMode('public')}
         />
-        {/* Global CSS still needed */}
       </>
     );
   }
 
-  /* ── Public Mode ── */
+  /* ── Public / Multi-User Mode ── */
   return (
     <div className="page-wrapper">
       <Starfield />
 
       {/* Login Gate */}
       {showLogin && (
-        <LoginModal onLoginSuccess={handleLoginSuccess} />
+        <LoginModal
+          onLoginSuccess={handleLoginSuccess}
+          onClose={() => setShowLogin(false)}
+        />
       )}
 
-      {/* Navbar — pass admin button handler */}
+      {/* Navbar — pass auth & action handlers */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={handleSetTab}
         queueCount={queueCount}
         auth={auth}
         onAdminClick={handleAdminLoginClick}
+        onLogout={handleLogout}
       />
+
 
       {/* SOS Emergency Top Banner */}
       {toast?.type === 'danger' && (
@@ -326,13 +346,15 @@ export default function App() {
 
       {/* Main Views */}
       <main style={{ flex: 1 }}>
-        {activeTab === 'devotee'     && <DevoteeDashboard onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} />}
+        {activeTab === 'home'        && <HomePage onNavigate={handleSetTab} onTriggerSOS={handleTriggerSOS} />}
+        {activeTab === 'devotee'     && <DevoteeDashboard auth={auth} onOpenLogin={handleAdminLoginClick} onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} />}
         {activeTab === 'pravachanam' && <PravachanamView onTriggerSOS={handleTriggerSOS} />}
         {activeTab === 'apara'       && <AparaView onTriggerSOS={handleTriggerSOS} />}
         {activeTab === 'freeSeva'    && <FreeSeva />}
         {activeTab === 'admin'       && <AdminAIHub feedbacks={feedbacks} />}
         {activeTab === 'purohit'     && <PurohitDashboard />}
       </main>
+
 
       {/* Footer */}
       <footer style={{ background: 'rgba(5,8,16,0.95)', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '24px 20px', textAlign: 'center', position: 'relative', zIndex: 1 }}>

@@ -582,32 +582,10 @@ function ReviewsTab({ feedbacks, onDelete }) {
 
 /* ──────────────────────────── Settings Tab ─────────────────────── */
 function SettingsTab({ onResetData }) {
-  const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
   return (
     <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div className="card" style={{ padding: 28 }}>
-        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: '#f8fafc', marginBottom: 20 }}>⚙️ Platform Configuration</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {[
-            { label: 'Platform Name', value: 'Real-Purohit' },
-            { label: 'Admin Email', value: 'admin@real-purohit.org' },
-            { label: 'Support Phone', value: '+91 98765 43210' },
-            { label: 'Emergency SOS SLA (Minutes)', value: '30' },
-          ].map(f => (
-            <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8' }}>{f.label}</label>
-              <input className="input" defaultValue={f.value} />
-            </div>
-          ))}
-          <button className="btn btn-primary btn-sm" style={{ width: 'fit-content', display: 'flex', alignItems: 'center', gap: 6 }} onClick={handleSave}>
-            {saved ? <><CheckCircle2 size={14} /> Saved!</> : <><Check size={14} /> Save Settings</>}
-          </button>
-        </div>
-      </div>
 
       <div className="card" style={{ padding: 28, borderColor: 'rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.03)' }}>
         <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: '#f87171', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>

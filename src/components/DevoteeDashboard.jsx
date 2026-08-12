@@ -34,16 +34,36 @@ const RITUAL_CARDS = [
   { icon: '📖', title: 'Garuda Purana Pravachanam',  desc: 'STRICTLY APARA ONLY — 10–13 day Apara Karyam discourse providing solace to grieving families.', isApara: true },
 ];
 
-export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, onOpenFeedback }) {
+export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, onOpenFeedback, auth, onOpenLogin }) {
   const [selectedDevotee, setSelectedDevotee] = useState(INITIAL_DEVOTEES[0]);
   const [subTab, setSubTab] = useState('vault');
   const [samagri, setSamagri] = useState(SAMAGRI_DEFAULT);
   const [delivery, setDelivery] = useState('handCarried');
   const [booked, setBooked] = useState(false);
 
+  if (!auth?.isLoggedIn) {
+    return (
+      <div className="container" style={{ paddingTop: 60, paddingBottom: 60, textAlign: 'center' }}>
+        <div className="card-premium animate-fade-up" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 32px' }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }} className="animate-float">🕉️</div>
+          <h2 style={{ fontSize: 24, fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#f8fafc', marginBottom: 10 }}>
+            Sacred Ancestral Devotee Vault
+          </h2>
+          <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.7, marginBottom: 24 }}>
+            To safeguard family privacy, ancestral Shraaddha records, Gotram/Sutra details, and AI Tithi allotments are protected. Please sign in or register to access your personal vault.
+          </p>
+          <button className="btn btn-primary btn-lg" onClick={onOpenLogin} style={{ justifyContent: 'center', width: '100%', gap: 8 }}>
+            <ShieldCheck size={18} /> Sign In / Register to Access Vault
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const tithiData = calculateNextTithiAllotments(selectedDevotee);
   const sampradaya = SAMPRADAYA_MATRIX[selectedDevotee.sampradaya];
   const total = samagri.filter(i => i.checked).reduce((s, i) => s + i.price, 0);
+
 
   const handleBook = () => {
     setBooked(true);
