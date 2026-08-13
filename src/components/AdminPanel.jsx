@@ -431,6 +431,9 @@ function BookingsTab({ bookings, onUpdateStatus, onDelete, onClearAllMeetLinks }
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {b.date} · {b.muhurtaTime}</span>
                   </div>
                   <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Logistics: {b.samagriMode}</p>
+                  <p style={{ fontSize: 12, color: '#fcd34d', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    📍 Venue & Directions: {b.location}
+                  </p>
                   
                   {/* Google Meet Link Dispatch & Clear Controls */}
                   <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, MapPin, ShieldCheck, Flame, X, Check, Heart, Sparkles, UserCheck, ArrowRight, ArrowLeft, Phone, User } from 'lucide-react';
+import { Calendar, Clock, MapPin, ShieldCheck, Flame, X, Check, Heart, Sparkles, UserCheck, ArrowRight, ArrowLeft, Phone, User, Link as LinkIcon, FileText } from 'lucide-react';
 import { DataStore } from '../services/store.js';
 import { SAMPRADAYA_MATRIX } from '../services/systemData.js';
 
@@ -16,28 +16,28 @@ const COUNTRY_CODES = [
 export default function BookingModal({ initialRitual, auth, onClose, onBookingSuccess, onOpenLogin }) {
   const RITUAL_OPTIONS = [
     // Standard Poojas & Homams
-    { title: 'Satyanarayana Swamy Pooja & Vrata', isApara: false, isFree: false, dakshina: '₹3,500' },
-    { title: 'Mahasudarshana & Dhanvantari Homam', isApara: false, isFree: false, dakshina: '₹6,500' },
-    { title: 'Navagraha Shanti & Ayushya Homam', isApara: false, isFree: false, dakshina: '₹5,500' },
-    { title: 'Griha Pravesham & Vastu Shanti', isApara: false, isFree: false, dakshina: '₹8,500' },
-    { title: 'Namakarana (Baby Naming)', isApara: false, isFree: false, dakshina: '₹3,000' },
+    { title: 'Satyanarayana Swamy Pooja & Vrata', isApara: false, isFree: false, dakshinaRange: '₹3,000 – ₹5,000' },
+    { title: 'Mahasudarshana & Dhanvantari Homam', isApara: false, isFree: false, dakshinaRange: '₹5,000 – ₹8,500' },
+    { title: 'Navagraha Shanti & Ayushya Homam', isApara: false, isFree: false, dakshinaRange: '₹5,000 – ₹8,000' },
+    { title: 'Griha Pravesham & Vastu Shanti', isApara: false, isFree: false, dakshinaRange: '₹6,000 – ₹10,000' },
+    { title: 'Namakarana (Baby Naming)', isApara: false, isFree: false, dakshinaRange: '₹3,000 – ₹5,000' },
 
     // Upanyasam & Pravachanams
-    { title: 'Srimad Bhagavatha Sapthaham', isApara: false, isFree: false, dakshina: '₹15,000' },
-    { title: 'Srimad Ramayana Pravachanam', isApara: false, isFree: false, dakshina: '₹7,500' },
-    { title: 'Mahabharatam & Bhagavad Gita', isApara: false, isFree: false, dakshina: '₹5,000' },
-    { title: 'Purana & Stotra Pravachanams', isApara: false, isFree: false, dakshina: '₹4,000' },
-    { title: 'Online HD Virtual Pravachanam', isApara: false, isFree: false, dakshina: '₹5,000' },
+    { title: 'Srimad Bhagavatha Sapthaham', isApara: false, isFree: false, dakshinaRange: '₹12,000 – ₹20,000' },
+    { title: 'Srimad Ramayana Pravachanam', isApara: false, isFree: false, dakshinaRange: '₹5,000 – ₹9,000' },
+    { title: 'Mahabharatam & Bhagavad Gita', isApara: false, isFree: false, dakshinaRange: '₹4,000 – ₹7,000' },
+    { title: 'Purana & Stotra Pravachanams', isApara: false, isFree: false, dakshinaRange: '₹3,500 – ₹6,000' },
+    { title: 'Online HD Virtual Pravachanam', isApara: false, isFree: false, dakshinaRange: '₹4,000 – ₹7,000' },
 
     // Apara Karyams
-    { title: 'Varshika Shraaddha (Pitru Karyam)', isApara: true, isFree: false, dakshina: '₹5,000' },
-    { title: 'Garuda Purana Pravachanam Discourse', isApara: true, isFree: false, dakshina: '₹4,000' },
-    { title: '10–13 Day Apara Kriya (Final Rites Protocol)', isApara: true, isFree: false, dakshina: '₹12,000' },
-    { title: 'Remote E-Pinda Daan', isApara: true, isFree: false, dakshina: '₹6,000' },
+    { title: 'Varshika Shraaddha (Pitru Karyam)', isApara: true, isFree: false, dakshinaRange: '₹4,500 – ₹7,500' },
+    { title: 'Garuda Purana Pravachanam Discourse', isApara: true, isFree: false, dakshinaRange: '₹3,500 – ₹6,000' },
+    { title: '10–13 Day Apara Kriya (Final Rites Protocol)', isApara: true, isFree: false, dakshinaRange: '₹10,000 – ₹18,000' },
+    { title: 'Remote E-Pinda Daan', isApara: true, isFree: false, dakshinaRange: '₹5,000 – ₹9,000' },
 
     // Noble Free Sevas (100% Free)
-    { title: 'Free 1-on-1 Vishnu Sahasranama Parayanam', isApara: false, isFree: true, dakshina: '₹0 (100% Free Seva)' },
-    { title: 'Free 1-on-1 Jyotisha Vedic Astrology', isApara: false, isFree: true, dakshina: '₹0 (100% Free Seva)' },
+    { title: 'Free 1-on-1 Vishnu Sahasranama Parayanam', isApara: false, isFree: true, dakshinaRange: '₹0 (100% Free Seva)' },
+    { title: 'Free 1-on-1 Jyotisha Vedic Astrology', isApara: false, isFree: true, dakshinaRange: '₹0 (100% Free Seva)' },
   ];
 
   const findMatch = (targetTitle) => {
@@ -50,27 +50,25 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
     if (match) return match;
     const isFree = targetTitle.toLowerCase().includes('free');
     const isApara = targetTitle.toLowerCase().includes('apara') || targetTitle.toLowerCase().includes('pinda') || targetTitle.toLowerCase().includes('shraaddha');
-    return { title: targetTitle, isApara, isFree, dakshina: isFree ? '₹0 (100% Free Seva)' : '₹4,500' };
+    return { title: targetTitle, isApara, isFree, dakshinaRange: isFree ? '₹0 (100% Free Seva)' : '₹3,500 – ₹6,000' };
   };
 
   const initialMatch = findMatch(initialRitual);
-
-  const allOptions = RITUAL_OPTIONS.some(r => r.title === initialMatch.title)
-    ? RITUAL_OPTIONS
-    : [initialMatch, ...RITUAL_OPTIONS];
 
   // Step state
   const [step, setStep] = useState(1); // 1: Ritual & Location Details | 2: Contact Info & Final Submission
 
   // Step 1 states
-  const [ritualName, setRitualName] = useState(initialMatch.title);
-  const [sampradaya, setSampradaya] = useState(auth?.user?.sampradaya || 'uttaradhi');
+  const [ritualName] = useState(initialMatch.title);
+  const [sampradaya, setSampradaya] = useState(auth?.user?.sampradaya || 'secular');
   const [date, setDate] = useState(new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]);
-  const [muhurtaTime, setMuhurtaTime] = useState('06:30 AM – 09:00 AM (Pratah Kala)');
-  const [dakshinaAmount, setDakshinaAmount] = useState(initialMatch.dakshina);
-  const [samagriMode, setSamagriMode] = useState('Pandit Hand-Carried Custom Kit (100% Pure Dravya)');
-  const [location, setLocation] = useState('Flat 402, Sri Vatsa Enclave, Jayanagar, Bengaluru');
-  const [isApara, setIsApara] = useState(initialMatch.isApara);
+  const [muhurtaTime, setMuhurtaTime] = useState('Pending Discussion with Admin');
+  const [dakshinaAmount] = useState(initialMatch.dakshinaRange);
+  const [samagriMode, setSamagriMode] = useState('Pending Admin Call (Pandit Kit vs Self-Arranged)');
+  const [venueAddress, setVenueAddress] = useState('Flat 402, Sri Vatsa Enclave, Jayanagar, Bengaluru');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+  const [landmarkNotes, setLandmarkNotes] = useState('');
+  const [isApara] = useState(initialMatch.isApara);
 
   // Step 2 states
   const [guestName, setGuestName] = useState(auth?.user?.name || '');
@@ -79,19 +77,10 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
   const [phoneError, setPhoneError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSelectRitual = (rName) => {
-    setRitualName(rName);
-    const rMatch = allOptions.find(r => r.title === rName);
-    if (rMatch) {
-      setIsApara(rMatch.isApara);
-      setDakshinaAmount(rMatch.dakshina);
-    }
-  };
-
   const handleProceedToStep2 = (e) => {
     e.preventDefault();
-    if (!ritualName || !date || !location.trim()) {
-      alert('Please fill in ritual type, date, and venue location address.');
+    if (!venueAddress.trim()) {
+      alert('Please fill in your venue residence/hall address.');
       return;
     }
     setStep(2);
@@ -131,6 +120,15 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
       const devoteeId = auth?.user?.id || `dev-guest-${Date.now()}`;
       const devoteePhone = countryCode === 'other' ? phoneNum.trim() : `${countryCode} ${phoneNum.trim()}`;
 
+      // Build structured location string
+      let fullLocation = venueAddress.trim();
+      if (googleMapsUrl.trim()) {
+        fullLocation += ` | Maps: ${googleMapsUrl.trim()}`;
+      }
+      if (landmarkNotes.trim()) {
+        fullLocation += ` | Note: ${landmarkNotes.trim()}`;
+      }
+
       const bookingPayload = {
         devoteeId,
         devoteeName,
@@ -141,17 +139,17 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
         ritualName,
         date,
         muhurtaTime,
-        dakshinaAmount,
+        dakshinaAmount: `${dakshinaAmount} (Estimated Range)`,
         dakshinaStatus: 'Direct On-the-Spot (0% Platform Fee)',
         samagriMode,
         status: 'Pending Admin Review',
         isAparaKaryam: isApara ? 1 : 0,
-        location
+        location: fullLocation
       };
 
       await DataStore.createBooking(bookingPayload);
       setSubmitting(false);
-      onBookingSuccess(`Sacred ritual booking request for "${ritualName}" submitted to Admin for ${date}. Admin desk will reach you at ${devoteePhone}!`);
+      onBookingSuccess(`Sacred ritual request for "${ritualName}" submitted to Admin for ${date}. Admin desk will call you at ${devoteePhone} to finalize Muhurtam and Dakshina!`);
       onClose();
     } catch (err) {
       console.error('Booking submission error:', err);
@@ -160,7 +158,7 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
     }
   };
 
-  const sm = SAMPRADAYA_MATRIX[sampradaya] || SAMPRADAYA_MATRIX['uttaradhi'];
+  const sm = SAMPRADAYA_MATRIX[sampradaya] || SAMPRADAYA_MATRIX['secular'];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -201,33 +199,37 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
         {/* ── STEP 1: RITUAL & LOGISTICS DETAILS ── */}
         {step === 1 && (
           <form onSubmit={handleProceedToStep2} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {/* Prominent Selected Ritual Card (No Dropdown needed) */}
+            <div style={{
+              padding: '16px 20px', borderRadius: 16,
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.14), rgba(234,88,12,0.06))',
+              border: '1px solid rgba(245,158,11,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16
+            }}>
+              <div>
+                <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Selected Seva Ritual
+                </span>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginTop: 3 }}>
+                  {ritualName}
+                </h3>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <span style={{ fontSize: 10, color: '#94a3b8', display: 'block' }}>Estimated Dakshina Range</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>
+                  {dakshinaAmount}
+                </span>
+              </div>
+            </div>
+
             {/* Direct Admin Notice */}
-            <div style={{ padding: '12px 16px', borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <UserCheck size={18} style={{ color: '#fbbf24', flexShrink: 0 }} />
-              <p style={{ fontSize: 12, color: '#fcd34d', lineHeight: 1.5 }}>
-                <strong>Direct Admin Request Protocol:</strong> Select ritual, date, and venue location. In the next step, specify contact details to submit directly to the Admin desk.
+            <div style={{ padding: '12px 16px', borderRadius: 14, background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.25)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <UserCheck size={18} style={{ color: '#38bdf8', flexShrink: 0 }} />
+              <p style={{ fontSize: 12, color: '#bae6fd', lineHeight: 1.5 }}>
+                <strong>Admin Consultation Protocol:</strong> After submitting your request, the Admin desk will contact you to discuss your exact preferences, confirm Muhurtam timing, and finalize the exact Dakshina honorarium.
               </p>
             </div>
 
-            {/* Select Ritual Category / Type */}
-            <div>
-              <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                Sacred Ritual / Pooja / Service Type *
-              </label>
-              <select
-                className="select"
-                value={ritualName}
-                onChange={e => handleSelectRitual(e.target.value)}
-              >
-                {allOptions.map((r, i) => (
-                  <option key={i} value={r.title}>
-                    {r.title} {r.isFree ? ' (100% Free Seva)' : r.isApara ? ' (Apara Karyam)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Select Sampradaya Tradition */}
+            {/* Select Sampradaya Tradition (Default: Secular) */}
             <div>
               <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
                 Family Tradition / Sampradaya Lineage
@@ -254,7 +256,7 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                  Sacred Muhurta Date *
+                  Preferred Date *
                 </label>
                 <input
                   type="date"
@@ -269,6 +271,7 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
                   Time Slot / Muhurtam
                 </label>
                 <select className="select" value={muhurtaTime} onChange={e => setMuhurtaTime(e.target.value)}>
+                  <option value="Pending Discussion with Admin">Pending Discussion with Admin</option>
                   <option value="05:30 AM – 07:30 AM (Brahma Muhurtam)">05:30 AM – 07:30 AM (Brahma Muhurtam)</option>
                   <option value="06:30 AM – 09:00 AM (Pratah Kala)">06:30 AM – 09:00 AM (Pratah Kala)</option>
                   <option value="11:45 AM – 12:30 PM (Abhijit Muhurtam)">11:45 AM – 12:30 PM (Abhijit Muhurtam)</option>
@@ -277,44 +280,66 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
               </div>
             </div>
 
-            {/* Samagri Logistics Mode & Estimated Dakshina */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                  Pooja Samagri Logistics
-                </label>
-                <select className="select" value={samagriMode} onChange={e => setSamagriMode(e.target.value)}>
-                  <option value="Pandit Hand-Carried Custom Kit (100% Pure Dravya)">Pandit Hand-Carried Kit</option>
-                  <option value="Householder Self-Arranged Dravya (Vedic Checklist Emailed)">Householder Self-Arranged</option>
-                </select>
+            {/* Pooja Samagri Logistics Mode */}
+            <div>
+              <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+                Pooja Samagri Logistics Mode
+              </label>
+              <select className="select" value={samagriMode} onChange={e => setSamagriMode(e.target.value)}>
+                <option value="Pending Admin Call (Pandit Kit vs Self-Arranged)">Pending Admin Call (Pandit Kit vs Self-Arranged)</option>
+                <option value="Pandit Hand-Carried Custom Kit (100% Pure Dravya)">Pandit Hand-Carried Kit</option>
+                <option value="Householder Self-Arranged Dravya (Vedic Checklist Emailed)">Householder Self-Arranged</option>
+              </select>
+            </div>
+
+            {/* Structured Venue Location Section */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '16px', borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <MapPin size={15} /> Venue Location & Directions
               </div>
+
+              {/* Residence / Hall Address */}
               <div>
-                <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                  Direct Scholar Dakshina
+                <label style={{ fontSize: 11, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                  Venue / Residence / Hall Address *
                 </label>
                 <input
                   type="text"
                   className="input"
-                  value={dakshinaAmount}
-                  onChange={e => setDakshinaAmount(e.target.value)}
+                  value={venueAddress}
+                  onChange={e => setVenueAddress(e.target.value)}
+                  placeholder="e.g. Flat 402, Sri Vatsa Enclave, Jayanagar, Bengaluru"
                   required
                 />
               </div>
-            </div>
 
-            {/* Address / Location */}
-            <div>
-              <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                Ritual Venue / Residence Address *
-              </label>
-              <input
-                type="text"
-                className="input"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                placeholder="Full address for Pandit arrival or Virtual Pravachanam"
-                required
-              />
+              {/* Google Maps Location Link (Optional) */}
+              <div>
+                <label style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                  <LinkIcon size={12} /> Google Maps Link / Location Pin URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  className="input"
+                  value={googleMapsUrl}
+                  onChange={e => setGoogleMapsUrl(e.target.value)}
+                  placeholder="e.g. https://maps.google.com/?q=12.9250,77.5938"
+                />
+              </div>
+
+              {/* Landmarks / Special Notes */}
+              <div>
+                <label style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                  <FileText size={12} /> Landmarks or Special Instructions for Pandit (Optional)
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  value={landmarkNotes}
+                  onChange={e => setLandmarkNotes(e.target.value)}
+                  placeholder="e.g. Near Big Banyan Tree, 4th Floor, Elevator available"
+                />
+              </div>
             </div>
 
             {/* Action Buttons */}
@@ -341,7 +366,10 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
               <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 14 }}>
                 <span>📅 Date: <strong style={{ color: '#e2e8f0' }}>{date}</strong></span>
                 <span>⏰ Time: <strong style={{ color: '#fbbf24' }}>{muhurtaTime}</strong></span>
-                <span>💰 Dakshina: <strong style={{ color: '#34d399' }}>{dakshinaAmount}</strong></span>
+                <span>💰 Dakshina Range: <strong style={{ color: '#34d399' }}>{dakshinaAmount}</strong></span>
+              </p>
+              <p style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>
+                📍 Venue: {venueAddress} {googleMapsUrl && ' (Google Maps Pin Attached)'}
               </p>
             </div>
 
@@ -368,7 +396,7 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
                   <div style={{ display: 'flex', gap: 8 }}>
                     <select
                       className="select"
-                      style={{ width: 140 }}
+                      style={{ width: 150 }}
                       value={countryCode}
                       onChange={e => { setCountryCode(e.target.value); setPhoneError(''); }}
                     >
@@ -392,7 +420,7 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700 }}>
-                    Guest Contact & Contact Information *
+                    Guest Contact Information *
                   </label>
                   {onOpenLogin && (
                     <button
@@ -445,7 +473,7 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
                     />
                   </div>
                   <p style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
-                    Admin desk will reach you on WhatsApp / Phone to assign Acharya and confirm Muhurtam.
+                    Admin desk will reach you on WhatsApp / Phone to discuss your preferences and confirm Muhurtam.
                   </p>
                 </div>
               </div>
