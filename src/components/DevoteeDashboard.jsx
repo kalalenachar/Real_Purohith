@@ -209,7 +209,10 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                 <h2 style={{ fontSize: 24, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
                   {currentDevotee.name}
                 </h2>
-                <span className={`badge badge-${currentDevotee.sampradaya}`}>{sampradaya?.name}</span>
+                <span className={`badge badge-${currentDevotee.sampradaya}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  {sampradaya?.image ? <img src={sampradaya.image} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'contain' }} /> : sampradaya?.icon}
+                  {sampradaya?.name}
+                </span>
               </div>
               <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: '0 14px' }}>
                 <span>Gotram: <strong style={{ color: '#fbbf24' }}>{currentDevotee.gotram}</strong></span>

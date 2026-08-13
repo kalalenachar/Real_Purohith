@@ -91,7 +91,11 @@ function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = 
             const count = purohits.filter(p => p.sampradaya === key).length;
             return (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ fontSize: 20 }}>{val.icon}</span>
+                {val.image ? (
+                  <img src={val.image} alt={val.name} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'contain' }} />
+                ) : (
+                  <span style={{ fontSize: 20 }}>{val.icon}</span>
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{val.name}</div>
                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{count} Acharya{count !== 1 ? 's' : ''}</div>
@@ -420,7 +424,12 @@ function BookingsTab({ bookings, onUpdateStatus, onDelete, onClearAllMeetLinks }
                 <div style={{ flex: 1, minWidth: 240 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
                     <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>{b.id}</span>
-                    {sm && <span className={`badge badge-${b.sampradaya}`}>{sm.icon} {sm.name.split(' ')[0]}</span>}
+                    {sm && (
+                      <span className={`badge badge-${b.sampradaya}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        {sm.image ? <img src={sm.image} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'contain' }} /> : sm.icon}
+                        {sm.name.split(' ')[0]}
+                      </span>
+                    )}
                     {isPending && <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>⚡ PENDING ADMIN REVIEW</span>}
                     {b.isAparaKaryam ? <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#dc2626', color: 'white', fontWeight: 700 }}>APARA</span> : null}
                   </div>
@@ -532,7 +541,12 @@ function DevoteesTab({ devotees, onDelete }) {
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,rgba(124,58,237,0.2),rgba(245,158,11,0.1))', border: '1px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🕉️</div>
                   <div>
                     <h4 style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif' }}>{d.name}</h4>
-                    {sm && <span className={`badge badge-${d.sampradaya}`} style={{ marginTop: 4, fontSize: 10 }}>{sm.icon} {sm.name.split(' ')[0]}</span>}
+                    {sm && (
+                      <span className={`badge badge-${d.sampradaya}`} style={{ marginTop: 4, fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        {sm.image ? <img src={sm.image} alt="" style={{ width: 12, height: 12, borderRadius: '50%', objectFit: 'contain' }} /> : sm.icon}
+                        {sm.name.split(' ')[0]}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <button onClick={() => setConfirmDelete(d.id)}
@@ -611,7 +625,12 @@ function ReviewsTab({ feedbacks, onDelete }) {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
                     <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#f59e0b' }}>{fb.id}</span>
-                    {sm && <span className={`badge badge-${fb.sampradaya}`}>{sm.icon} {sm.name.split(' ')[0]}</span>}
+                    {sm && (
+                      <span className={`badge badge-${fb.sampradaya}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        {sm.image ? <img src={sm.image} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'contain' }} /> : sm.icon}
+                        {sm.name.split(' ')[0]}
+                      </span>
+                    )}
                     <span style={{
                       fontSize: 10, padding: '2px 10px', borderRadius: 20, fontWeight: 700,
                       background: (fb.aiSentiment || '').includes('Alert') ? 'rgba(220,38,38,0.15)' : 'rgba(16,185,129,0.12)',
@@ -775,7 +794,11 @@ function SampradayasTab({ sampradayas = [], onRefresh }) {
           <div key={s.id} className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 24 }}>{s.icon}</span>
+                {s.image ? (
+                  <img src={s.image} alt={s.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'contain' }} />
+                ) : (
+                  <span style={{ fontSize: 24 }}>{s.icon}</span>
+                )}
                 <span className={`badge ${s.badgeClass || 'badge-secular'}`}>{s.id}</span>
               </div>
               <h4 style={{ fontSize: 15, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>{s.name}</h4>

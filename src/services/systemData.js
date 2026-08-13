@@ -1,52 +1,61 @@
+import { SAMPRADAYA_LOGOS } from '../assets/sampradayaLogos.js';
+
 export const SAMPRADAYA_MATRIX = {
   uttaradhi: {
     id: 'uttaradhi',
     name: 'Uttaradhi Mutt (Dvaita)',
     badgeClass: 'badge-uttaradhi',
     description: 'Adhering strictly to Uttaradhi Mutt lineage.',
-    icon: '🛕'
+    icon: '🛕',
+    image: SAMPRADAYA_LOGOS.uttaradhi
   },
   udupi: {
     id: 'udupi',
     name: 'Udupi Madhva (Ashta Mutts)',
     badgeClass: 'badge-udupi',
     description: 'Trained under Udupi Ashta Mutts (Palimaru, Pejavara, Sodhe, etc.).',
-    icon: '🚩'
+    icon: '🚩',
+    image: SAMPRADAYA_LOGOS.udupi
   },
   vadagalai: {
     id: 'vadagalai',
     name: 'Sri Vaishnava (Vadagalai)',
     badgeClass: 'badge-vadagalai',
     description: 'Following Vedanta Desika tradition.',
-    icon: '🪔'
+    icon: '🪔',
+    image: SAMPRADAYA_LOGOS.vadagalai
   },
   thengalai: {
     id: 'thengalai',
     name: 'Sri Vaishnava (Thengalai)',
     badgeClass: 'badge-thengalai',
     description: 'Following Manavala Mahamuni tradition.',
-    icon: '⚜️'
+    icon: '⚜️',
+    image: SAMPRADAYA_LOGOS.thengalai
   },
   shankara: {
     id: 'shankara',
     name: 'Shankara Mutt (Smartha / Advaita)',
     badgeClass: 'badge-shankara',
     description: 'Following Sringeri, Kanchi, or other Sankara traditions.',
-    icon: '☸️'
+    icon: '☸️',
+    image: SAMPRADAYA_LOGOS.shankara
   },
   secular: {
     id: 'secular',
     name: 'Secular / Modern Purohit',
     badgeClass: 'badge-secular',
     description: 'Approachable, multi-lingual explanations (English/Hindi/Telugu/Tamil/Kannada) for modern homes.',
-    icon: '🌿'
+    icon: '🌿',
+    image: SAMPRADAYA_LOGOS.secular
   },
   orthodox: {
     id: 'orthodox',
     name: 'High-Level Orthodox Acharyas',
     badgeClass: 'badge-orthodox',
     description: 'Senior Mahamahopadhyayas & Veda Bhashya Rathnas for complex Yagnas, Somayagam & strict Apara Karyam.',
-    icon: '👑'
+    icon: '👑',
+    image: SAMPRADAYA_LOGOS.orthodox
   }
 };
 

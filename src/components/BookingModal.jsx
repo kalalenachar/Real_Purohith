@@ -247,7 +247,10 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
               </select>
               {sm && (
                 <div style={{ marginTop: 6, fontSize: 11, color: '#94a3b8' }}>
-                  <span className={`badge badge-${sampradaya}`}>{sm.icon} {sm.name}</span> — {sm.description}
+                  <span className={`badge badge-${sampradaya}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    {sm.image ? <img src={sm.image} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'contain' }} /> : sm.icon}
+                    {sm.name}
+                  </span> — {sm.description}
                 </div>
               )}
             </div>
