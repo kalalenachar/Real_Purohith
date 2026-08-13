@@ -51,12 +51,12 @@ function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = 
     : '4.92';
 
   const kpis = [
-    { label: 'Total Purohits',    value: safePurohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    { label: 'Total Devotees',    value: safeDevotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
+    { label: 'Verified Acharyas', value: safePurohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    { label: 'Devotee Accounts',  value: safeDevotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
     { label: 'Active Bookings',   value: safeBookings.length,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
-    { label: 'Reviews Received',  value: safeFeedbacks.length,  icon: Star,          color: '#f97316', bg: 'rgba(249,115,22,0.1)' },
-    { label: 'Avg Rating',        value: avgRating + ' ⭐', icon: Award,         color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
-    { label: 'Platform Fee',      value: '0% Pure Bridge',  icon: Wallet,        color: '#34d399', bg: 'rgba(16,185,129,0.08)' },
+    { label: 'Vedic Sampradayas', value: '7 Lineages',          icon: Award,         color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
+    { label: 'Admin Allocation',  value: '100% Centralized',    icon: ShieldCheck,   color: '#38bdf8', bg: 'rgba(56,189,248,0.1)' },
+    { label: 'Platform Fee',      value: '0% Pure Bridge',      icon: Wallet,        color: '#34d399', bg: 'rgba(16,185,129,0.08)' },
   ];
 
   const recentBookings = safeBookings.slice(0, 5);
@@ -161,8 +161,7 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [form, setForm] = useState({
     name: '', sampradaya: 'uttaradhi', mutt: '', vedaShakha: '', sutram: '',
-    experienceYears: '', rating: 5.0, reviewsCount: 0,
-    languages: '', specialties: '', trustScore: 95, status: 'Verified Acharya'
+    experienceYears: '', languages: '', specialties: '', trustScore: 95, status: 'Verified Acharya'
   });
 
   const filtered = purohits.filter(p => {
@@ -173,7 +172,7 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
   });
 
   const openNew = () => {
-    setForm({ name: '', sampradaya: 'uttaradhi', mutt: '', vedaShakha: '', sutram: '', experienceYears: '', rating: 5.0, reviewsCount: 0, languages: '', specialties: '', trustScore: 95, status: 'Verified Acharya' });
+    setForm({ name: '', sampradaya: 'uttaradhi', mutt: '', vedaShakha: '', sutram: '', experienceYears: '', languages: '', specialties: '', trustScore: 95, status: 'Verified Acharya' });
     setEditingId(null);
     setShowForm(true);
   };
@@ -194,8 +193,6 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
       ...form,
       id: editingId || generateId('pur'),
       experienceYears: parseInt(form.experienceYears) || 0,
-      rating: parseFloat(form.rating) || 5.0,
-      reviewsCount: parseInt(form.reviewsCount) || 0,
       trustScore: parseInt(form.trustScore) || 95,
       languages: typeof form.languages === 'string' ? form.languages.split(',').map(s => s.trim()).filter(Boolean) : form.languages,
       specialties: typeof form.specialties === 'string' ? form.specialties.split(',').map(s => s.trim()).filter(Boolean) : form.specialties,
@@ -252,16 +249,15 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#94a3b8' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>{p.vedaShakha} · {p.sutram}</span>
-                  <span style={{ color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>⭐ {p.rating}</span>
+                  <span style={{ color: '#34d399', fontFamily: 'monospace', fontSize: 11, fontWeight: 700 }}>{p.trustScore}% Verified Trust</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{p.experienceYears} yrs exp · {p.reviewsCount} reviews</span>
-                  <span style={{ color: '#34d399', fontFamily: 'monospace', fontSize: 11, fontWeight: 700 }}>{p.trustScore}% Trust</span>
+                  <span>{p.experienceYears} yrs scholarly experience</span>
+                  <span style={{ color: '#fbbf24', fontSize: 11 }}>{p.status}</span>
                 </div>
                 <div className="progress-track" style={{ marginTop: 4 }}>
                   <div className="progress-bar" style={{ width: `${p.trustScore}%`, background: p.trustScore >= 98 ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#f59e0b,#ea580c)' }} />
                 </div>
-                <p style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{p.status}</p>
               </div>
             </div>
           );
@@ -287,8 +283,6 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
                   { label: 'Sutram', key: 'sutram', placeholder: 'Ashvalayana Sutram' },
                   { label: 'Experience (Years)', key: 'experienceYears', placeholder: '15', type: 'number' },
                   { label: 'Trust Score (0–100)', key: 'trustScore', placeholder: '95', type: 'number' },
-                  { label: 'Rating (0–5)', key: 'rating', placeholder: '4.9', type: 'number', step: '0.1' },
-                  { label: 'Reviews Count', key: 'reviewsCount', placeholder: '0', type: 'number' },
                 ].map(f => (
                   <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>{f.label}</label>
@@ -1918,7 +1912,6 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
     { id: 'sampradayas',  label: 'Sampradaya Traditions', icon: Award },
     { id: 'purohits',     label: 'Acharya Directory',     icon: Users },
     { id: 'devotees',     label: 'Devotee Records',       icon: BookOpen },
-    { id: 'reviews',      label: 'Reviews & Feedback',    icon: Star },
     { id: 'dbAccess',     label: 'Full DB Access',        icon: Database },
     { id: 'settings',     label: 'Settings',              icon: Settings },
   ];

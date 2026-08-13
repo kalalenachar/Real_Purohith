@@ -153,7 +153,7 @@ export default function FeedbackModal({ purohit, onClose, onSubmit }) {
           {/* notice */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', fontSize: 12, color: '#c4b5fd' }}>
             <Sparkles size={15} style={{ flexShrink: 0, color: '#a78bfa' }} />
-            Submission updates scholar ratings and Mutt Trust Score in real time.
+            Feedback is securely sent directly to Admin Desk for confidential quality audit.
           </div>
 
           {/* Footer */}
