@@ -4,7 +4,7 @@ import {
   AlertCircle, CheckCircle2, X, Sparkles, KeyRound, UserPlus, LogIn, ArrowLeft
 } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { SAMPRADAYA_MATRIX } from '../services/systemData.js';
+import { SAMPRADAYA_MATRIX, RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
 
 export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'login' }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'forgot'
@@ -22,6 +22,8 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
   const [regConfirmPwd, setRegConfirmPwd] = useState('');
   const [role, setRole] = useState('devotee'); // 'devotee' | 'purohit' | 'admin'
   const [gotram, setGotram] = useState('');
+  const [rashi, setRashi] = useState('');
+  const [nakshatra, setNakshatra] = useState('');
   const [sampradaya, setSampradaya] = useState('uttaradhi');
 
   // Forgot password state
@@ -89,6 +91,8 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
       password: regPassword,
       role,
       gotram: gotram.trim(),
+      rashi,
+      nakshatra,
       sampradaya
     });
 
@@ -382,33 +386,66 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                 </div>
               </div>
 
-              {/* Gotram & Sampradaya (for Devotee/Purohit) */}
+              {/* Gotram, Sampradaya, Rashi & Nakshatra (for Devotee/Purohit) */}
               {role !== 'admin' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Gotram (Optional)</label>
-                    <input
-                      type="text"
-                      value={gotram}
-                      onChange={e => setGotram(e.target.value)}
-                      placeholder="e.g. Kashyapa"
-                      className="input"
-                    />
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Gotram (Optional)</label>
+                      <input
+                        type="text"
+                        value={gotram}
+                        onChange={e => setGotram(e.target.value)}
+                        placeholder="e.g. Kashyapa"
+                        className="input"
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Sampradaya</label>
+                      <select
+                        value={sampradaya}
+                        onChange={e => setSampradaya(e.target.value)}
+                        className="select"
+                        style={{ fontSize: 12 }}
+                      >
+                        {Object.values(SAMPRADAYA_MATRIX).map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Sampradaya</label>
-                    <select
-                      value={sampradaya}
-                      onChange={e => setSampradaya(e.target.value)}
-                      className="select"
-                      style={{ fontSize: 12 }}
-                    >
-                      {Object.values(SAMPRADAYA_MATRIX).map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Rashi (Zodiac)</label>
+                      <select
+                        value={rashi}
+                        onChange={e => setRashi(e.target.value)}
+                        className="select"
+                        style={{ fontSize: 11 }}
+                      >
+                        <option value="">-- Select Rashi --</option>
+                        {RASHI_LIST.map(r => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Nakshatra (Star)</label>
+                      <select
+                        value={nakshatra}
+                        onChange={e => setNakshatra(e.target.value)}
+                        className="select"
+                        style={{ fontSize: 11 }}
+                      >
+                        <option value="">-- Select Nakshatra --</option>
+                        {NAKSHATRA_LIST.map(n => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Submit Register Button */}

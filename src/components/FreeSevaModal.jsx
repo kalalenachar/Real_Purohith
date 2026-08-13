@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, Calendar, Clock, Video, Phone, Sparkles, User, Mail, MapPin, Heart, BookOpen, ShieldCheck } from 'lucide-react';
 import { DataStore } from '../services/store.js';
+import { RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
 
 export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
   const isAstrology = sevaType === 'astrology';
@@ -16,7 +17,8 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
 
   // Parayanam specific
   const [gotram, setGotram] = useState(user?.gotram || '');
-  const [nakshatram, setNakshatram] = useState('');
+  const [rashi, setRashi] = useState(user?.rashi || '');
+  const [nakshatram, setNakshatram] = useState(user?.nakshatra || '');
   const [sankalpaIntention, setSankalpaIntention] = useState('Family Health, Peace & Spiritual Well-being');
 
   // Astrology specific
@@ -270,30 +272,50 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
             </>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={{ fontSize: 11, color: '#6ee7b7', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                    Gotram
+                    Gotram (Lineage)
                   </label>
                   <input
                     type="text"
                     className="input"
                     value={gotram}
                     onChange={e => setGotram(e.target.value)}
-                    placeholder="e.g. Kashyapa"
+                    placeholder="e.g. Naidhruva Kashyapa"
                   />
                 </div>
                 <div>
                   <label style={{ fontSize: 11, color: '#6ee7b7', fontWeight: 700, display: 'block', marginBottom: 6 }}>
-                    Janma Nakshatram / Rashi
+                    Janma Rashi (Zodiac)
                   </label>
-                  <input
-                    type="text"
-                    className="input"
+                  <select
+                    className="select"
+                    style={{ fontSize: 11 }}
+                    value={rashi}
+                    onChange={e => setRashi(e.target.value)}
+                  >
+                    <option value="">-- Select Rashi --</option>
+                    {RASHI_LIST.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#6ee7b7', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+                    Janma Nakshatram (Star)
+                  </label>
+                  <select
+                    className="select"
+                    style={{ fontSize: 11 }}
                     value={nakshatram}
                     onChange={e => setNakshatram(e.target.value)}
-                    placeholder="e.g. Rohini / Vrishabha"
-                  />
+                  >
+                    <option value="">-- Select Nakshatra --</option>
+                    {NAKSHATRA_LIST.map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

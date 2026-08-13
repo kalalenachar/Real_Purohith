@@ -113,6 +113,22 @@ export function initDb() {
     db.exec(`ALTER TABLE bookings ADD COLUMN meet_link TEXT`);
   } catch (e) {}
 
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN rashi TEXT`);
+  } catch (e) {}
+
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN nakshatra TEXT`);
+  } catch (e) {}
+
+  try {
+    db.exec(`ALTER TABLE devotees ADD COLUMN rashi TEXT`);
+  } catch (e) {}
+
+  try {
+    db.exec(`ALTER TABLE devotees ADD COLUMN nakshatra TEXT`);
+  } catch (e) {}
+
   // 6. Feedbacks table
   db.exec(`
     CREATE TABLE IF NOT EXISTS feedbacks (

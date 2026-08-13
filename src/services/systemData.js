@@ -1,5 +1,18 @@
 import { SAMPRADAYA_LOGOS } from '../assets/sampradayaLogos.js';
 
+export const RASHI_LIST = [
+  'Mesha (Aries)', 'Vrishabha (Taurus)', 'Mithuna (Gemini)', 'Karkataka (Cancer)',
+  'Simha (Leo)', 'Kanya (Virgo)', 'Tula (Libra)', 'Vrishchika (Scorpio)',
+  'Dhanus (Sagittarius)', 'Makara (Capricorn)', 'Kumbha (Aquarius)', 'Meena (Pisces)'
+];
+
+export const NAKSHATRA_LIST = [
+  'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya',
+  'Ashlesha', 'Magha', 'Purva Phalguni (Pubba)', 'Uttara Phalguni (Uttara)', 'Hasta', 'Chitra',
+  'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purvashadha', 'Uttarashadha',
+  'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
+];
+
 export const SAMPRADAYA_MATRIX = {
   uttaradhi: {
     id: 'uttaradhi',

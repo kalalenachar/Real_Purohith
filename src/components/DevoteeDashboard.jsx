@@ -4,7 +4,7 @@ import {
   ChevronRight, Flame, CheckCircle2, ShieldCheck, Plus,
   MapPin, Clock, Check, Star, User, Save, Edit3
 } from 'lucide-react';
-import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
+import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS, RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
 import { calculateNextTithiAllotments } from '../services/aiTimeAllotmentEngine.js';
 import { DataStore } from '../services/store.js';
 
@@ -47,6 +47,8 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
   // Profile form state
   const [profileName, setProfileName] = useState('');
   const [profileGotram, setProfileGotram] = useState('');
+  const [profileRashi, setProfileRashi] = useState('');
+  const [profileNakshatra, setProfileNakshatra] = useState('');
   const [profileSampradaya, setProfileSampradaya] = useState('vadagalai');
   const [profileVedaShakha, setProfileVedaShakha] = useState('Rigveda');
   const [profileSutram, setProfileSutram] = useState('Ashvalayana Sutram');
@@ -111,6 +113,8 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
       setProfileName(auth.user.name || auth.user.username || '');
       const userGotram = auth.user.gotram || selectedDevotee?.gotram || '';
       setProfileGotram(userGotram !== 'Kashyapa' && userGotram !== 'Not Specified' ? userGotram : '');
+      setProfileRashi(auth.user.rashi || selectedDevotee?.rashi || '');
+      setProfileNakshatra(auth.user.nakshatra || selectedDevotee?.nakshatra || '');
       setProfileSampradaya(auth.user.sampradaya || selectedDevotee?.sampradaya || 'secular');
       const vShakha = selectedDevotee?.vedaShakha || auth.user.vedaShakha || '';
       setProfileVedaShakha(vShakha !== 'Not Specified' ? vShakha : '');
@@ -130,6 +134,8 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
     const payload = {
       name: profileName.trim(),
       gotram: profileGotram.trim(),
+      rashi: profileRashi,
+      nakshatra: profileNakshatra,
       sampradaya: profileSampradaya,
       vedaShakha: profileVedaShakha,
       sutram: profileSutram,
@@ -218,10 +224,12 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                 </span>
               </div>
               <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: '0 14px' }}>
-                <span>Gotram: <strong style={{ color: '#fbbf24' }}>{currentDevotee.gotram}</strong></span>
-                <span>Shakha: <strong style={{ color: '#fbbf24' }}>{currentDevotee.vedaShakha}</strong></span>
-                <span>Sutram: <strong style={{ color: '#fbbf24' }}>{currentDevotee.sutram}</strong></span>
-                <span>Kula Daivam: <strong style={{ color: '#fbbf24' }}>{currentDevotee.kulaDaivam}</strong></span>
+                {currentDevotee.gotram && <span>Gotram: <strong style={{ color: '#fbbf24' }}>{currentDevotee.gotram}</strong></span>}
+                {currentDevotee.rashi && <span>Rashi: <strong style={{ color: '#38bdf8' }}>{currentDevotee.rashi}</strong></span>}
+                {currentDevotee.nakshatra && <span>Nakshatra: <strong style={{ color: '#34d399' }}>{currentDevotee.nakshatra}</strong></span>}
+                {currentDevotee.vedaShakha && <span>Shakha: <strong style={{ color: '#fbbf24' }}>{currentDevotee.vedaShakha}</strong></span>}
+                {currentDevotee.sutram && <span>Sutram: <strong style={{ color: '#fbbf24' }}>{currentDevotee.sutram}</strong></span>}
+                {currentDevotee.kulaDaivam && <span>Kula Daivam: <strong style={{ color: '#fbbf24' }}>{currentDevotee.kulaDaivam}</strong></span>}
               </p>
             </div>
           </div>
@@ -359,6 +367,37 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                   <option value="udupi">Madhva (Udupi Ashta Mutt)</option>
                   <option value="smartha">Smartha / Bhagavata Paddhati</option>
                   <option value="secular">Modern Secular / Multi-Lingual</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Janma Rashi & Janma Nakshatra */}
+            <div className="grid-2">
+              <div>
+                <label className="input-label">Janma Rashi (Moon Zodiac Sign)</label>
+                <select
+                  className="select"
+                  value={profileRashi}
+                  onChange={e => setProfileRashi(e.target.value)}
+                >
+                  <option value="">-- Select Janma Rashi --</option>
+                  {RASHI_LIST.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="input-label">Janma Nakshatra (Birth Star)</label>
+                <select
+                  className="select"
+                  value={profileNakshatra}
+                  onChange={e => setProfileNakshatra(e.target.value)}
+                >
+                  <option value="">-- Select Janma Nakshatra --</option>
+                  {NAKSHATRA_LIST.map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
                 </select>
               </div>
             </div>

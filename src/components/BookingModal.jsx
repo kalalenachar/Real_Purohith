@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, ShieldCheck, Flame, X, Check, Heart, Sparkles, UserCheck, ArrowRight, ArrowLeft, Phone, User, Link as LinkIcon, FileText } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { SAMPRADAYA_MATRIX } from '../services/systemData.js';
+import { SAMPRADAYA_MATRIX, RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
 
 const COUNTRY_CODES = [
   { code: '+91',  label: '🇮🇳 India (+91)',         flag: '🇮🇳', regex: /^[6-9]\d{9}$/,   errorMsg: 'India mobile number must be 10 digits starting with 6, 7, 8, or 9.' },
@@ -61,6 +61,8 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
   // Step 1 states
   const [ritualName] = useState(initialMatch.title);
   const [sampradaya, setSampradaya] = useState(auth?.user?.sampradaya || 'secular');
+  const [rashi, setRashi] = useState(auth?.user?.rashi || '');
+  const [nakshatra, setNakshatra] = useState(auth?.user?.nakshatra || '');
   const [date, setDate] = useState(new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]);
   const [muhurtaTime, setMuhurtaTime] = useState('Pending Discussion with Admin');
   const [dakshinaAmount] = useState(initialMatch.dakshinaRange);
@@ -253,6 +255,41 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
                   </span> — {sm.description}
                 </div>
               )}
+            </div>
+
+            {/* Sankalpam Janma Rashi & Janma Nakshatra */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+                  Janma Rashi (Moon Sign for Sankalpam)
+                </label>
+                <select
+                  className="select"
+                  value={rashi}
+                  onChange={e => setRashi(e.target.value)}
+                >
+                  <option value="">-- Select Rashi --</option>
+                  {RASHI_LIST.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+                  Janma Nakshatra (Birth Star for Sankalpam)
+                </label>
+                <select
+                  className="select"
+                  value={nakshatra}
+                  onChange={e => setNakshatra(e.target.value)}
+                >
+                  <option value="">-- Select Nakshatra --</option>
+                  {NAKSHATRA_LIST.map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Date & Muhurta Time */}

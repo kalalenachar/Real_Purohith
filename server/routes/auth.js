@@ -136,15 +136,17 @@ router.post('/login', (req, res) => {
 // 3. GET CURRENT USER PROFILE (/api/auth/me)
 router.get('/me', authenticateToken, (req, res) => {
   try {
-    const user = db.prepare('SELECT id, username, email, role, name, gotram, sampradaya, avatar, created_at FROM users WHERE id = ?').get(req.user.id);
+    const user = db.prepare('SELECT id, username, email, role, name, gotram, sampradaya, rashi, nakshatra, avatar, created_at FROM users WHERE id = ?').get(req.user.id);
     if (!user) return res.status(404).json({ error: 'User profile not found.' });
 
     // Try to fetch additional devotee attributes if existing
-    const dev = db.prepare('SELECT veda_shakha, sutram, kula_daivam, location FROM devotees WHERE user_id = ? OR id = ?').get(user.id, user.id);
+    const dev = db.prepare('SELECT veda_shakha, sutram, kula_daivam, location, rashi, nakshatra FROM devotees WHERE user_id = ? OR id = ?').get(user.id, user.id);
 
     res.json({
       user: {
         ...user,
+        rashi: user?.rashi || dev?.rashi || '',
+        nakshatra: user?.nakshatra || dev?.nakshatra || '',
         vedaShakha: dev?.veda_shakha || '',
         sutram: dev?.sutram || '',
         kulaDaivam: dev?.kula_daivam || '',
@@ -159,7 +161,7 @@ router.get('/me', authenticateToken, (req, res) => {
 // 4. UPDATE USER PROFILE (/api/auth/profile)
 router.put('/profile', authenticateToken, (req, res) => {
   try {
-    const { name, gotram, sampradaya, avatar, vedaShakha, sutram, kulaDaivam, location } = req.body;
+    const { name, gotram, sampradaya, rashi, nakshatra, avatar, vedaShakha, sutram, kulaDaivam, location } = req.body;
     const userId = req.user.id;
 
     // Update users table
@@ -168,9 +170,11 @@ router.put('/profile', authenticateToken, (req, res) => {
       SET name = COALESCE(?, name),
           gotram = COALESCE(?, gotram),
           sampradaya = COALESCE(?, sampradaya),
+          rashi = COALESCE(?, rashi),
+          nakshatra = COALESCE(?, nakshatra),
           avatar = COALESCE(?, avatar)
       WHERE id = ?
-    `).run(name, gotram, sampradaya, avatar, userId);
+    `).run(name, gotram, sampradaya, rashi, nakshatra, avatar, userId);
 
     // Also update or insert in devotees table
     const existingDev = db.prepare('SELECT id FROM devotees WHERE user_id = ? OR id = ?').get(userId, userId);
@@ -180,26 +184,30 @@ router.put('/profile', authenticateToken, (req, res) => {
         SET name = COALESCE(?, name),
             gotram = COALESCE(?, gotram),
             sampradaya = COALESCE(?, sampradaya),
+            rashi = COALESCE(?, rashi),
+            nakshatra = COALESCE(?, nakshatra),
             veda_shakha = COALESCE(?, veda_shakha),
             sutram = COALESCE(?, sutram),
             kula_daivam = COALESCE(?, kula_daivam),
             location = COALESCE(?, location)
         WHERE id = ?
-      `).run(name, gotram, sampradaya, vedaShakha, sutram, kulaDaivam, location, existingDev.id);
+      `).run(name, gotram, sampradaya, rashi, nakshatra, vedaShakha, sutram, kulaDaivam, location, existingDev.id);
     } else {
       const devId = `dev-${Date.now()}`;
       db.prepare(`
-        INSERT INTO devotees (id, user_id, name, gotram, veda_shakha, sutram, sampradaya, mutt, kula_daivam, location)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(devId, userId, name || req.user.name, gotram || '', vedaShakha || '', sutram || '', sampradaya || '', '', kulaDaivam || '', location || '');
+        INSERT INTO devotees (id, user_id, name, gotram, veda_shakha, sutram, sampradaya, mutt, kula_daivam, location, rashi, nakshatra)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(devId, userId, name || req.user.name, gotram || '', vedaShakha || '', sutram || '', sampradaya || '', '', kulaDaivam || '', location || '', rashi || '', nakshatra || '');
     }
 
-    const updatedUser = db.prepare('SELECT id, username, email, role, name, gotram, sampradaya, avatar FROM users WHERE id = ?').get(userId);
+    const updatedUser = db.prepare('SELECT id, username, email, role, name, gotram, sampradaya, rashi, nakshatra, avatar FROM users WHERE id = ?').get(userId);
 
     res.json({
       message: 'Profile updated successfully!',
       user: {
         ...updatedUser,
+        rashi,
+        nakshatra,
         vedaShakha,
         sutram,
         kulaDaivam,
