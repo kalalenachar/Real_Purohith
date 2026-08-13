@@ -109,6 +109,10 @@ export function initDb() {
     db.exec(`ALTER TABLE bookings ADD COLUMN devotee_phone TEXT`);
   } catch (e) {}
 
+  try {
+    db.exec(`ALTER TABLE bookings ADD COLUMN meet_link TEXT`);
+  } catch (e) {}
+
   // 6. Feedbacks table
   db.exec(`
     CREATE TABLE IF NOT EXISTS feedbacks (
@@ -147,9 +151,16 @@ export function initDb() {
       name TEXT NOT NULL,
       badge_class TEXT NOT NULL,
       description TEXT NOT NULL,
-      icon TEXT NOT NULL
+      icon TEXT NOT NULL,
+      image TEXT
     );
   `);
+
+  try {
+    db.exec(`ALTER TABLE sampradayas ADD COLUMN image TEXT;`);
+  } catch (e) {
+    // Column already exists
+  }
 
   seedInitialData();
 }

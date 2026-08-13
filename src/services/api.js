@@ -164,11 +164,11 @@ export const API = {
     return res.json();
   },
 
-  async updateBookingStatus(id, status, location) {
+  async updateBookingStatus(id, status, meetLink, location) {
     const res = await fetch(`${API_BASE}/bookings/${id}/status`, {
       method: 'PUT',
       headers: getHeaders(),
-      body: JSON.stringify({ status, location })
+      body: JSON.stringify({ status, meetLink, location })
     });
     if (!res.ok) throw new Error('Failed to update booking status');
     return res.json();
@@ -267,6 +267,28 @@ export const API = {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Incorrect Admin password');
     }
+    return res.json();
+  },
+
+  async changeAdminPassword(currentPassword, newPassword) {
+    const res = await fetch(`${API_BASE}/admin/db/change-password`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to update admin password');
+    }
+    return res.json();
+  },
+
+  async vacuumDb() {
+    const res = await fetch(`${API_BASE}/admin/db/vacuum`, {
+      method: 'POST',
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error('Failed to vacuum database');
     return res.json();
   },
 

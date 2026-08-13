@@ -191,7 +191,9 @@ function FreeSeva({ onOpenFreeSeva }) {
 /* ──────────────────────────────────────────────────────────── */
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTabState] = useState(() => {
+    return localStorage.getItem('real_purohit_active_tab') || 'home';
+  });
   const [feedbacks, setFeedbacks]   = useState(INITIAL_FEEDBACKS);
   const [tasks, setTasks]           = useState([]);
   const [queueOpen, setQueueOpen]   = useState(false);
@@ -204,7 +206,19 @@ export default function App() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingRitual, setBookingRitual]       = useState(null);
   const [freeSevaType, setFreeSevaType]         = useState(null); // 'parayanam' | 'astrology' | null
-  const [appMode, setAppMode]       = useState('public'); // 'public' | 'admin'
+  const [appMode, setAppModeState]       = useState(() => {
+    return localStorage.getItem('real_purohit_app_mode') || 'public';
+  });
+
+  const setActiveTab = useCallback((tab) => {
+    setActiveTabState(tab);
+    localStorage.setItem('real_purohit_active_tab', tab);
+  }, []);
+
+  const setAppMode = useCallback((mode) => {
+    setAppModeState(mode);
+    localStorage.setItem('real_purohit_app_mode', mode);
+  }, []);
 
   const showToast = useCallback((msg, type = 'info') => {
     setToast({ msg, type });
@@ -223,7 +237,13 @@ export default function App() {
   // Check auth and load feedbacks on mount from database
   useEffect(() => {
     DataStore.checkAuth().then(res => {
-      if (res && res.isLoggedIn) setAuth(res);
+      if (res && res.isLoggedIn) {
+        setAuth(res);
+        if (res.user?.role === 'admin' || res.role === 'admin') {
+          const savedMode = localStorage.getItem('real_purohit_app_mode');
+          if (savedMode === 'admin') setAppModeState('admin');
+        }
+      }
     });
     DataStore.getFeedbacks().then(data => {
       if (Array.isArray(data)) setFeedbacks(data);
@@ -301,7 +321,10 @@ export default function App() {
   const handleLogout = useCallback(() => {
     const cleared = DataStore.logout();
     setAuth(cleared || { isLoggedIn: false, user: null, role: 'guest' });
-    setAppMode('public');
+    localStorage.removeItem('real_purohit_active_tab');
+    localStorage.removeItem('real_purohit_app_mode');
+    setAppModeState('public');
+    setActiveTabState('home');
     showToast('Signed out of Real-Purohit platform.', 'info');
   }, [showToast]);
 

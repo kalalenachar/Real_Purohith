@@ -117,8 +117,8 @@ export class DataStore {
     return await API.updateBooking(id, bookingData);
   }
 
-  static async updateBookingStatus(id, status, location) {
-    return await API.updateBookingStatus(id, status, location);
+  static async updateBookingStatus(id, status, meetLink, location) {
+    return await API.updateBookingStatus(id, status, meetLink, location);
   }
 
   static async clearAllMeetLinks() {
@@ -147,7 +147,10 @@ export class DataStore {
     try {
       const list = await API.getSampradayas();
       if (Array.isArray(list) && list.length > 0) {
-        return list;
+        return list.map(item => ({
+          ...item,
+          image: item.image || SAMPRADAYA_MATRIX[item.id]?.image || SAMPRADAYA_LOGOS[item.id] || null
+        }));
       }
     } catch (e) {}
     return Object.values(SAMPRADAYA_MATRIX);
@@ -168,6 +171,14 @@ export class DataStore {
   // Database Admin Studio
   static async verifyAdminPassword(password) {
     return await API.verifyAdminPassword(password);
+  }
+
+  static async changeAdminPassword(currentPassword, newPassword) {
+    return await API.changeAdminPassword(currentPassword, newPassword);
+  }
+
+  static async vacuumDb() {
+    return await API.vacuumDb();
   }
 
   static async getDbTables() {

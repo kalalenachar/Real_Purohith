@@ -119,7 +119,11 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
             <div key={item.id} className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ fontSize: 32 }}>{item.icon}</span>
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'contain' }} />
+                  ) : (
+                    <span style={{ fontSize: 32 }}>{item.icon}</span>
+                  )}
                   <span className={`badge ${item.badgeClass}`}>{item.name}</span>
                 </div>
                 <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 700, color: '#f8fafc', marginBottom: 8 }}>

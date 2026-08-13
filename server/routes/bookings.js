@@ -24,6 +24,7 @@ router.get('/', (req, res) => {
       status: r.status,
       isAparaKaryam: Boolean(r.is_apara_karyam),
       location: r.location,
+      meetLink: r.meet_link || '',
       createdAt: r.created_at
     }));
     res.json(result);
@@ -35,13 +36,13 @@ router.get('/', (req, res) => {
 // CREATE a booking
 router.post('/', (req, res) => {
   try {
-    const { devoteeId, devoteeName, devoteePhone, purohitId, purohitName, sampradaya, ritualName, date, muhurtaTime, dakshinaAmount, samagriMode, isAparaKaryam, location } = req.body;
+    const { devoteeId, devoteeName, devoteePhone, purohitId, purohitName, sampradaya, ritualName, date, muhurtaTime, dakshinaAmount, samagriMode, isAparaKaryam, location, meetLink } = req.body;
 
     const id = `BK-${Math.floor(8900 + Math.random() * 9000)}`;
 
     db.prepare(`
-      INSERT INTO bookings (id, devotee_id, devotee_name, devotee_phone, purohit_id, purohit_name, sampradaya, ritual_name, date, muhurta_time, dakshina_amount, dakshina_status, samagri_mode, status, is_apara_karyam, location)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO bookings (id, devotee_id, devotee_name, devotee_phone, purohit_id, purohit_name, sampradaya, ritual_name, date, muhurta_time, dakshina_amount, dakshina_status, samagri_mode, status, is_apara_karyam, location, meet_link)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       devoteeId || 'dev-guest',
@@ -58,7 +59,8 @@ router.post('/', (req, res) => {
       samagriMode || 'Pandit Hand-Carried Custom Kit',
       'Pending Admin Review',
       isAparaKaryam ? 1 : 0,
-      location || 'Bengaluru'
+      location || 'Bengaluru',
+      meetLink || null
     );
 
     res.status(201).json({ id, message: 'Booking record saved in database!' });
@@ -75,7 +77,7 @@ router.put('/:id', (req, res) => {
     const {
       devoteeName, devoteePhone, purohitId, purohitName, sampradaya,
       ritualName, date, muhurtaTime, dakshinaAmount, dakshinaStatus,
-      samagriMode, status, isAparaKaryam, location
+      samagriMode, status, isAparaKaryam, location, meetLink
     } = req.body;
 
     db.prepare(`
@@ -93,13 +95,14 @@ router.put('/:id', (req, res) => {
         samagri_mode = COALESCE(?, samagri_mode),
         status = COALESCE(?, status),
         is_apara_karyam = COALESCE(?, is_apara_karyam),
-        location = COALESCE(?, location)
+        location = COALESCE(?, location),
+        meet_link = COALESCE(?, meet_link)
       WHERE id = ?
     `).run(
       devoteeName, devoteePhone, purohitId, purohitName, sampradaya,
       ritualName, date, muhurtaTime, dakshinaAmount, dakshinaStatus,
       samagriMode, status, isAparaKaryam !== undefined ? (isAparaKaryam ? 1 : 0) : null,
-      location, id
+      location, meetLink, id
     );
 
     res.json({ message: `Booking ${id} details successfully updated in SQLite database.` });
@@ -109,17 +112,20 @@ router.put('/:id', (req, res) => {
   }
 });
 
-// UPDATE booking status and/or meet link location
+// UPDATE booking status and/or meet link
 router.put('/:id/status', (req, res) => {
   try {
     const { id } = req.params;
-    const { status, location } = req.body;
-    if (location !== undefined) {
-      db.prepare('UPDATE bookings SET status = ?, location = ? WHERE id = ?').run(status, location, id);
+    const { status, meetLink, location } = req.body;
+    
+    if (meetLink !== undefined) {
+      db.prepare('UPDATE bookings SET status = COALESCE(?, status), meet_link = ? WHERE id = ?').run(status, meetLink, id);
+    } else if (location !== undefined) {
+      db.prepare('UPDATE bookings SET status = COALESCE(?, status), location = ? WHERE id = ?').run(status, location, id);
     } else {
       db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(status, id);
     }
-    res.json({ message: `Booking status/location updated in database.` });
+    res.json({ message: `Booking status/meet_link updated in database.` });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update booking status.' });
   }
@@ -128,7 +134,7 @@ router.put('/:id/status', (req, res) => {
 // CLEAR ALL MEET LINKS (Admin Control)
 router.post('/clear-links', (req, res) => {
   try {
-    db.prepare("UPDATE bookings SET location = 'Venue Address / In-App Vault' WHERE location LIKE 'http%'").run();
+    db.prepare("UPDATE bookings SET meet_link = NULL").run();
     res.json({ message: 'All live Google Meet links cleared by Admin.' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to clear meet links.' });

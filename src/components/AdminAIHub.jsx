@@ -96,7 +96,12 @@ export default function AdminAIHub({ feedbacks }) {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif' }}>{fb.purohitName}</span>
-                        {sm && <span className={`badge badge-${fb.sampradaya}`}>{sm.icon} {sm.name.split(' ')[0]}</span>}
+                        {sm && (
+                          <span className={`badge badge-${fb.sampradaya}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            {sm.image ? <img src={sm.image} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'contain' }} /> : sm.icon}
+                            {sm.name.split(' ')[0]}
+                          </span>
+                        )}
                         <span style={{ fontSize: 11, color: '#64748b' }}>by {fb.devoteeName}</span>
                       </div>
                       <p className="serif" style={{ fontSize: 14, color: '#e2e8f0', fontStyle: 'italic', marginTop: 8, lineHeight: 1.6 }}>

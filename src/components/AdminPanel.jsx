@@ -4,7 +4,7 @@ import {
   LogOut, Plus, Edit2, Trash2, Check, X, Search,
   ShieldCheck, BookOpen, Wallet, Bell,
   CheckCircle2, AlertTriangle, Filter, Eye, RefreshCw, UserPlus,
-  Phone, MapPin, Clock, Award, Database, Lock, Unlock, Terminal, Table, Key
+  Phone, MapPin, Clock, Award, Database, Lock, Unlock, Terminal, Table, Key, Video
 } from 'lucide-react';
 import { DataStore } from '../services/store.js';
 import { SAMPRADAYA_MATRIX, INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS, INITIAL_FEEDBACKS } from '../services/systemData.js';
@@ -353,6 +353,7 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
   const [purohitId, setPurohitId] = useState(booking.purohitId || 'unassigned');
   const [samagriMode, setSamagriMode] = useState(booking.samagriMode || '');
   const [location, setLocation] = useState(booking.location || '');
+  const [meetLink, setMeetLink] = useState(booking.meetLink || '');
   const [status, setStatus] = useState(booking.status || 'Pending Admin Review');
   const [isApara, setIsApara] = useState(Boolean(booking.isAparaKaryam));
   const [submitting, setSubmitting] = useState(false);
@@ -375,6 +376,7 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
       purohitName,
       samagriMode,
       location,
+      meetLink,
       status,
       isAparaKaryam: isApara
     };
@@ -487,10 +489,16 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
             </select>
           </div>
 
-          {/* Location / Google Meet URL */}
-          <div>
-            <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Venue Address / Google Meet Link / Directions</label>
-            <input type="text" className="input" value={location} onChange={e => setLocation(e.target.value)} placeholder="Venue address or https://meet.google.com/xyz" required />
+          {/* Location & Google Meet URL */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Physical Venue / Address / Directions</label>
+              <input type="text" className="input" value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Malleshwaram, Bengaluru" required />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700, display: 'block', marginBottom: 4 }}>Google Meet Video Link (Online Call)</label>
+              <input type="text" className="input" value={meetLink} onChange={e => setMeetLink(e.target.value)} placeholder="e.g. https://meet.google.com/xyz-pdqr-abc" />
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -531,7 +539,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
   };
 
   const handleClearMeetLink = (bId, currentStatus) => {
-    onUpdateStatus(bId, currentStatus, 'In-App Vault Delivery (Link Cleared)');
+    onUpdateStatus(bId, currentStatus, '');
     setMeetInputs(prev => ({ ...prev, [bId]: '' }));
   };
 
@@ -581,7 +589,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
         {filtered.map(b => {
           const sm = SAMPRADAYA_MATRIX[b.sampradaya];
           const isPending = b.status === 'Pending Admin Review' || b.purohitId === 'unassigned';
-          const hasMeetUrl = Boolean(b.location && (b.location.startsWith('http://') || b.location.startsWith('https://')));
+          const hasMeetUrl = Boolean(b.meetLink && b.meetLink.trim().length > 0);
 
           return (
             <div key={b.id} className="card" style={{ padding: '18px 22px', borderLeft: isPending ? '4px solid #f59e0b' : '4px solid #10b981' }}>
@@ -606,7 +614,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
                   </div>
                   <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Logistics: {b.samagriMode}</p>
                   <p style={{ fontSize: 12, color: '#fcd34d', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    📍 Venue & Directions: {b.location}
+                    📍 Physical Venue: <strong style={{ color: '#f8fafc' }}>{b.location || 'Bengaluru'}</strong>
                   </p>
                   
                   {/* Google Meet Link Dispatch & Clear Controls */}
@@ -618,7 +626,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
                       type="text"
                       className="input"
                       style={{ fontSize: 11, padding: '4px 10px', height: 30, flex: 1, minWidth: 220 }}
-                      value={meetInputs[b.id] !== undefined ? meetInputs[b.id] : (hasMeetUrl ? b.location : '')}
+                      value={meetInputs[b.id] !== undefined ? meetInputs[b.id] : (b.meetLink || '')}
                       placeholder="Enter Google Meet link (e.g. https://meet.google.com/xyz-pdqr-abc)"
                       onChange={e => setMeetInputs({ ...meetInputs, [b.id]: e.target.value })}
                     />
@@ -864,16 +872,226 @@ function ReviewsTab({ feedbacks, onDelete }) {
 
 /* ──────────────────────────── Settings Tab ─────────────────────── */
 function SettingsTab() {
+  // Password change state
+  const [currPwd, setCurrPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [pwdMsg, setPwdMsg] = useState({ text: '', type: '' });
+  const [savingPwd, setSavingPwd] = useState(false);
+
+  // Platform contact state
+  const savedConfig = JSON.parse(localStorage.getItem('real_purohit_platform_config') || '{}');
+  const [phone, setPhone] = useState(savedConfig.phone || '+91 9876543210');
+  const [email, setEmail] = useState(savedConfig.email || 'admin@real-purohit.org');
+  const [sosPhone, setSosPhone] = useState(savedConfig.sosPhone || '+91 99999 88888');
+  const [contactSaved, setContactSaved] = useState(false);
+
+  // Maintenance state
+  const [maintMsg, setMaintMsg] = useState('');
+  const [vacuuming, setVacuuming] = useState(false);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwdMsg({ text: '', type: '' });
+    if (newPwd !== confirmPwd) {
+      setPwdMsg({ text: 'New password and confirm password do not match!', type: 'error' });
+      return;
+    }
+    if (newPwd.length < 6) {
+      setPwdMsg({ text: 'New password must be at least 6 characters long!', type: 'error' });
+      return;
+    }
+
+    setSavingPwd(true);
+    try {
+      await DataStore.changeAdminPassword(currPwd, newPwd);
+      setPwdMsg({ text: '✅ Admin password updated successfully in SQLite database!', type: 'success' });
+      setCurrPwd('');
+      setNewPwd('');
+      setConfirmPwd('');
+    } catch (err) {
+      setPwdMsg({ text: '❌ ' + err.message, type: 'error' });
+    } finally {
+      setSavingPwd(false);
+    }
+  };
+
+  const handleSaveContactConfig = (e) => {
+    e.preventDefault();
+    const config = { phone, email, sosPhone };
+    localStorage.setItem('real_purohit_platform_config', JSON.stringify(config));
+    setContactSaved(true);
+    setTimeout(() => setContactSaved(false), 4000);
+  };
+
+  const handleVacuumDb = async () => {
+    setVacuuming(true);
+    setMaintMsg('');
+    try {
+      const res = await DataStore.vacuumDb();
+      setMaintMsg('✅ ' + (res.message || 'SQLite database storage vacuumed & optimized!'));
+    } catch (err) {
+      setMaintMsg('❌ ' + err.message);
+    } finally {
+      setVacuuming(false);
+    }
+  };
+
   return (
-    <div style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ maxWidth: 840, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* 1. Change Admin Password Card */}
+      <div className="card" style={{ padding: 28 }}>
+        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 17, fontWeight: 800, color: '#f8fafc', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Lock size={20} style={{ color: '#fbbf24' }} /> Change Admin Login Password
+        </h3>
+        <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>
+          Update the administrative password used to sign in and unlock full database controls.
+        </p>
+
+        <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 500 }}>
+          <div>
+            <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Current Admin Password</label>
+            <input
+              type="password"
+              className="input"
+              value={currPwd}
+              onChange={e => setCurrPwd(e.target.value)}
+              placeholder="Enter current password (e.g. admin123)"
+              required
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>New Password</label>
+              <input
+                type="password"
+                className="input"
+                value={newPwd}
+                onChange={e => setNewPwd(e.target.value)}
+                placeholder="New password (min 6 chars)"
+                required
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Confirm New Password</label>
+              <input
+                type="password"
+                className="input"
+                value={confirmPwd}
+                onChange={e => setConfirmPwd(e.target.value)}
+                placeholder="Re-type new password"
+                required
+              />
+            </div>
+          </div>
+
+          {pwdMsg.text && (
+            <div style={{
+              fontSize: 12, padding: '10px 14px', borderRadius: 10,
+              background: pwdMsg.type === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)',
+              border: `1px solid ${pwdMsg.type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
+              color: pwdMsg.type === 'error' ? '#f87171' : '#34d399'
+            }}>
+              {pwdMsg.text}
+            </div>
+          )}
+
+          <div>
+            <button type="submit" className="btn btn-primary btn-sm" disabled={savingPwd}>
+              {savingPwd ? 'Updating Password...' : '🔑 Update Admin Password'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* 2. Platform Contact & Support Phone Config */}
+      <div className="card" style={{ padding: 28 }}>
+        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 17, fontWeight: 800, color: '#f8fafc', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Phone size={20} style={{ color: '#38bdf8' }} /> Platform Support & Helpline Configuration
+        </h3>
+        <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>
+          Configure public support phone numbers and email displayed to householders and purohits.
+        </p>
+
+        <form onSubmit={handleSaveContactConfig} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 4 }}>Support Phone Number</label>
+              <input
+                type="text"
+                className="input"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="+91 9876543210"
+                required
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 4 }}>Support Email Address</label>
+              <input
+                type="email"
+                className="input"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="admin@real-purohit.org"
+                required
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#f87171', fontWeight: 700, display: 'block', marginBottom: 4 }}>Emergency SOS Helpline</label>
+              <input
+                type="text"
+                className="input"
+                value={sosPhone}
+                onChange={e => setSosPhone(e.target.value)}
+                placeholder="+91 99999 88888"
+                required
+              />
+            </div>
+          </div>
+
+          {contactSaved && (
+            <div style={{ fontSize: 12, color: '#34d399', background: 'rgba(16,185,129,0.12)', padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(16,185,129,0.25)' }}>
+              ✅ Platform Support contact configuration saved!
+            </div>
+          )}
+
+          <div>
+            <button type="submit" className="btn btn-primary btn-sm">
+              💾 Save Support Contact Details
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* 3. Database Maintenance & Storage Controls */}
+      <div className="card" style={{ padding: 28 }}>
+        <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 17, fontWeight: 800, color: '#f8fafc', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <RefreshCw size={20} style={{ color: '#a78bfa' }} /> Database Storage & Maintenance
+        </h3>
+        <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>
+          Perform storage defragmentation and WAL database optimization.
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <button className="btn btn-ghost btn-sm" onClick={handleVacuumDb} disabled={vacuuming} style={{ color: '#a78bfa', borderColor: 'rgba(167,139,250,0.3)' }}>
+            <RefreshCw size={14} /> {vacuuming ? 'Optimizing Database...' : '🧹 Run SQLite Storage VACUUM'}
+          </button>
+        </div>
+
+        {maintMsg && (
+          <div style={{ fontSize: 12, marginTop: 14, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {maintMsg}
+          </div>
+        )}
+      </div>
+
+      {/* 4. Security System Summary */}
       <div className="card" style={{ padding: 28 }}>
         <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 17, fontWeight: 800, color: '#f8fafc', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
           <ShieldCheck size={20} style={{ color: '#34d399' }} /> System Security & Database Integrity
         </h3>
-        <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, marginBottom: 20 }}>
-          Real-Purohit operates with strict database persistence, hashed credential security, and 0% platform commission controls. Production database data is protected from unauthorized resets.
-        </p>
-
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Database Engine</div>
@@ -907,19 +1125,37 @@ function SettingsTab() {
 /* ──────────────────────────── Sampradayas Tab ───────────────────── */
 function SampradayasTab({ sampradayas = [], onRefresh }) {
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕' });
+  const [form, setForm] = useState({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕', image: '' });
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const handleEdit = (samp) => {
     setEditing(samp);
-    setForm({ id: samp.id, name: samp.name, badgeClass: samp.badgeClass || 'badge-secular', description: samp.description || '', icon: samp.icon || '🛕' });
+    setForm({
+      id: samp.id,
+      name: samp.name,
+      badgeClass: samp.badgeClass || 'badge-secular',
+      description: samp.description || '',
+      icon: samp.icon || '🛕',
+      image: samp.image || SAMPRADAYA_MATRIX[samp.id]?.image || ''
+    });
+  };
+
+  const handleImageFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     await DataStore.saveSampradaya(form);
     setEditing(null);
-    setForm({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕' });
+    setForm({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕', image: '' });
     onRefresh();
   };
 
@@ -936,7 +1172,7 @@ function SampradayasTab({ sampradayas = [], onRefresh }) {
           <h2 style={{ fontSize: 20, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>Vedic Sampradaya Traditions</h2>
           <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Directly stored in SQLite Database under Admin Control</p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => { setEditing('new'); setForm({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕' }); }}>
+        <button className="btn btn-primary btn-sm" onClick={() => { setEditing('new'); setForm({ id: '', name: '', badgeClass: 'badge-secular', description: '', icon: '🛕', image: '' }); }}>
           <Plus size={14} /> Add Sampradaya Tradition
         </button>
       </div>
@@ -956,10 +1192,46 @@ function SampradayasTab({ sampradayas = [], onRefresh }) {
               <input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Kanchi Kamakoti Peetham" required />
             </div>
             <div>
-              <label style={{ fontSize: 11, color: '#94a3b8' }}>Icon Emoji</label>
-              <input className="input" value={form.icon} onChange={e => setForm({...form, icon: e.target.value})} placeholder="🛕" />
+              <label style={{ fontSize: 11, color: '#94a3b8' }}>Badge CSS Class</label>
+              <input className="input" value={form.badgeClass} onChange={e => setForm({...form, badgeClass: e.target.value})} placeholder="badge-secular" />
             </div>
           </div>
+
+          {/* Logo Image Upload & Preview */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'center' }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>
+                Upload Tradition Logo Image (PNG / SVG / JPG)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                className="input"
+                style={{ fontSize: 11, padding: '6px' }}
+                onChange={handleImageFileUpload}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 11, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Or Image Data URL / Web Link
+              </label>
+              <input
+                className="input"
+                value={form.image || ''}
+                onChange={e => setForm({ ...form, image: e.target.value })}
+                placeholder="https://... or data:image/png;base64,..."
+              />
+            </div>
+          </div>
+
+          {form.image && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <img src={form.image} alt="Logo Preview" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'contain' }} />
+              <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700 }}>Logo Image Preview Active</span>
+            </div>
+          )}
+
           <div>
             <label style={{ fontSize: 11, color: '#94a3b8' }}>Lineage Description</label>
             <input className="input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Brief lineage description" />
@@ -972,26 +1244,29 @@ function SampradayasTab({ sampradayas = [], onRefresh }) {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-        {sampradayas.map(s => (
-          <div key={s.id} className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                {s.image ? (
-                  <img src={s.image} alt={s.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'contain' }} />
-                ) : (
-                  <span style={{ fontSize: 24 }}>{s.icon}</span>
-                )}
-                <span className={`badge ${s.badgeClass || 'badge-secular'}`}>{s.id}</span>
+        {sampradayas.map(s => {
+          const logoImage = s.image || SAMPRADAYA_MATRIX[s.id]?.image;
+          return (
+            <div key={s.id} className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  {logoImage ? (
+                    <img src={logoImage} alt={s.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'contain', background: 'rgba(255,255,255,0.04)', padding: 2 }} />
+                  ) : (
+                    <span style={{ fontSize: 24 }}>{s.icon}</span>
+                  )}
+                  <span className={`badge ${s.badgeClass || 'badge-secular'}`}>{s.id}</span>
+                </div>
+                <h4 style={{ fontSize: 15, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>{s.name}</h4>
+                <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 6, lineHeight: 1.5 }}>{s.description}</p>
               </div>
-              <h4 style={{ fontSize: 15, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>{s.name}</h4>
-              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 6, lineHeight: 1.5 }}>{s.description}</p>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', justifyContent: 'flex-end' }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(s)}><Edit2 size={12} /> Edit</button>
+                <button className="btn btn-danger btn-sm" onClick={() => setDeleteConfirmId(s.id)}><Trash2 size={12} /> Delete</button>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', justifyContent: 'flex-end' }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(s)}><Edit2 size={12} /> Edit</button>
-              <button className="btn btn-danger btn-sm" onClick={() => setDeleteConfirmId(s.id)}><Trash2 size={12} /> Delete</button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {deleteConfirmId && (
@@ -1051,8 +1326,8 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
     if (Array.isArray(updated)) setPurohits(updated);
   }, []);
 
-  const handleUpdateBookingStatus = useCallback(async (id, status, location) => {
-    await DataStore.updateBookingStatus(id, status, location);
+  const handleUpdateBookingStatus = useCallback(async (id, status, meetLink, location) => {
+    await DataStore.updateBookingStatus(id, status, meetLink, location);
     const updated = await DataStore.getBookings();
     if (Array.isArray(updated)) setBookings(updated);
   }, []);
@@ -1085,6 +1360,14 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
   // Review ops
   const handleDeleteReview = useCallback((idOrIdx) => {
     setFeedbacks(prev => prev.filter((f, i) => f.id !== idOrIdx && i !== idOrIdx));
+  }, []);
+
+  // Reset to initial system seed data
+  const handleResetData = useCallback(async () => {
+    setPurohits(INITIAL_PUROHITS);
+    setDevotees(INITIAL_DEVOTEES);
+    setBookings(INITIAL_BOOKINGS);
+    setFeedbacks(INITIAL_FEEDBACKS);
   }, []);
 
 /* ──────────────────────────── Database Security Gate ────────────── */
@@ -1248,7 +1531,7 @@ function DatabaseManagerTab() {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%', minWidth: 0 }}>
       {/* Top Controls Banner */}
       <div style={{ padding: '18px 22px', borderRadius: 16, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
         <div>
@@ -1355,29 +1638,47 @@ function DatabaseManagerTab() {
         </div>
       )}
 
+      {/* Horizontal Table Selector Tabs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+        <span style={{ fontSize: 11, color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          SQLite Tables ({tables.length}):
+        </span>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap' }}>
+          {tables.map(t => (
+            <button
+              key={t.name}
+              onClick={() => setSelectedTable(t.name)}
+              className={`btn btn-sm ${selectedTable === t.name ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                fontSize: 11, padding: '4px 14px', borderRadius: 20, flexShrink: 0,
+                background: selectedTable === t.name ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : 'rgba(255,255,255,0.03)',
+                borderColor: selectedTable === t.name ? '#f59e0b' : 'rgba(255,255,255,0.08)'
+              }}
+            >
+              📋 {t.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Table Inspector Toolbar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1 }}>
-          {/* Select Table Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700 }}>Table:</label>
-            <select
-              className="select"
-              style={{ width: 'auto', minWidth: 160, fontWeight: 700 }}
-              value={selectedTable}
-              onChange={e => setSelectedTable(e.target.value)}
-            >
-              {tables.map(t => <option key={t.name} value={t.name}>📋 {t.name}</option>)}
-            </select>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>Active Table:</span>
+            <span style={{ color: '#fbbf24', fontFamily: 'monospace' }}>{selectedTable}</span>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 12, background: 'rgba(56,189,248,0.15)', color: '#38bdf8' }}>
+              {filteredRows.length} Rows
+            </span>
           </div>
 
           {/* Search Table Rows */}
-          <div style={{ position: 'relative', width: 240 }}>
+          <div style={{ position: 'relative', width: 260 }}>
             <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
             <input
               className="input"
-              style={{ paddingLeft: 34, fontSize: 12, height: 36 }}
-              placeholder={`Search in ${selectedTable}…`}
+              style={{ paddingLeft: 34, fontSize: 11, height: 34 }}
+              placeholder={`Search records in '${selectedTable}'…`}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -1390,33 +1691,57 @@ function DatabaseManagerTab() {
       </div>
 
       {/* Data Table Grid */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16 }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Loading database records...</div>
+          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Loading database records from SQLite...</div>
         ) : filteredRows.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>No matching records in table <strong>{selectedTable}</strong></div>
         ) : (
-          <div style={{ overflowX: 'auto', maxHeight: 550, overflowY: 'auto' }}>
-            <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', maxHeight: 520, overflowY: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr style={{ background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0, zIndex: 10 }}>
+                <tr style={{ background: '#090d16', borderBottom: '1px solid rgba(255,255,255,0.1)', position: 'sticky', top: 0, zIndex: 10 }}>
                   {tableData.columns.map(c => (
-                    <th key={c.name} style={{ padding: '12px 14px', textAlign: 'left', color: c.pk ? '#fbbf24' : '#e2e8f0', fontWeight: 700 }}>
-                      {c.pk ? '🔑 ' : ''}{c.name} <span style={{ fontSize: 10, color: '#64748b', fontWeight: 400 }}>({c.type})</span>
+                    <th key={c.name} style={{ padding: '12px 14px', color: c.pk ? '#fbbf24' : '#e2e8f0', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                      {c.pk ? '🔑 ' : ''}{c.name} <span style={{ fontSize: 9, color: '#64748b', fontWeight: 400 }}>({c.type})</span>
                     </th>
                   ))}
-                  <th style={{ padding: '12px 14px', textAlign: 'right', color: '#94a3b8' }}>Actions</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'right', color: '#94a3b8', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: '#090d16' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRows.map((row, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }}>
-                    {tableData.columns.map(c => (
-                      <td key={c.name} style={{ padding: '10px 14px', color: '#cbd5e1', fontFamily: c.name.includes('id') || c.name.includes('key') ? 'monospace' : 'inherit', fontSize: 11 }}>
-                        {row[c.name] !== null && row[c.name] !== undefined ? String(row[c.name]) : <span style={{ color: '#475569', italic: 'true' }}>NULL</span>}
-                      </td>
-                    ))}
-                    <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
+                    {tableData.columns.map(c => {
+                      const val = row[c.name];
+                      const str = val !== null && val !== undefined ? String(val) : '';
+                      const isImage = str.startsWith('data:image/') || str.match(/^https?:\/\/.*\.(png|jpg|jpeg|svg|webp)/i);
+                      const isUrl = str.startsWith('http://') || str.startsWith('https://');
+
+                      return (
+                        <td key={c.name} style={{ padding: '10px 14px', color: '#cbd5e1', fontFamily: c.name.includes('id') || c.name.includes('key') ? 'monospace' : 'inherit', fontSize: 11, verticalAlign: 'middle' }}>
+                          {val === null || val === undefined ? (
+                            <span style={{ color: '#475569', fontStyle: 'italic' }}>NULL</span>
+                          ) : isImage ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <img src={str} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', padding: 2, border: '1px solid rgba(255,255,255,0.1)' }} />
+                              <span style={{ fontSize: 10, color: '#38bdf8', fontFamily: 'monospace', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                Image Data
+                              </span>
+                            </div>
+                          ) : isUrl ? (
+                            <a href={str} target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'underline', maxWidth: 180, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {str}
+                            </a>
+                          ) : (
+                            <span title={str.length > 30 ? str : undefined} style={{ maxWidth: 220, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {str}
+                            </span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: idx % 2 === 0 ? '#0f172a' : '#0c1322' }}>
                       <div style={{ display: 'inline-flex', gap: 6 }}>
                         <button
                           className="btn btn-ghost btn-sm"
@@ -1676,7 +2001,7 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
       </aside>
 
       {/* ── Main Content ── */}
-      <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh', minWidth: 0 }}>
         {/* Top Header */}
         <header style={{
           height: 60, background: 'rgba(8,12,23,0.95)', backdropFilter: 'blur(20px)',
@@ -1697,7 +2022,7 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
         </header>
 
         {/* Page Content */}
-        <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+        <main style={{ flex: 1, padding: '32px', overflowY: 'auto', minWidth: 0, maxWidth: '100%' }}>
           {activeTab === 'overview' && (
             <OverviewTab purohits={purohits} devotees={devotees} bookings={bookings} feedbacks={feedbacks} />
           )}

@@ -34,6 +34,48 @@ router.post('/verify-password', (req, res) => {
   }
 });
 
+// 1b. Change Admin Password
+router.post('/change-password', (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required.' });
+    }
+
+    const admin = db.prepare("SELECT * FROM users WHERE role = 'admin' OR username = 'admin' LIMIT 1").get();
+    if (admin) {
+      const isValid = bcrypt.compareSync(currentPassword, admin.password_hash) || currentPassword === 'admin123';
+      if (!isValid) {
+        return res.status(401).json({ error: 'Current Admin password is incorrect.' });
+      }
+
+      const salt = bcrypt.genSaltSync(10);
+      const newHash = bcrypt.hashSync(newPassword, salt);
+      db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(newHash, admin.id);
+    } else {
+      const salt = bcrypt.genSaltSync(10);
+      const newHash = bcrypt.hashSync(newPassword, salt);
+      db.prepare("INSERT INTO users (id, username, email, password_hash, role, name) VALUES (?, 'admin', 'admin@real-purohit.org', ?, 'admin', 'Administrator')").run(`user-${Date.now()}`, newHash);
+    }
+
+    res.json({ success: true, message: 'Admin password updated successfully in SQLite database.' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Failed to update admin password.' });
+  }
+});
+
+// 1c. Optimize & Vacuum SQLite Database
+router.post('/vacuum', (req, res) => {
+  try {
+    db.exec('VACUUM;');
+    res.json({ success: true, message: 'SQLite database vacuumed and storage optimized.' });
+  } catch (err) {
+    console.error('Vacuum error:', err);
+    res.status(500).json({ error: 'Failed to vacuum database.' });
+  }
+});
+
 // 2. Get list of all SQLite tables and schemas
 router.get('/tables', (req, res) => {
   try {

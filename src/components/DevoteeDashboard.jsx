@@ -459,8 +459,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {activeSevas.map((b, idx) => {
-                    const hasMeetUrl = Boolean(b.location && (b.location.startsWith('http://') || b.location.startsWith('https://')));
-                    const meetUrl = hasMeetUrl ? b.location.match(/https?:\/\/[^\s]+/)?.[0] : null;
+                    const meetUrl = (b.meetLink && b.meetLink.trim().length > 0) ? b.meetLink : (b.location && (b.location.startsWith('http://') || b.location.startsWith('https://')) ? b.location : null);
 
                     return (
                       <div key={b.id || idx} className="card-premium" style={{ padding: '18px 22px' }}>
@@ -480,14 +479,15 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                               {b.ritualName}
                             </h4>
 
-                            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 12 }}>
+                            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                               <span>📅 Date: <strong style={{ color: '#e2e8f0' }}>{b.date}</strong></span>
                               <span>⏰ Slot: <strong style={{ color: '#fbbf24' }}>{b.muhurtaTime}</strong></span>
+                              {b.location && <span>📍 Venue: <strong style={{ color: '#e2e8f0' }}>{b.location}</strong></span>}
                             </p>
                           </div>
 
                           <div>
-                            {hasMeetUrl && meetUrl ? (
+                            {meetUrl ? (
                               <a
                                 href={meetUrl}
                                 target="_blank"

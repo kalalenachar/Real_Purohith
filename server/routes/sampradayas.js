@@ -12,7 +12,7 @@ const db = new Database(dbPath);
 // GET /api/sampradayas - List all traditions from SQLite database
 router.get('/', (req, res) => {
   try {
-    const sampradayas = db.prepare('SELECT id, name, badge_class as badgeClass, description, icon FROM sampradayas').all();
+    const sampradayas = db.prepare('SELECT id, name, badge_class as badgeClass, description, icon, image FROM sampradayas').all();
     res.json(sampradayas);
   } catch (error) {
     console.error('Error fetching sampradayas:', error);
@@ -23,17 +23,17 @@ router.get('/', (req, res) => {
 // POST /api/sampradayas - Create a new tradition (Admin Only)
 router.post('/', (req, res) => {
   try {
-    const { id, name, badgeClass, description, icon } = req.body;
+    const { id, name, badgeClass, description, icon, image } = req.body;
     if (!id || !name) {
       return res.status(400).json({ error: 'Id and name are required' });
     }
 
     const insert = db.prepare(`
-      INSERT INTO sampradayas (id, name, badge_class, description, icon)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO sampradayas (id, name, badge_class, description, icon, image)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
 
-    insert.run(id.toLowerCase().replace(/\s+/g, '-'), name, badgeClass || 'badge-secular', description || '', icon || '🛕');
+    insert.run(id.toLowerCase().replace(/\s+/g, '-'), name, badgeClass || 'badge-secular', description || '', icon || '🛕', image || null);
     res.status(201).json({ message: 'Sampradaya created successfully' });
   } catch (error) {
     console.error('Error creating sampradaya:', error);
@@ -44,7 +44,7 @@ router.post('/', (req, res) => {
 // PUT /api/sampradayas/:id - Update tradition (Admin Only)
 router.put('/:id', (req, res) => {
   try {
-    const { name, badgeClass, description, icon } = req.body;
+    const { name, badgeClass, description, icon, image } = req.body;
     const { id } = req.params;
 
     const update = db.prepare(`
@@ -52,11 +52,12 @@ router.put('/:id', (req, res) => {
       SET name = COALESCE(?, name),
           badge_class = COALESCE(?, badge_class),
           description = COALESCE(?, description),
-          icon = COALESCE(?, icon)
+          icon = COALESCE(?, icon),
+          image = COALESCE(?, image)
       WHERE id = ?
     `);
 
-    update.run(name, badgeClass, description, icon, id);
+    update.run(name, badgeClass, description, icon, image, id);
     res.json({ message: 'Sampradaya updated successfully' });
   } catch (error) {
     console.error('Error updating sampradaya:', error);
