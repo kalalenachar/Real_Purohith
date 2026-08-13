@@ -486,7 +486,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                             </p>
                           </div>
 
-                          <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                             {meetUrl ? (
                               <a
                                 href={meetUrl}
@@ -505,6 +505,16 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                               <span style={{ fontSize: 11, padding: '6px 14px', borderRadius: 12, background: 'rgba(245,158,11,0.08)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.25)', fontWeight: 700 }}>
                                 ⏳ Meet Link Pending Admin Dispatch
                               </span>
+                            )}
+
+                            {onOpenFeedback && (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => onOpenFeedback({ id: b.purohitId || 'pur-101', name: b.purohitName || 'Assigned Pandit', sampradaya: b.sampradaya })}
+                                style={{ fontSize: 11, padding: '6px 14px', borderRadius: 12, borderColor: 'rgba(245,158,11,0.3)', color: '#fbbf24', fontWeight: 700 }}
+                              >
+                                ⭐ Leave Feedback & Audit Review
+                              </button>
                             )}
                           </div>
                         </div>

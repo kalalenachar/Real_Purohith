@@ -7,24 +7,33 @@ const router = express.Router();
 router.get('/', (req, res) => {
   try {
     const rows = db.prepare('SELECT * FROM feedbacks ORDER BY date_submitted DESC').all();
-    const result = rows.map(r => ({
-      id: r.id,
-      bookingId: r.booking_id,
-      devoteeName: r.devotee_name,
-      purohitId: r.purohit_id,
-      purohitName: r.purohit_name,
-      sampradaya: r.sampradaya,
-      ratings: JSON.parse(r.ratings_json || '{}'),
-      sampradayaPaddhatiAccuracy: r.sampradaya_paddhati_accuracy,
-      reviewText: r.review_text,
-      aiSentiment: r.ai_sentiment,
-      aiConfidence: r.ai_confidence,
-      status: r.status,
-      dateSubmitted: r.date_submitted
-    }));
+    const result = rows.map(r => {
+      let parsedRatings = {};
+      try {
+        parsedRatings = JSON.parse(r.ratings_json || '{}');
+      } catch (e) {
+        parsedRatings = {};
+      }
+      return {
+        id: r.id,
+        bookingId: r.booking_id,
+        devoteeName: r.devotee_name,
+        purohitId: r.purohit_id,
+        purohitName: r.purohit_name,
+        sampradaya: r.sampradaya,
+        ratings: parsedRatings,
+        sampradayaPaddhatiAccuracy: r.sampradaya_paddhati_accuracy,
+        reviewText: r.review_text,
+        aiSentiment: r.ai_sentiment,
+        aiConfidence: r.ai_confidence,
+        status: r.status,
+        dateSubmitted: r.date_submitted
+      };
+    });
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: 'Database error fetching feedbacks.' });
+    console.error('Database error fetching feedbacks:', err);
+    res.json([]);
   }
 });
 

@@ -543,7 +543,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
       <div style={{ padding: '16px 20px', borderRadius: 16, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
-            📥 Incoming User Booking Requests
+            📥 Incoming Devotee Booking Requests
           </h3>
           <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
             All ritual requests land at Admin Desk. Admin controls Google Meet link dispatch and time-based link clearing.
@@ -577,7 +577,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
         </select>
       </div>
 
-      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {bookings.length} user booking requests</p>
+      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {bookings.length} devotee booking requests</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {filtered.map(b => {
@@ -602,7 +602,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
                   </div>
                   <h4 style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginBottom: 6 }}>{b.ritualName}</h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: 12, color: '#94a3b8' }}>
-                    <span>👤 User: <strong style={{ color: '#e2e8f0' }}>{b.devoteeName}</strong> {b.devoteePhone && <span style={{ color: '#38bdf8', fontWeight: 700 }}> (📞 {b.devoteePhone})</span>}</span>
+                    <span>👤 Devotee: <strong style={{ color: '#e2e8f0' }}>{b.devoteeName}</strong> {b.devoteePhone && <span style={{ color: '#38bdf8', fontWeight: 700 }}> (📞 {b.devoteePhone})</span>}</span>
                     <span>🪔 Status: <strong style={{ color: isPending ? '#fbbf24' : '#34d399' }}>{b.purohitName || 'Pending Admin Assignment'}</strong></span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {b.date} · {b.muhurtaTime}</span>
                   </div>
@@ -1907,9 +1907,9 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
 }
 
   const SIDEBAR_ITEMS = [
-    { id: 'overview',     label: 'Overview',              icon: LayoutDashboard },
-    { id: 'bookings',     label: 'User Booking Requests', icon: CalendarCheck },
-    { id: 'sampradayas',  label: 'Sampradaya Traditions', icon: Award },
+    { id: 'overview',     label: 'Overview',                 icon: LayoutDashboard },
+    { id: 'bookings',     label: 'Devotee Booking Requests', icon: CalendarCheck },
+    { id: 'sampradayas',  label: 'Sampradaya Traditions',    icon: Award },
     { id: 'purohits',     label: 'Acharya Directory',     icon: Users },
     { id: 'devotees',     label: 'Devotee Records',       icon: BookOpen },
     { id: 'dbAccess',     label: 'Full DB Access',        icon: Database },
@@ -1979,7 +1979,7 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
           }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#94a3b8'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}>
-            <Eye size={14} /> View Public App
+            <Eye size={14} /> View Devotee Platform
           </button>
           <button onClick={onLogout} style={{
             width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(220,38,38,0.2)',
