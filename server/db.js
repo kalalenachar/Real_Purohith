@@ -218,13 +218,13 @@ function seedInitialData() {
   const userPwdHash = bcrypt.hashSync('user123', salt);
 
   const insertUser = db.prepare(`
-    INSERT INTO users (id, username, email, password_hash, role, name, gotram, sampradaya, avatar)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO users (id, username, email, phone, password_hash, role, name, gotram, sampradaya, avatar)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  insertUser.run('user-admin', 'admin', 'admin@real-purohit.org', adminPwdHash, 'admin', 'Chief Administrator', '', '', '👑');
-  insertUser.run('user-devotee-1', 'venkatesh', 'venkatesh@real-purohit.org', userPwdHash, 'devotee', 'Sri Venkatesh Rao', 'Kashyapa', 'uttaradhi', '🕉️');
-  insertUser.run('user-purohit-1', 'acharyar', 'acharyar@real-purohit.org', userPwdHash, 'purohit', 'Vidwan Raghavendra Acharya', 'Kashyapa', 'uttaradhi', '🪔');
+  insertUser.run('user-admin', 'admin', 'admin@real-purohit.org', '+91 9999999999', adminPwdHash, 'admin', 'Chief Administrator', '', '', '👑');
+  insertUser.run('user-devotee-1', 'venkatesh', 'venkatesh@real-purohit.org', '+91 9876543210', userPwdHash, 'devotee', 'Sri Venkatesh Rao', 'Kashyapa', 'uttaradhi', '🕉️');
+  insertUser.run('user-purohit-1', 'acharyar', 'acharyar@real-purohit.org', '+91 9876543211', userPwdHash, 'purohit', 'Vidwan Raghavendra Acharya', 'Kashyapa', 'uttaradhi', '🪔');
 
   // Seed Purohits
   const insertPurohit = db.prepare(`
