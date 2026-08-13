@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, Calendar, Clock, Video, Phone, Sparkles, User, Mail, MapPin, Heart, BookOpen, ShieldCheck } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
+import { RASHI_LIST, NAKSHATRA_LIST, getNakshatrasForRashi, getRashisForNakshatra, handleRashiSelection, handleNakshatraSelection } from '../services/vedicAstrologyService.js';
 
 export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
   const isAstrology = sevaType === 'astrology';
@@ -20,6 +20,18 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
   const [rashi, setRashi] = useState(user?.rashi || '');
   const [nakshatram, setNakshatram] = useState(user?.nakshatra || '');
   const [sankalpaIntention, setSankalpaIntention] = useState('Family Health, Peace & Spiritual Well-being');
+
+  const onSelectRashi = (newRashi) => {
+    const updated = handleRashiSelection(newRashi, nakshatram);
+    setRashi(updated.rashi);
+    setNakshatram(updated.nakshatra);
+  };
+
+  const onSelectNakshatra = (newNakshatra) => {
+    const updated = handleNakshatraSelection(newNakshatra, rashi);
+    setRashi(updated.rashi);
+    setNakshatram(updated.nakshatra);
+  };
 
   // Astrology specific
   const [dob, setDob] = useState('1992-05-15');
@@ -293,10 +305,10 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
                     className="select"
                     style={{ fontSize: 11 }}
                     value={rashi}
-                    onChange={e => setRashi(e.target.value)}
+                    onChange={e => onSelectRashi(e.target.value)}
                   >
                     <option value="">-- Select Rashi --</option>
-                    {RASHI_LIST.map(r => (
+                    {getRashisForNakshatra(nakshatram).map(r => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
@@ -309,10 +321,10 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
                     className="select"
                     style={{ fontSize: 11 }}
                     value={nakshatram}
-                    onChange={e => setNakshatram(e.target.value)}
+                    onChange={e => onSelectNakshatra(e.target.value)}
                   >
                     <option value="">-- Select Nakshatra --</option>
-                    {NAKSHATRA_LIST.map(n => (
+                    {getNakshatrasForRashi(rashi).map(n => (
                       <option key={n} value={n}>{n}</option>
                     ))}
                   </select>

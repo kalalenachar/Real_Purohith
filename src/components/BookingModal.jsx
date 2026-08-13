@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, ShieldCheck, Flame, X, Check, Heart, Sparkles, UserCheck, ArrowRight, ArrowLeft, Phone, User, Link as LinkIcon, FileText } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { SAMPRADAYA_MATRIX, RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
+import { SAMPRADAYA_MATRIX } from '../services/systemData.js';
+import { RASHI_LIST, NAKSHATRA_LIST, getNakshatrasForRashi, getRashisForNakshatra, handleRashiSelection, handleNakshatraSelection } from '../services/vedicAstrologyService.js';
 
 const COUNTRY_CODES = [
   { code: '+91',  label: '🇮🇳 India (+91)',         flag: '🇮🇳', regex: /^[6-9]\d{9}$/,   errorMsg: 'India mobile number must be 10 digits starting with 6, 7, 8, or 9.' },
@@ -63,6 +64,18 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
   const [sampradaya, setSampradaya] = useState(auth?.user?.sampradaya || 'secular');
   const [rashi, setRashi] = useState(auth?.user?.rashi || '');
   const [nakshatra, setNakshatra] = useState(auth?.user?.nakshatra || '');
+
+  const onSelectRashi = (newRashi) => {
+    const updated = handleRashiSelection(newRashi, nakshatra);
+    setRashi(updated.rashi);
+    setNakshatra(updated.nakshatra);
+  };
+
+  const onSelectNakshatra = (newNakshatra) => {
+    const updated = handleNakshatraSelection(newNakshatra, rashi);
+    setRashi(updated.rashi);
+    setNakshatra(updated.nakshatra);
+  };
   const [date, setDate] = useState(new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]);
   const [muhurtaTime, setMuhurtaTime] = useState('Pending Discussion with Admin');
   const [dakshinaAmount] = useState(initialMatch.dakshinaRange);
@@ -266,10 +279,10 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
                 <select
                   className="select"
                   value={rashi}
-                  onChange={e => setRashi(e.target.value)}
+                  onChange={e => onSelectRashi(e.target.value)}
                 >
                   <option value="">-- Select Rashi --</option>
-                  {RASHI_LIST.map(r => (
+                  {getRashisForNakshatra(nakshatra).map(r => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
@@ -282,10 +295,10 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
                 <select
                   className="select"
                   value={nakshatra}
-                  onChange={e => setNakshatra(e.target.value)}
+                  onChange={e => onSelectNakshatra(e.target.value)}
                 >
                   <option value="">-- Select Nakshatra --</option>
-                  {NAKSHATRA_LIST.map(n => (
+                  {getNakshatrasForRashi(rashi).map(n => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>

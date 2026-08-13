@@ -4,7 +4,8 @@ import {
   AlertCircle, CheckCircle2, X, Sparkles, KeyRound, UserPlus, LogIn, ArrowLeft
 } from 'lucide-react';
 import { DataStore } from '../services/store.js';
-import { SAMPRADAYA_MATRIX, RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
+import { SAMPRADAYA_MATRIX } from '../services/systemData.js';
+import { RASHI_LIST, NAKSHATRA_LIST, getNakshatrasForRashi, getRashisForNakshatra, handleRashiSelection, handleNakshatraSelection } from '../services/vedicAstrologyService.js';
 
 export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'login' }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'forgot'
@@ -24,6 +25,18 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
   const [gotram, setGotram] = useState('');
   const [rashi, setRashi] = useState('');
   const [nakshatra, setNakshatra] = useState('');
+
+  const onSelectRegRashi = (newRashi) => {
+    const updated = handleRashiSelection(newRashi, nakshatra);
+    setRashi(updated.rashi);
+    setNakshatra(updated.nakshatra);
+  };
+
+  const onSelectRegNakshatra = (newNakshatra) => {
+    const updated = handleNakshatraSelection(newNakshatra, rashi);
+    setRashi(updated.rashi);
+    setNakshatra(updated.nakshatra);
+  };
   const [sampradaya, setSampradaya] = useState('uttaradhi');
 
   // Forgot password state
@@ -420,12 +433,12 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                       <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Rashi (Zodiac)</label>
                       <select
                         value={rashi}
-                        onChange={e => setRashi(e.target.value)}
+                        onChange={e => onSelectRegRashi(e.target.value)}
                         className="select"
                         style={{ fontSize: 11 }}
                       >
                         <option value="">-- Select Rashi --</option>
-                        {RASHI_LIST.map(r => (
+                        {getRashisForNakshatra(nakshatra).map(r => (
                           <option key={r} value={r}>{r}</option>
                         ))}
                       </select>
@@ -434,12 +447,12 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                       <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Nakshatra (Star)</label>
                       <select
                         value={nakshatra}
-                        onChange={e => setNakshatra(e.target.value)}
+                        onChange={e => onSelectRegNakshatra(e.target.value)}
                         className="select"
                         style={{ fontSize: 11 }}
                       >
                         <option value="">-- Select Nakshatra --</option>
-                        {NAKSHATRA_LIST.map(n => (
+                        {getNakshatrasForRashi(rashi).map(n => (
                           <option key={n} value={n}>{n}</option>
                         ))}
                       </select>

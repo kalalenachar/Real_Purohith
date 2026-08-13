@@ -4,7 +4,8 @@ import {
   ChevronRight, Flame, CheckCircle2, ShieldCheck, Plus,
   MapPin, Clock, Check, Star, User, Save, Edit3
 } from 'lucide-react';
-import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS, RASHI_LIST, NAKSHATRA_LIST } from '../services/systemData.js';
+import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
+import { RASHI_LIST, NAKSHATRA_LIST, getNakshatrasForRashi, getRashisForNakshatra, handleRashiSelection, handleNakshatraSelection } from '../services/vedicAstrologyService.js';
 import { calculateNextTithiAllotments } from '../services/aiTimeAllotmentEngine.js';
 import { DataStore } from '../services/store.js';
 
@@ -57,6 +58,18 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
   const [profileAvatar, setProfileAvatar] = useState('👤');
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaveMsg, setProfileSaveMsg] = useState('');
+
+  const onSelectProfileRashi = (newRashi) => {
+    const updated = handleRashiSelection(newRashi, profileNakshatra);
+    setProfileRashi(updated.rashi);
+    setProfileNakshatra(updated.nakshatra);
+  };
+
+  const onSelectProfileNakshatra = (newNakshatra) => {
+    const updated = handleNakshatraSelection(newNakshatra, profileRashi);
+    setProfileRashi(updated.rashi);
+    setProfileNakshatra(updated.nakshatra);
+  };
 
   // Load user-specific bookings & profile details
   React.useEffect(() => {
@@ -378,10 +391,10 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                 <select
                   className="select"
                   value={profileRashi}
-                  onChange={e => setProfileRashi(e.target.value)}
+                  onChange={e => onSelectProfileRashi(e.target.value)}
                 >
                   <option value="">-- Select Janma Rashi --</option>
-                  {RASHI_LIST.map(r => (
+                  {getRashisForNakshatra(profileNakshatra).map(r => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
@@ -392,10 +405,10 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
                 <select
                   className="select"
                   value={profileNakshatra}
-                  onChange={e => setProfileNakshatra(e.target.value)}
+                  onChange={e => onSelectProfileNakshatra(e.target.value)}
                 >
                   <option value="">-- Select Janma Nakshatra --</option>
-                  {NAKSHATRA_LIST.map(n => (
+                  {getNakshatrasForRashi(profileRashi).map(n => (
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
