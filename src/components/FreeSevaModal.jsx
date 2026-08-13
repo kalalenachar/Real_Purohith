@@ -210,15 +210,15 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-                  Email Address *
+                <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+                  Mobile Number * (Mandatory)
                 </label>
                 <input
-                  type="email"
+                  type="tel"
                   className="input"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="e.g. +91 9876543210"
                   required
                 />
               </div>

@@ -17,6 +17,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
 
   // Register state
   const [fullName, setFullName] = useState('');
+  const [regPhone, setRegPhone] = useState('');
   const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -37,7 +38,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
     setRashi(updated.rashi);
     setNakshatra(updated.nakshatra);
   };
-  const [sampradaya, setSampradaya] = useState('uttaradhi');
+  const [sampradaya, setSampradaya] = useState('');
 
   // Forgot password state
   const [forgotIdentifier, setForgotIdentifier] = useState('');
@@ -51,15 +52,14 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
 
   // Handle Login submission
   const handleLoginSubmit = async (e) => {
-    e?.preventDefault();
-    if (!identifier.trim() || !password.trim()) {
-      setError('Please enter your Username/Email ID and Password.');
-      return;
-    }
-    setLoading(true);
+    e.preventDefault();
     setError('');
 
-    const result = await DataStore.login(identifier, password);
+    if (!identifier.trim()) return setError('Please enter your mobile number or username.');
+    if (!password) return setError('Please enter your password.');
+
+    setLoading(true);
+    const result = await DataStore.login(identifier.trim(), password);
     setLoading(false);
     if (result.success) {
       onLoginSuccess(result.auth);
@@ -90,8 +90,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
     setError('');
 
     if (!fullName.trim()) return setError('Please enter your full name.');
-    if (!regUsername.trim()) return setError('Please choose a username.');
-    if (!regEmail.trim()) return setError('Please enter your email address.');
+    if (!regPhone.trim()) return setError('Please enter your mobile number.');
     if (!regPassword) return setError('Please enter a password.');
     if (regPassword !== regConfirmPwd) return setError('Passwords do not match.');
 
@@ -99,6 +98,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
 
     const result = await DataStore.registerUser({
       name: fullName.trim(),
+      phone: regPhone.trim(),
       username: regUsername.trim(),
       email: regEmail.trim(),
       password: regPassword,
@@ -250,10 +250,10 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
           {/* ────────────────────────────────────────────────────────── */}
           {mode === 'login' && (
             <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Username or Email */}
+              {/* Mobile Number or Username */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                  Username or Email ID
+                  Mobile Number / Username
                 </label>
                 <div style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}>
@@ -263,7 +263,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                     type="text"
                     value={identifier}
                     onChange={e => setIdentifier(e.target.value)}
-                    placeholder="Enter your username or email"
+                    placeholder="Enter mobile number (e.g. +91 9876543210) or username"
                     className="input"
                     style={{ paddingLeft: 42 }}
                     autoFocus
@@ -335,41 +335,55 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
             <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#fbbf24' }}>
                 <span>👤</span>
-                <span>Registering User / Householder Account</span>
+                <span>Registering User Account</span>
               </div>
 
 
-              {/* Full Name */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Full Name</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  placeholder="e.g. Sri Sundara Raman"
-                  className="input"
-                />
-              </div>
-
-              {/* Username & Email row */}
+              {/* Full Name & Mandatory Mobile Number */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Username</label>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24' }}>Full Name *</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="e.g. Sri Sundara Raman"
+                    className="input"
+                    required
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24' }}>Mobile Number * (Mandatory)</label>
+                  <input
+                    type="tel"
+                    value={regPhone}
+                    onChange={e => setRegPhone(e.target.value)}
+                    placeholder="e.g. +91 9876543210"
+                    className="input"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Username (Optional) & Email (Optional) row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Username (Optional)</label>
                   <input
                     type="text"
                     value={regUsername}
                     onChange={e => setRegUsername(e.target.value)}
-                    placeholder="e.g. sundar_88"
+                    placeholder="Auto-generated if empty"
                     className="input"
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Email Address</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Email Address (Optional)</label>
                   <input
                     type="email"
                     value={regEmail}
                     onChange={e => setRegEmail(e.target.value)}
-                    placeholder="name@email.com"
+                    placeholder="name@example.com (Optional)"
                     className="input"
                   />
                 </div>
@@ -421,6 +435,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                         className="select"
                         style={{ fontSize: 12 }}
                       >
+                        <option value="">-- Select Sampradaya / Tradition --</option>
                         {Object.values(SAMPRADAYA_MATRIX).map(s => (
                           <option key={s.id} value={s.id}>{s.name}</option>
                         ))}

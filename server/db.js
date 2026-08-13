@@ -129,6 +129,14 @@ export function initDb() {
     db.exec(`ALTER TABLE devotees ADD COLUMN nakshatra TEXT`);
   } catch (e) {}
 
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN phone TEXT`);
+  } catch (e) {}
+
+  try {
+    db.exec(`ALTER TABLE devotees ADD COLUMN phone TEXT`);
+  } catch (e) {}
+
   // 6. Feedbacks table
   db.exec(`
     CREATE TABLE IF NOT EXISTS feedbacks (

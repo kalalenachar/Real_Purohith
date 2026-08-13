@@ -12,9 +12,9 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
 
   // Build dynamic navigation tabs based on auth status
   const mainTabs = [
-    { id: 'pravachanam', label: 'Pravachanam',     icon: BookOpen },
-    { id: 'apara',       label: '30-Min SOS',      icon: Flame,     danger: true },
-    { id: 'freeSeva',    label: 'Noble Free Seva', icon: Heart,     accent: 'heart' },
+    { id: 'freeSeva',    label: '🪔 Noble Free Sevas', icon: Heart,     accent: 'heart' },
+    { id: 'pravachanam', label: 'Pravachanam',          icon: BookOpen },
+    { id: 'apara',       label: '30-Min SOS',           icon: Flame,     danger: true },
   ];
 
   // Add user portal tab for logged in users

@@ -16,6 +16,10 @@ const COUNTRY_CODES = [
 
 export default function BookingModal({ initialRitual, auth, onClose, onBookingSuccess, onOpenLogin }) {
   const RITUAL_OPTIONS = [
+    // Noble Free Sevas (100% Free — AT THE VERY TOP)
+    { title: 'Free 1-on-1 Vishnu Sahasranama Parayanam', isApara: false, isFree: true, dakshinaRange: '₹0 (100% Free Seva)' },
+    { title: 'Free 1-on-1 Jyotisha Vedic Astrology', isApara: false, isFree: true, dakshinaRange: '₹0 (100% Free Seva)' },
+
     // Standard Poojas & Homams
     { title: 'Satyanarayana Swamy Pooja & Vrata', isApara: false, isFree: false, dakshinaRange: '₹3,000 – ₹5,000' },
     { title: 'Mahasudarshana & Dhanvantari Homam', isApara: false, isFree: false, dakshinaRange: '₹5,000 – ₹8,500' },
@@ -35,10 +39,6 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
     { title: 'Garuda Purana Pravachanam Discourse', isApara: true, isFree: false, dakshinaRange: '₹3,500 – ₹6,000' },
     { title: '10–13 Day Apara Kriya (Final Rites Protocol)', isApara: true, isFree: false, dakshinaRange: '₹10,000 – ₹18,000' },
     { title: 'Remote E-Pinda Daan', isApara: true, isFree: false, dakshinaRange: '₹5,000 – ₹9,000' },
-
-    // Noble Free Sevas (100% Free)
-    { title: 'Free 1-on-1 Vishnu Sahasranama Parayanam', isApara: false, isFree: true, dakshinaRange: '₹0 (100% Free Seva)' },
-    { title: 'Free 1-on-1 Jyotisha Vedic Astrology', isApara: false, isFree: true, dakshinaRange: '₹0 (100% Free Seva)' },
   ];
 
   const findMatch = (targetTitle) => {

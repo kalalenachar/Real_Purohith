@@ -37,9 +37,12 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
             Directly connect with authenticated Veda Pandits & Pauranikas adhering strictly to your family’s tradition: <span className="serif" style={{ color: '#fbbf24', fontStyle: 'italic', fontWeight: 600 }}>Uttaradhi Mutt (Dvaita)</span>, <span className="serif" style={{ color: '#f59e0b', fontStyle: 'italic', fontWeight: 600 }}>Udupi Ashta Mutts</span>, <span className="serif" style={{ color: '#f97316', fontStyle: 'italic', fontWeight: 600 }}>Sri Vaishnava</span>, <span className="serif" style={{ color: '#c4b5fd', fontStyle: 'italic', fontWeight: 600 }}>Smartha Shankara</span>, and <span className="serif" style={{ color: '#6ee7b7', fontStyle: 'italic', fontWeight: 600 }}>Secular / Universal</span>.
           </p>
 
-          {/* Action CTAs */}
+          {/* Action CTAs — FREE SEVA AT THE VERY TOP */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            <button className="btn btn-primary btn-lg" onClick={() => onOpenBooking && onOpenBooking('Satyanarayana Swamy Pooja & Vrata')}>
+            <button className="btn btn-primary btn-lg" onClick={() => onNavigate('freeSeva')} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 800 }}>
+              <Heart size={18} /> 🪔 Explore Noble Free Sevas (100% Free)
+            </button>
+            <button className="btn btn-ghost btn-lg" onClick={() => onOpenBooking && onOpenBooking('Free 1-on-1 Vishnu Sahasranama Parayanam')}>
               <BookOpen size={18} /> Schedule Ritual Booking
             </button>
             <button className="btn btn-danger btn-lg sos-btn" onClick={onTriggerSOS}>
@@ -48,10 +51,28 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
             <button className="btn btn-ghost btn-lg" onClick={() => onNavigate('pravachanam')}>
               <BookOpen size={18} /> Explore Pravachanam
             </button>
-            <button className="btn btn-ghost btn-lg" onClick={() => onNavigate('freeSeva')} style={{ borderColor: 'rgba(16,185,129,0.3)', color: '#6ee7b7' }}>
-              <Heart size={18} /> Noble Free Seva
-            </button>
           </div>
+        </div>
+      </section>
+
+      {/* ──────────────────────────────────────────────────────────── */}
+      {/*  TOP FEATURED NOBLE FREE SEVAS BANNER                        */}
+      {/* ──────────────────────────────────────────────────────────── */}
+      <section style={{ marginBottom: 44, padding: '24px 28px', borderRadius: 24, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.3)', boxShadow: '0 10px 40px rgba(16,185,129,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 18, background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: '0 6px 20px rgba(16,185,129,0.35)' }}>
+              🪔
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: 1 }}>100% Truly Free Seva Vertical</div>
+              <h3 style={{ fontSize: 20, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc', marginTop: 2 }}>Free 1-on-1 Vishnu Sahasranama & Jyotisha Astrology</h3>
+              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>No platform fees · Direct Google Meet session links delivered to your Devotee Vault inside the app.</p>
+            </div>
+          </div>
+          <button className="btn btn-primary" onClick={() => onNavigate('freeSeva')} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 800, padding: '10px 20px' }}>
+            Book Free Seva Now <ArrowRight size={16} />
+          </button>
         </div>
       </section>
 

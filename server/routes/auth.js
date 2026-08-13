@@ -23,23 +23,34 @@ export function authenticateToken(req, res, next) {
 // 1. REGISTER USER
 router.post('/register', (req, res) => {
   try {
-    const { name, username, email, password, role = 'devotee', gotram = '', sampradaya = '' } = req.body;
+    const { name, phone, password, username, email, role = 'devotee', gotram = '', sampradaya = '', rashi = '', nakshatra = '' } = req.body;
 
-    if (!name || !username || !email || !password) {
-      return res.status(400).json({ error: 'Please provide all required fields: name, username, email, password.' });
+    if (!name || !phone || !password) {
+      return res.status(400).json({ error: 'Please provide all mandatory fields: Full Name, Mobile Number, and Password.' });
     }
 
-    const cleanUsername = username.trim().toLowerCase();
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = phone.trim();
+    const phoneDigits = cleanPhone.replace(/\D/g, '');
+    if (phoneDigits.length < 7) {
+      return res.status(400).json({ error: 'Please enter a valid mobile number.' });
+    }
+
+    const cleanUsername = (username && username.trim().length > 0) ? username.trim().toLowerCase() : `dev_${phoneDigits}`;
+    const cleanEmail = (email && email.trim().length > 0) ? email.trim().toLowerCase() : `phone_${phoneDigits}@realpurohit.local`;
 
     if (role === 'admin') {
       return res.status(403).json({ error: 'Admin registration is restricted to system administrator.' });
     }
 
-    // Check if user already exists
-    const existing = db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(cleanUsername, cleanEmail);
+    // Check if user already exists by phone, username, or email
+    const existing = db.prepare(`
+      SELECT id FROM users 
+      WHERE phone = ? 
+         OR username = ? 
+         OR email = ?
+    `).get(cleanPhone, cleanUsername, cleanEmail);
     if (existing) {
-      return res.status(409).json({ error: 'An account with that username or email already exists in the database.' });
+      return res.status(409).json({ error: 'An account with that mobile number, username, or email already exists.' });
     }
 
     // Hash password with bcrypt
@@ -50,16 +61,16 @@ router.post('/register', (req, res) => {
 
     // Insert user into SQLite
     db.prepare(`
-      INSERT INTO users (id, username, email, password_hash, role, name, gotram, sampradaya, avatar)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, cleanUsername, cleanEmail, password_hash, role, name, gotram, sampradaya, avatar);
+      INSERT INTO users (id, username, email, phone, password_hash, role, name, gotram, sampradaya, rashi, nakshatra, avatar)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, cleanUsername, cleanEmail, cleanPhone, password_hash, role, name, gotram, sampradaya, rashi, nakshatra, avatar);
 
     // If devotee, insert devotee profile record
     if (role === 'devotee') {
       const devId = `dev-${Date.now()}`;
       db.prepare(`
-        INSERT INTO devotees (id, user_id, name, gotram, veda_shakha, sutram, sampradaya, mutt, kula_daivam, location)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO devotees (id, user_id, name, gotram, veda_shakha, sutram, sampradaya, mutt, kula_daivam, location, rashi, nakshatra, phone)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         devId, id, name,
         gotram || '',
@@ -68,17 +79,20 @@ router.post('/register', (req, res) => {
         sampradaya || 'secular',
         '',
         '',
-        ''
+        '',
+        rashi || '',
+        nakshatra || '',
+        cleanPhone
       );
     }
 
     // Generate JWT token
-    const token = jwt.sign({ id, username: cleanUsername, role, name }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id, username: cleanUsername, role, name, phone: cleanPhone }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       message: 'Account successfully registered in database!',
       token,
-      user: { id, username: cleanUsername, email: cleanEmail, name, role, gotram, sampradaya, avatar }
+      user: { id, username: cleanUsername, email: cleanEmail, phone: cleanPhone, name, role, gotram, sampradaya, rashi, nakshatra, avatar }
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -92,26 +106,32 @@ router.post('/login', (req, res) => {
     const { identifier, password } = req.body;
 
     if (!identifier || !password) {
-      return res.status(400).json({ error: 'Please enter your username/email and password.' });
+      return res.status(400).json({ error: 'Please enter your Mobile Number / Username and Password.' });
     }
 
-    const term = identifier.trim().toLowerCase();
+    const term = identifier.trim();
+    const termLower = term.toLowerCase();
+    const digitsOnly = term.replace(/\D/g, '');
 
-    // Query user from SQLite database
-    const user = db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(term, term);
+    // Query user from SQLite database by phone, username, or email
+    let user = db.prepare('SELECT * FROM users WHERE phone = ? OR username = ? OR email = ?').get(term, termLower, termLower);
+
+    if (!user && digitsOnly.length >= 7) {
+      user = db.prepare('SELECT * FROM users WHERE phone LIKE ?').get(`%${digitsOnly}%`);
+    }
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid username/email or password.' });
+      return res.status(401).json({ error: 'Invalid Mobile Number / Username or password.' });
     }
 
     // Verify bcrypt hashed password
     const valid = bcrypt.compareSync(password, user.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid username/email or password.' });
+      return res.status(401).json({ error: 'Invalid Mobile Number / Username or password.' });
     }
 
     // Generate JWT token
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role, name: user.name, phone: user.phone }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       message: 'Successfully authenticated via database!',
@@ -120,10 +140,13 @@ router.post('/login', (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        phone: user.phone || '',
         name: user.name,
         role: user.role,
         gotram: user.gotram,
         sampradaya: user.sampradaya,
+        rashi: user.rashi || '',
+        nakshatra: user.nakshatra || '',
         avatar: user.avatar
       }
     });
