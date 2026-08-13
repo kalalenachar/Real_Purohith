@@ -9,6 +9,7 @@ import bookingsRoutes from './routes/bookings.js';
 import feedbacksRoutes from './routes/feedbacks.js';
 import sosRoutes from './routes/sos.js';
 import sampradayasRoutes from './routes/sampradayas.js';
+import dbAdminRoutes from './routes/dbAdmin.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ app.use('/api/bookings', bookingsRoutes);
 app.use('/api/feedbacks', feedbacksRoutes);
 app.use('/api/sos', sosRoutes);
 app.use('/api/sampradayas', sampradayasRoutes);
+app.use('/api/admin/db', dbAdminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

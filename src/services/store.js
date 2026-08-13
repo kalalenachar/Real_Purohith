@@ -164,4 +164,33 @@ export class DataStore {
   static async deleteSampradaya(id) {
     return await API.deleteSampradaya(id);
   }
+
+  // Database Admin Studio
+  static async verifyAdminPassword(password) {
+    return await API.verifyAdminPassword(password);
+  }
+
+  static async getDbTables() {
+    return await API.getDbTables();
+  }
+
+  static async getTableRows(tableName) {
+    return await API.getTableRows(tableName);
+  }
+
+  static async createDbRow(tableName, rowData) {
+    return await API.createDbRow(tableName, rowData);
+  }
+
+  static async updateDbRow(tableName, primaryKey, primaryValue, data) {
+    return await API.updateDbRow(tableName, primaryKey, primaryValue, data);
+  }
+
+  static async deleteDbRow(tableName, id, pk = 'id') {
+    return await API.deleteDbRow(tableName, id, pk);
+  }
+
+  static async executeSql(sql) {
+    return await API.executeSql(sql);
+  }
 }

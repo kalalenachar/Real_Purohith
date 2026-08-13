@@ -4,7 +4,7 @@ import {
   LogOut, Plus, Edit2, Trash2, Check, X, Search,
   ShieldCheck, BookOpen, Wallet, Bell,
   CheckCircle2, AlertTriangle, Filter, Eye, RefreshCw, UserPlus,
-  Phone, MapPin, Clock, Award
+  Phone, MapPin, Clock, Award, Database, Lock, Unlock, Terminal, Table, Key
 } from 'lucide-react';
 import { DataStore } from '../services/store.js';
 import { SAMPRADAYA_MATRIX, INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS, INITIAL_FEEDBACKS } from '../services/systemData.js';
@@ -1008,6 +1008,16 @@ function SampradayasTab({ sampradayas = [], onRefresh }) {
 /* ──────────────────────────── MAIN ADMIN PANEL ─────────────────── */
 export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [dbUnlocked, setDbUnlocked] = useState(false);
+  const [showDbSecurityGate, setShowDbSecurityGate] = useState(false);
+
+  const handleSelectTab = (tabId) => {
+    if (tabId === 'dbAccess' && !dbUnlocked) {
+      setShowDbSecurityGate(true);
+      return;
+    }
+    setActiveTab(tabId);
+  };
 
   const [purohits, setPurohits] = useState(INITIAL_PUROHITS);
   const [devotees, setDevotees] = useState(INITIAL_DEVOTEES);
@@ -1077,13 +1087,505 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
     setFeedbacks(prev => prev.filter((f, i) => f.id !== idOrIdx && i !== idOrIdx));
   }, []);
 
-  // Reset to initial system seed data
-  const handleResetData = useCallback(async () => {
-    setPurohits(INITIAL_PUROHITS);
-    setDevotees(INITIAL_DEVOTEES);
-    setBookings(INITIAL_BOOKINGS);
-    setFeedbacks(INITIAL_FEEDBACKS);
+/* ──────────────────────────── Database Security Gate ────────────── */
+function DatabaseSecurityGate({ onUnlocked, onCancel }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [verifying, setVerifying] = useState(false);
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setError('');
+    setVerifying(true);
+    try {
+      await DataStore.verifyAdminPassword(password);
+      onUnlocked();
+    } catch (err) {
+      setError(err.message || 'Incorrect password');
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="card-premium animate-fade-up" style={{ maxWidth: 440, width: '100%', padding: 32, borderRadius: 20 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ width: 54, height: 54, borderRadius: 16, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+            <Lock size={26} style={{ color: '#f87171' }} />
+          </div>
+          <h3 style={{ fontSize: 18, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
+            🔒 Security Password Verification
+          </h3>
+          <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 6, lineHeight: 1.5 }}>
+            You are opening <strong>Full Database Access</strong>. Re-enter Admin password to unlock SQLite table management permissions.
+          </p>
+        </div>
+
+        <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+              Admin Password
+            </label>
+            <input
+              type="password"
+              className="input"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Enter admin password (e.g. admin123)"
+              autoFocus
+              required
+            />
+          </div>
+
+          {error && (
+            <div style={{ fontSize: 12, color: '#f87171', background: 'rgba(239,68,68,0.1)', padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.25)', textAlign: 'center' }}>
+              ❌ {error}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 6 }}>
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={verifying}>
+              {verifying ? 'Verifying...' : '🔓 Unlock DB Access'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────── Database Manager Tab ─────────────── */
+function DatabaseManagerTab() {
+  const [tables, setTables] = useState([]);
+  const [selectedTable, setSelectedTable] = useState('users');
+  const [tableData, setTableData] = useState({ columns: [], rows: [] });
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showSqlStudio, setShowSqlStudio] = useState(false);
+
+  // SQL Studio state
+  const [sqlQuery, setSqlQuery] = useState('SELECT * FROM users LIMIT 50;');
+  const [sqlResult, setSqlResult] = useState(null);
+  const [sqlError, setSqlError] = useState('');
+  const [executingSql, setExecutingSql] = useState(false);
+
+  // Modals state
+  const [editingRow, setEditingRow] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteConfirmRow, setDeleteConfirmRow] = useState(null);
+
+  // Load available SQLite tables
+  const loadTables = useCallback(async () => {
+    try {
+      const res = await DataStore.getDbTables();
+      if (Array.isArray(res)) setTables(res);
+    } catch (err) {
+      console.error(err);
+    }
   }, []);
+
+  // Load selected table data
+  const loadTableData = useCallback(async (tName) => {
+    if (!tName) return;
+    setLoading(true);
+    try {
+      const res = await DataStore.getTableRows(tName);
+      setTableData(res);
+    } catch (err) {
+      alert('Error fetching table rows: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadTables();
+  }, [loadTables]);
+
+  React.useEffect(() => {
+    if (selectedTable) {
+      loadTableData(selectedTable);
+    }
+  }, [selectedTable, loadTableData]);
+
+  const handleExecuteSql = async () => {
+    if (!sqlQuery.trim()) return;
+    setExecutingSql(true);
+    setSqlError('');
+    setSqlResult(null);
+    try {
+      const res = await DataStore.executeSql(sqlQuery);
+      setSqlResult(res);
+      // Refresh current table if mutation performed
+      if (res.type === 'MUTATION') {
+        loadTableData(selectedTable);
+      }
+    } catch (err) {
+      setSqlError(err.message || 'SQL Execution Error');
+    } finally {
+      setExecutingSql(false);
+    }
+  };
+
+  const handleDeleteRow = async (row) => {
+    const pkCol = tableData.columns.find(c => c.pk)?.name || 'id';
+    const pkVal = row[pkCol];
+    try {
+      await DataStore.deleteDbRow(selectedTable, pkVal, pkCol);
+      loadTableData(selectedTable);
+      setDeleteConfirmRow(null);
+    } catch (err) {
+      alert('Failed to delete row: ' + err.message);
+    }
+  };
+
+  const filteredRows = (tableData.rows || []).filter(r => {
+    if (!search.trim()) return true;
+    return Object.values(r).some(val => String(val || '').toLowerCase().includes(search.toLowerCase()));
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Top Controls Banner */}
+      <div style={{ padding: '18px 22px', borderRadius: 16, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+        <div>
+          <h3 style={{ fontSize: 17, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Database size={20} style={{ color: '#fbbf24' }} /> SQLite Database Manager & SQL Studio
+          </h3>
+          <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>
+            Full CRUD administrative access: view, search, edit, insert, and delete records across all SQLite tables.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            className={`btn btn-sm ${showSqlStudio ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setShowSqlStudio(!showSqlStudio)}
+            style={{ fontSize: 12, padding: '6px 14px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <Terminal size={14} /> {showSqlStudio ? 'Close SQL Console' : '⚡ Open Raw SQL Studio'}
+          </button>
+          <button
+            className="btn btn-sm btn-ghost"
+            onClick={() => { loadTables(); loadTableData(selectedTable); }}
+            style={{ fontSize: 12, padding: '6px 12px', borderRadius: 10 }}
+          >
+            <RefreshCw size={13} /> Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* SQL Studio Console Component */}
+      {showSqlStudio && (
+        <div className="card" style={{ padding: 24, border: '1px solid rgba(56,189,248,0.3)', background: 'rgba(15,23,42,0.95)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h4 style={{ fontSize: 14, fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Terminal size={16} /> Raw SQL Query Studio Console
+            </h4>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, padding: '2px 8px' }} onClick={() => setSqlQuery(`SELECT * FROM ${selectedTable} LIMIT 50;`)}>
+                SELECT {selectedTable}
+              </button>
+              <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, padding: '2px 8px' }} onClick={() => setSqlQuery(`SELECT * FROM users;`)}>
+                SELECT users
+              </button>
+              <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, padding: '2px 8px' }} onClick={() => setSqlQuery(`SELECT * FROM bookings;`)}>
+                SELECT bookings
+              </button>
+              <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, padding: '2px 8px' }} onClick={() => setSqlQuery(`PRAGMA table_info('${selectedTable}');`)}>
+                Table Info
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            className="input"
+            rows={4}
+            style={{ fontFamily: 'monospace', fontSize: 12, lineHeight: 1.5, color: '#38bdf8', background: '#090d16', padding: 12 }}
+            value={sqlQuery}
+            onChange={e => setSqlQuery(e.target.value)}
+            placeholder="Type SQL command (e.g. SELECT * FROM users or UPDATE bookings SET status = 'Scheduled' WHERE id = 'BK-1001')"
+          />
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+            <button className="btn btn-primary btn-sm" onClick={handleExecuteSql} disabled={executingSql}>
+              {executingSql ? 'Executing Query...' : '▶ Execute SQL Statement'}
+            </button>
+          </div>
+
+          {sqlError && (
+            <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', color: '#f87171', fontSize: 12 }}>
+              ❌ {sqlError}
+            </div>
+          )}
+
+          {sqlResult && (
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              {sqlResult.type === 'MUTATION' ? (
+                <div style={{ padding: 12, borderRadius: 10, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', fontSize: 12 }}>
+                  ✅ {sqlResult.message}
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: 11, color: '#94a3b8', marginBottom: 8 }}>Returned {sqlResult.count} row(s):</p>
+                  <div style={{ overflowX: 'auto', maxHeight: 300, overflowY: 'auto' }}>
+                    <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.05)', color: '#fbbf24', textAlign: 'left' }}>
+                          {sqlResult.columns.map(col => <th key={col} style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{col}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sqlResult.rows.map((r, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            {sqlResult.columns.map(col => (
+                              <td key={col} style={{ padding: '8px 12px', color: '#e2e8f0', fontFamily: 'monospace' }}>{String(r[col] ?? '')}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main Table Inspector Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1 }}>
+          {/* Select Table Dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700 }}>Table:</label>
+            <select
+              className="select"
+              style={{ width: 'auto', minWidth: 160, fontWeight: 700 }}
+              value={selectedTable}
+              onChange={e => setSelectedTable(e.target.value)}
+            >
+              {tables.map(t => <option key={t.name} value={t.name}>📋 {t.name}</option>)}
+            </select>
+          </div>
+
+          {/* Search Table Rows */}
+          <div style={{ position: 'relative', width: 240 }}>
+            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+            <input
+              className="input"
+              style={{ paddingLeft: 34, fontSize: 12, height: 36 }}
+              placeholder={`Search in ${selectedTable}…`}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>
+          <Plus size={14} /> Add New Row in {selectedTable}
+        </button>
+      </div>
+
+      {/* Data Table Grid */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        {loading ? (
+          <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Loading database records...</div>
+        ) : filteredRows.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>No matching records in table <strong>{selectedTable}</strong></div>
+        ) : (
+          <div style={{ overflowX: 'auto', maxHeight: 550, overflowY: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0, zIndex: 10 }}>
+                  {tableData.columns.map(c => (
+                    <th key={c.name} style={{ padding: '12px 14px', textAlign: 'left', color: c.pk ? '#fbbf24' : '#e2e8f0', fontWeight: 700 }}>
+                      {c.pk ? '🔑 ' : ''}{c.name} <span style={{ fontSize: 10, color: '#64748b', fontWeight: 400 }}>({c.type})</span>
+                    </th>
+                  ))}
+                  <th style={{ padding: '12px 14px', textAlign: 'right', color: '#94a3b8' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRows.map((row, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }}>
+                    {tableData.columns.map(c => (
+                      <td key={c.name} style={{ padding: '10px 14px', color: '#cbd5e1', fontFamily: c.name.includes('id') || c.name.includes('key') ? 'monospace' : 'inherit', fontSize: 11 }}>
+                        {row[c.name] !== null && row[c.name] !== undefined ? String(row[c.name]) : <span style={{ color: '#475569', italic: 'true' }}>NULL</span>}
+                      </td>
+                    ))}
+                    <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', gap: 6 }}>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ padding: '4px 10px', fontSize: 11, color: '#fbbf24', borderColor: 'rgba(245,158,11,0.25)' }}
+                          onClick={() => setEditingRow(row)}
+                        >
+                          <Edit2 size={12} /> Edit
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ padding: '4px 8px', fontSize: 11, color: '#f87171', borderColor: 'rgba(220,38,38,0.25)' }}
+                          onClick={() => setDeleteConfirmRow(row)}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add Row Modal */}
+      {showAddModal && (
+        <AddRowModal
+          tableName={selectedTable}
+          columns={tableData.columns}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => { setShowAddModal(false); loadTableData(selectedTable); }}
+        />
+      )}
+
+      {/* Edit Row Modal */}
+      {editingRow && (
+        <EditRowModal
+          tableName={selectedTable}
+          columns={tableData.columns}
+          row={editingRow}
+          onClose={() => setEditingRow(null)}
+          onSuccess={() => { setEditingRow(null); loadTableData(selectedTable); }}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmRow && (
+        <ConfirmDialog
+          message={`Are you sure you want to delete this row from table '${selectedTable}'?`}
+          onConfirm={() => handleDeleteRow(deleteConfirmRow)}
+          onCancel={() => setDeleteConfirmRow(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ── Add Row Modal ── */
+function AddRowModal({ tableName, columns, onClose, onSuccess }) {
+  const [form, setForm] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await DataStore.createDbRow(tableName, form);
+      onSuccess();
+    } catch (err) {
+      alert('Failed to insert row: ' + err.message);
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="card-premium" style={{ maxWidth: 580, width: '100%', padding: 28, borderRadius: 20 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
+            ➕ Insert New Row into '{tableName}'
+          </h3>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}><X size={18} /></button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 480, overflowY: 'auto' }}>
+          {columns.map(c => (
+            <div key={c.name}>
+              <label style={{ fontSize: 11, color: c.pk ? '#fbbf24' : '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 4 }}>
+                {c.name} {c.pk ? '(Primary Key)' : ''}
+              </label>
+              <input
+                className="input"
+                style={{ fontSize: 12 }}
+                value={form[c.name] ?? ''}
+                onChange={e => setForm({ ...form, [c.name]: e.target.value })}
+                placeholder={`Value for ${c.name}`}
+              />
+            </div>
+          ))}
+
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 14 }}>
+            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={submitting}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              {submitting ? 'Inserting...' : 'Insert Record into Database'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ── Edit Row Modal ── */
+function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
+  const pkCol = columns.find(c => c.pk)?.name || 'id';
+  const pkVal = row[pkCol];
+  const [form, setForm] = useState({ ...row });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await DataStore.updateDbRow(tableName, pkCol, pkVal, form);
+      onSuccess();
+    } catch (err) {
+      alert('Failed to update row: ' + err.message);
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="card-premium" style={{ maxWidth: 580, width: '100%', padding: 28, borderRadius: 20 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
+            ✏️ Edit Row in '{tableName}' ({pkCol}: {String(pkVal)})
+          </h3>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}><X size={18} /></button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 480, overflowY: 'auto' }}>
+          {columns.map(c => (
+            <div key={c.name}>
+              <label style={{ fontSize: 11, color: c.pk ? '#fbbf24' : '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 4 }}>
+                {c.name} {c.pk ? '(Primary Key)' : ''}
+              </label>
+              <input
+                className="input"
+                style={{ fontSize: 12 }}
+                value={form[c.name] ?? ''}
+                disabled={c.pk}
+                onChange={e => setForm({ ...form, [c.name]: e.target.value })}
+              />
+            </div>
+          ))}
+
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 14 }}>
+            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={submitting}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              {submitting ? 'Saving Changes...' : 'Save Database Row'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
   const SIDEBAR_ITEMS = [
     { id: 'overview',     label: 'Overview',              icon: LayoutDashboard },
@@ -1092,6 +1594,7 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
     { id: 'purohits',     label: 'Acharya Directory',     icon: Users },
     { id: 'devotees',     label: 'Devotee Records',       icon: BookOpen },
     { id: 'reviews',      label: 'Reviews & Feedback',    icon: Star },
+    { id: 'dbAccess',     label: 'Full DB Access',        icon: Database },
     { id: 'settings',     label: 'Settings',              icon: Settings },
   ];
 
@@ -1129,7 +1632,7 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-              <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
+              <button key={item.id} onClick={() => handleSelectTab(item.id)} style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
                 fontFamily: 'Outfit,sans-serif', fontSize: 13, fontWeight: isActive ? 700 : 500,
@@ -1220,11 +1723,26 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
           {activeTab === 'reviews' && (
             <ReviewsTab feedbacks={feedbacks} onDelete={handleDeleteReview} />
           )}
+          {activeTab === 'dbAccess' && dbUnlocked && (
+            <DatabaseManagerTab />
+          )}
           {activeTab === 'settings' && (
             <SettingsTab onResetData={handleResetData} />
           )}
         </main>
       </div>
+
+      {/* Security Password Gate Modal */}
+      {showDbSecurityGate && (
+        <DatabaseSecurityGate
+          onUnlocked={() => {
+            setDbUnlocked(true);
+            setShowDbSecurityGate(false);
+            setActiveTab('dbAccess');
+          }}
+          onCancel={() => setShowDbSecurityGate(false)}
+        />
+      )}
     </div>
   );
 }

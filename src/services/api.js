@@ -254,5 +254,82 @@ export const API = {
     });
     if (!res.ok) throw new Error('Failed to delete sampradaya');
     return res.json();
+  },
+
+  // ── Database Admin Studio APIs ──
+  async verifyAdminPassword(password) {
+    const res = await fetch(`${API_BASE}/admin/db/verify-password`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ password })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Incorrect Admin password');
+    }
+    return res.json();
+  },
+
+  async getDbTables() {
+    const res = await fetch(`${API_BASE}/admin/db/tables`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch DB tables');
+    return res.json();
+  },
+
+  async getTableRows(tableName) {
+    const res = await fetch(`${API_BASE}/admin/db/tables/${tableName}`, { headers: getHeaders() });
+    if (!res.ok) throw new Error(`Failed to fetch rows for table ${tableName}`);
+    return res.json();
+  },
+
+  async createDbRow(tableName, rowData) {
+    const res = await fetch(`${API_BASE}/admin/db/tables/${tableName}/row`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(rowData)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to insert row');
+    }
+    return res.json();
+  },
+
+  async updateDbRow(tableName, primaryKey, primaryValue, data) {
+    const res = await fetch(`${API_BASE}/admin/db/tables/${tableName}/row`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ primaryKey, primaryValue, data })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to update row');
+    }
+    return res.json();
+  },
+
+  async deleteDbRow(tableName, id, pk = 'id') {
+    const res = await fetch(`${API_BASE}/admin/db/tables/${tableName}/row/${id}?pk=${pk}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to delete row');
+    }
+    return res.json();
+  },
+
+  async executeSql(sql) {
+    const res = await fetch(`${API_BASE}/admin/db/execute`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ sql })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'SQL execution failed');
+    }
+    return res.json();
   }
 };
