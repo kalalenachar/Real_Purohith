@@ -30,7 +30,7 @@ export default function AdminAIHub({ feedbacks }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,rgba(245,158,11,0.3),rgba(139,92,246,0.2))', border: '1px solid rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🛡️</div>
               <div>
-                <h2 style={{ fontSize: 22, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>AI Quality Care & Sampradaya Hub</h2>
+                <h2 style={{ fontSize: 22, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>Quality Care & Sampradaya Hub</h2>
                 <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>Real-time sentiment monitoring · Multi-Mutt Trust Scoring · Outbound Call Guarantee</p>
               </div>
             </div>

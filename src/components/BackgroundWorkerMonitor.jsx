@@ -18,7 +18,7 @@ export default function BackgroundWorkerMonitor({ tasks, onClose }) {
             </div>
             <div>
               <h3 style={{ fontSize: 14, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
-                Background AI Task Queue
+                System Task Queue
               </h3>
               <p style={{ fontSize: 11, color: '#64748b', marginTop: 1, fontFamily: 'monospace' }}>
                 {running > 0 ? `${running} worker(s) running` : 'All workers idle'}

@@ -62,6 +62,19 @@ export const API = {
     localStorage.removeItem('rp_auth_token');
   },
 
+  async updateProfile(profileData) {
+    const res = await fetch(`${API_BASE}/auth/profile`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(profileData)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to update user profile');
+    }
+    return res.json();
+  },
+
   // Acharya APIs
   async getPurohits() {
     const res = await fetch(`${API_BASE}/purohits`);

@@ -52,6 +52,15 @@ export class DataStore {
     return { isLoggedIn: false, user: null, role: 'guest' };
   }
 
+  static async updateProfile(profileData) {
+    try {
+      const res = await API.updateProfile(profileData);
+      return { success: true, user: res.user };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  }
+
   // Purohits from SQLite DB
   static async getPurohits() {
     try {
@@ -79,6 +88,15 @@ export class DataStore {
       return await API.getDevotees();
     } catch (e) {
       return INITIAL_DEVOTEES;
+    }
+  }
+
+  static async addAncestor(devoteeId, ancestor) {
+    try {
+      return await API.addAncestor(devoteeId, ancestor);
+    } catch (e) {
+      console.error(e);
+      return null;
     }
   }
 

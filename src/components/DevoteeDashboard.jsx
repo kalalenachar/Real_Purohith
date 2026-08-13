@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import {
   Users, Calendar, ShoppingBag, BookOpen, Sparkles,
   ChevronRight, Flame, CheckCircle2, ShieldCheck, Plus,
-  MapPin, Clock, Check, Star
+  MapPin, Clock, Check, Star, User, Save, Edit3
 } from 'lucide-react';
 import { INITIAL_DEVOTEES, SAMPRADAYA_MATRIX, INITIAL_PUROHITS } from '../services/systemData.js';
 import { calculateNextTithiAllotments } from '../services/aiTimeAllotmentEngine.js';
 import { DataStore } from '../services/store.js';
 
 const SUB_TABS = [
-  { id: 'vault',    label: 'Ancestral Vault',      icon: Users },
-  { id: 'tithi',   label: 'AI Tithi Reminders',   icon: Calendar },
+  { id: 'profile', label: 'My Profile',           icon: User },
+  { id: 'vault',   label: 'Ancestral Vault',      icon: Users },
+  { id: 'tithi',   label: 'Tithi Reminders',      icon: Calendar },
   { id: 'booking', label: 'Book Ritual',           icon: BookOpen },
   { id: 'samagri', label: 'Samagri Checkout',      icon: ShoppingBag },
 ];
@@ -35,19 +36,117 @@ const RITUAL_CARDS = [
   { icon: '📖', title: 'Garuda Purana Pravachanam',  desc: 'STRICTLY APARA ONLY — 10–13 day Apara Karyam discourse providing solace to grieving families.', isApara: true },
 ];
 
-export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, onOpenFeedback, auth, onOpenLogin, onOpenBooking }) {
-  const [selectedDevotee, setSelectedDevotee] = useState(INITIAL_DEVOTEES[0]);
-  const [subTab, setSubTab] = useState('vault');
+export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, onOpenFeedback, auth, onOpenLogin, onOpenBooking, onUpdateUser }) {
+  const [selectedDevotee, setSelectedDevotee] = useState(null);
+  const [subTab, setSubTab] = useState('profile');
   const [samagri, setSamagri] = useState(SAMAGRI_DEFAULT);
   const [delivery, setDelivery] = useState('handCarried');
   const [booked, setBooked] = useState(false);
   const [myBookings, setMyBookings] = useState([]);
 
+  // Profile form state
+  const [profileName, setProfileName] = useState('');
+  const [profileGotram, setProfileGotram] = useState('');
+  const [profileSampradaya, setProfileSampradaya] = useState('vadagalai');
+  const [profileVedaShakha, setProfileVedaShakha] = useState('Rigveda');
+  const [profileSutram, setProfileSutram] = useState('Ashvalayana Sutram');
+  const [profileKulaDaivam, setProfileKulaDaivam] = useState('');
+  const [profileLocation, setProfileLocation] = useState('');
+  const [profileAvatar, setProfileAvatar] = useState('👤');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaveMsg, setProfileSaveMsg] = useState('');
+
+  // Load user-specific bookings & profile details
   React.useEffect(() => {
+    if (!auth?.isLoggedIn || !auth?.user) return;
+
+    // 1. Fetch user bookings and filter for this user ONLY
     DataStore.getBookings().then(res => {
-      if (Array.isArray(res)) setMyBookings(res);
+      if (Array.isArray(res)) {
+        const userBookings = res.filter(b => 
+          (auth.user.id && (b.devoteeId === auth.user.id || b.userId === auth.user.id)) ||
+          (auth.user.name && b.devoteeName?.toLowerCase() === auth.user.name.toLowerCase()) ||
+          (auth.user.username && b.devoteeName?.toLowerCase() === auth.user.username.toLowerCase())
+        );
+        setMyBookings(userBookings);
+      }
     });
-  }, []);
+
+    // 2. Fetch devotee profile for this logged-in user
+    DataStore.getDevotees().then(devotees => {
+      if (Array.isArray(devotees) && devotees.length > 0) {
+        const match = devotees.find(
+          d => d.userId === auth.user.id || d.id === auth.user.id || (d.name && auth.user.name && d.name.toLowerCase() === auth.user.name.toLowerCase())
+        );
+        if (match) {
+          setSelectedDevotee({
+            ...match,
+            name: auth.user.name || match.name,
+            gotram: auth.user.gotram || (match.gotram !== 'Kashyapa' ? match.gotram : 'Not Specified'),
+            sampradaya: auth.user.sampradaya || match.sampradaya || 'vadagalai'
+          });
+          return;
+        }
+      }
+
+      // Default profile object built directly from auth.user (no Sri Venkatesh Rao fallbacks)
+      setSelectedDevotee({
+        id: auth.user.id || `dev-${Date.now()}`,
+        name: auth.user.name || auth.user.username || 'Devotee',
+        gotram: auth.user.gotram || 'Not Specified',
+        vedaShakha: auth.user.vedaShakha || 'Not Specified',
+        sutram: auth.user.sutram || 'Not Specified',
+        sampradaya: auth.user.sampradaya || 'vadagalai',
+        mutt: auth.user.mutt || 'Not Specified',
+        kulaDaivam: auth.user.kulaDaivam || 'Not Specified',
+        location: auth.user.location || 'Not Specified',
+        ancestors: auth.user.ancestors || []
+      });
+    });
+  }, [auth]);
+
+  // Sync profile form state when currentDevotee or auth.user updates
+  React.useEffect(() => {
+    if (auth?.user) {
+      setProfileName(auth.user.name || auth.user.username || '');
+      setProfileGotram(auth.user.gotram || selectedDevotee?.gotram || '');
+      setProfileSampradaya(auth.user.sampradaya || selectedDevotee?.sampradaya || 'vadagalai');
+      setProfileVedaShakha(selectedDevotee?.vedaShakha || auth.user.vedaShakha || 'Rigveda');
+      setProfileSutram(selectedDevotee?.sutram || auth.user.sutram || 'Ashvalayana Sutram');
+      setProfileKulaDaivam(selectedDevotee?.kulaDaivam || auth.user.kulaDaivam || '');
+      setProfileLocation(selectedDevotee?.location || auth.user.location || '');
+      setProfileAvatar(auth.user.avatar || selectedDevotee?.avatar || '👤');
+    }
+  }, [auth, selectedDevotee]);
+
+  const handleSaveProfile = async (e) => {
+    e?.preventDefault();
+    setSavingProfile(true);
+    setProfileSaveMsg('');
+
+    const payload = {
+      name: profileName.trim(),
+      gotram: profileGotram.trim(),
+      sampradaya: profileSampradaya,
+      vedaShakha: profileVedaShakha,
+      sutram: profileSutram,
+      kulaDaivam: profileKulaDaivam.trim(),
+      location: profileLocation.trim(),
+      avatar: profileAvatar
+    };
+
+    const res = await DataStore.updateProfile(payload);
+    setSavingProfile(false);
+
+    if (res.success) {
+      setSelectedDevotee(prev => ({ ...prev, ...payload }));
+      if (onUpdateUser) onUpdateUser(res.user);
+      setProfileSaveMsg('User Profile successfully updated in database!');
+      setTimeout(() => setProfileSaveMsg(''), 4000);
+    } else {
+      setProfileSaveMsg(`Error updating profile: ${res.error || 'Database error'}`);
+    }
+  };
 
   if (!auth?.isLoggedIn) {
     return (
@@ -55,7 +154,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
         <div className="card-premium animate-fade-up" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 32px' }}>
           <div style={{ fontSize: 52, marginBottom: 16 }} className="animate-float">🕉️</div>
           <h2 style={{ fontSize: 24, fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: '#f8fafc', marginBottom: 10 }}>
-            Sacred Ancestral Devotee Vault
+            User Profile & Ancestral Vault
           </h2>
           <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.7, marginBottom: 24 }}>
             To safeguard family privacy, ancestral Shraaddha records, Gotram/Sutra details, and AI Tithi allotments are protected. Please sign in or register to access your personal vault.
@@ -68,10 +167,22 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
     );
   }
 
-  const tithiData = calculateNextTithiAllotments(selectedDevotee);
-  const sampradaya = SAMPRADAYA_MATRIX[selectedDevotee.sampradaya];
-  const total = samagri.filter(i => i.checked).reduce((s, i) => s + i.price, 0);
+  const currentDevotee = selectedDevotee || {
+    id: auth?.user?.id || 'dev-user',
+    name: auth?.user?.name || auth?.user?.username || 'User',
+    gotram: auth?.user?.gotram || 'Not Specified',
+    vedaShakha: 'Not Specified',
+    sutram: 'Not Specified',
+    sampradaya: auth?.user?.sampradaya || 'vadagalai',
+    mutt: 'Not Specified',
+    kulaDaivam: 'Not Specified',
+    location: 'Not Specified',
+    ancestors: []
+  };
 
+  const tithiData = calculateNextTithiAllotments(currentDevotee);
+  const sampradaya = SAMPRADAYA_MATRIX[currentDevotee.sampradaya || 'vadagalai'] || SAMPRADAYA_MATRIX['vadagalai'];
+  const total = samagri.filter(i => i.checked).reduce((s, i) => s + i.price, 0);
 
   const handleBook = () => {
     setBooked(true);
@@ -92,34 +203,30 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
               background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 34, boxShadow: '0 8px 32px rgba(245,158,11,0.45)'
-            }} className="animate-float">🕉️</div>
+            }} className="animate-float">{currentDevotee.avatar || '👤'}</div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <h2 style={{ fontSize: 24, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
-                  {selectedDevotee.name}
+                  {currentDevotee.name}
                 </h2>
-                <span className={`badge badge-${selectedDevotee.sampradaya}`}>{sampradaya?.name}</span>
+                <span className={`badge badge-${currentDevotee.sampradaya}`}>{sampradaya?.name}</span>
               </div>
               <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: '0 14px' }}>
-                <span>Gotram: <strong style={{ color: '#fbbf24' }}>{selectedDevotee.gotram}</strong></span>
-                <span>Shakha: <strong style={{ color: '#fbbf24' }}>{selectedDevotee.vedaShakha}</strong></span>
-                <span>Sutram: <strong style={{ color: '#fbbf24' }}>{selectedDevotee.sutram}</strong></span>
-                <span>Kula Daivam: <strong style={{ color: '#fbbf24' }}>{selectedDevotee.kulaDaivam}</strong></span>
+                <span>Gotram: <strong style={{ color: '#fbbf24' }}>{currentDevotee.gotram}</strong></span>
+                <span>Shakha: <strong style={{ color: '#fbbf24' }}>{currentDevotee.vedaShakha}</strong></span>
+                <span>Sutram: <strong style={{ color: '#fbbf24' }}>{currentDevotee.sutram}</strong></span>
+                <span>Kula Daivam: <strong style={{ color: '#fbbf24' }}>{currentDevotee.kulaDaivam}</strong></span>
               </p>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-            <select
-              className="select"
-              style={{ width: 'auto', minWidth: 200 }}
-              value={selectedDevotee.id}
-              onChange={e => setSelectedDevotee(INITIAL_DEVOTEES.find(d => d.id === e.target.value))}
-            >
-              {INITIAL_DEVOTEES.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
+            <button className="btn btn-primary btn-sm" onClick={() => setSubTab('profile')}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
+              <User size={14} /> Edit Profile
+            </button>
 
-            <button className="btn btn-ghost btn-sm" onClick={() => onRunBackgroundTithi(selectedDevotee)}
+            <button className="btn btn-ghost btn-sm" onClick={() => onRunBackgroundTithi(currentDevotee)}
               style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Sparkles size={14} /> Recalculate Tithis
             </button>
@@ -165,6 +272,160 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
               Assigned Acharya will call within 15 minutes. Pay Dakshina directly on the spot.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* ── MY PROFILE TAB ── */}
+      {subTab === 'profile' && (
+        <div className="card animate-fade-up" style={{ padding: 32, maxWidth: 740, margin: '0 auto' }}>
+          <div className="section-header" style={{ marginBottom: 24 }}>
+            <div className="section-title">
+              <User size={22} style={{ color: '#f59e0b' }} /> User Profile & Lineage Details
+            </div>
+            <span className="badge badge-uttaradhi">Database Authenticated</span>
+          </div>
+
+          {profileSaveMsg && (
+            <div style={{
+              padding: '12px 16px', borderRadius: 12, marginBottom: 20,
+              background: profileSaveMsg.includes('Error') ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+              border: profileSaveMsg.includes('Error') ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)',
+              color: profileSaveMsg.includes('Error') ? '#f87171' : '#34d399',
+              fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8
+            }}>
+              <CheckCircle2 size={16} /> {profileSaveMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div className="grid-2">
+              <div>
+                <label className="input-label">Full Name</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={profileName}
+                  onChange={e => setProfileName(e.target.value)}
+                  placeholder="Your Full Name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="input-label">Avatar Icon</label>
+                <select
+                  className="select"
+                  value={profileAvatar}
+                  onChange={e => setProfileAvatar(e.target.value)}
+                >
+                  <option value="👤">👤 User Default</option>
+                  <option value="🕉️">🕉️ Sacred Om</option>
+                  <option value="🪔">🪔 Diyas / Light</option>
+                  <option value="🙏">🙏 Namaste</option>
+                  <option value="🌺">🌺 Sacred Flower</option>
+                  <option value="☀️">☀️ Surya / Sun</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid-2">
+              <div>
+                <label className="input-label">Gotram (Lineage)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={profileGotram}
+                  onChange={e => setProfileGotram(e.target.value)}
+                  placeholder="e.g. Kashyapa, Bharadwaja, Kaushika..."
+                />
+              </div>
+
+              <div>
+                <label className="input-label">Sampradaya / Tradition</label>
+                <select
+                  className="select"
+                  value={profileSampradaya}
+                  onChange={e => setProfileSampradaya(e.target.value)}
+                >
+                  <option value="vadagalai">Sri Vaishnava (Vadagalai)</option>
+                  <option value="thengalai">Sri Vaishnava (Thengalai)</option>
+                  <option value="uttaradhi">Madhva (Uttaradhi Mutt)</option>
+                  <option value="udupi">Madhva (Udupi Ashta Mutt)</option>
+                  <option value="smartha">Smartha / Bhagavata Paddhati</option>
+                  <option value="secular">Modern Secular / Multi-Lingual</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid-2">
+              <div>
+                <label className="input-label">Veda Shakha</label>
+                <select
+                  className="select"
+                  value={profileVedaShakha}
+                  onChange={e => setProfileVedaShakha(e.target.value)}
+                >
+                  <option value="Rigveda">Rigveda</option>
+                  <option value="Yajurveda (Krishna)">Yajurveda (Krishna)</option>
+                  <option value="Yajurveda (Shukla)">Yajurveda (Shukla)</option>
+                  <option value="Samaveda">Samaveda</option>
+                  <option value="Atharvaveda">Atharvaveda</option>
+                  <option value="Not Specified">Not Specified</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="input-label">Sutram</label>
+                <select
+                  className="select"
+                  value={profileSutram}
+                  onChange={e => setProfileSutram(e.target.value)}
+                >
+                  <option value="Ashvalayana Sutram">Ashvalayana Sutram</option>
+                  <option value="Apastamba Sutram">Apastamba Sutram</option>
+                  <option value="Katyayana Sutram">Katyayana Sutram</option>
+                  <option value="Drahyayana Sutram">Drahyayana Sutram</option>
+                  <option value="Bodhayana Sutram">Bodhayana Sutram</option>
+                  <option value="Not Specified">Not Specified</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid-2">
+              <div>
+                <label className="input-label">Kula Daivam (Family Deity)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={profileKulaDaivam}
+                  onChange={e => setProfileKulaDaivam(e.target.value)}
+                  placeholder="e.g. Tirupati Venkateswara Swamy"
+                />
+              </div>
+
+              <div>
+                <label className="input-label">Location / City</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={profileLocation}
+                  onChange={e => setProfileLocation(e.target.value)}
+                  placeholder="e.g. Bengaluru, Chennai, Hyderabad..."
+                />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={savingProfile}
+                style={{ padding: '12px 28px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                <Save size={16} /> {savingProfile ? 'Saving Profile...' : 'Save User Profile Details'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
@@ -257,28 +518,37 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
               </button>
             </div>
             <div className="grid-2">
-              {selectedDevotee.ancestors.map(anc => (
-                <div key={anc.id} className="acharya-card" style={{ cursor: 'default' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: 1 }}>
-                    {anc.relation}
-                  </div>
-                  <h4 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', marginTop: 6, fontFamily: 'Outfit,sans-serif' }}>
-                    {anc.name}
-                  </h4>
-                  <p className="serif" style={{ fontSize: 15, color: '#fcd34d', marginTop: 8, fontStyle: 'italic' }}>
-                    {anc.month} · {anc.paksha} Paksha · {anc.tithi}
+              {(!currentDevotee.ancestors || currentDevotee.ancestors.length === 0) ? (
+                <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8', gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>No ancestral records added yet to your sacred vault.</p>
+                  <p style={{ fontSize: 12, marginTop: 6, color: '#64748b' }}>
+                    Click "Add Ancestor" to record your family's Shraaddha dates, Gotram, and Tithi details for automated reminders.
                   </p>
-                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Passing Year: {anc.passingYear}</p>
-                  <div className="divider" style={{ marginTop: 14, marginBottom: 12 }} />
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => setSubTab('tithi')}
-                    style={{ width: '100%', justifyContent: 'space-between' }}
-                  >
-                    View AI Tithi Allotment <ChevronRight size={14} />
-                  </button>
                 </div>
-              ))}
+              ) : (
+                (currentDevotee.ancestors || []).map(anc => (
+                  <div key={anc.id} className="acharya-card" style={{ cursor: 'default' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: 1 }}>
+                      {anc.relation}
+                    </div>
+                    <h4 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', marginTop: 6, fontFamily: 'Outfit,sans-serif' }}>
+                      {anc.name}
+                    </h4>
+                    <p className="serif" style={{ fontSize: 15, color: '#fcd34d', marginTop: 8, fontStyle: 'italic' }}>
+                      {anc.month} · {anc.paksha} Paksha · {anc.tithi}
+                    </p>
+                    <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Passing Year: {anc.passingYear}</p>
+                    <div className="divider" style={{ marginTop: 14, marginBottom: 12 }} />
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setSubTab('tithi')}
+                      style={{ width: '100%', justifyContent: 'space-between' }}
+                    >
+                      View Tithi Allotment <ChevronRight size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -290,7 +560,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
           <div className="card" style={{ padding: 28 }}>
             <div className="section-header">
               <div className="section-title">
-                <Sparkles size={20} style={{ color: '#f59e0b' }} /> AI Solar-Lunar Tithi Allotments 2026
+                <Sparkles size={20} style={{ color: '#f59e0b' }} /> Solar-Lunar Tithi Allotments 2026
               </div>
               <span style={{ fontSize: 12, color: '#34d399', fontFamily: 'monospace' }}>Aparahna Kaala Windows</span>
             </div>

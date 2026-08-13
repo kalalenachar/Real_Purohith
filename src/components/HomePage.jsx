@@ -73,7 +73,7 @@ export default function HomePage({ onNavigate, onTriggerSOS, onOpenBooking }) {
             <span className="kpi-label">Sampradayas</span>
             <Compass size={18} style={{ color: '#38bdf8' }} />
           </div>
-          <div className="kpi-value" style={{ color: '#38bdf8' }}>5 Lineages</div>
+          <div className="kpi-value" style={{ color: '#38bdf8' }}>Multi Tradition</div>
           <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Strict Paddhati & Sutra Matching</div>
         </div>
 

@@ -88,6 +88,7 @@ export function initDb() {
       id TEXT PRIMARY KEY,
       devotee_id TEXT NOT NULL,
       devotee_name TEXT NOT NULL,
+      devotee_phone TEXT,
       purohit_id TEXT,
       purohit_name TEXT,
       sampradaya TEXT NOT NULL,
@@ -103,6 +104,10 @@ export function initDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  try {
+    db.exec(`ALTER TABLE bookings ADD COLUMN devotee_phone TEXT`);
+  } catch (e) {}
 
   // 6. Feedbacks table
   db.exec(`

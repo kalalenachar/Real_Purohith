@@ -17,10 +17,10 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
     { id: 'freeSeva',    label: 'Noble Free Seva', icon: Heart,     accent: 'heart' },
   ];
 
-  // Add user portal tab for logged in devotees
+  // Add user portal tab for logged in users
   if (isLoggedIn) {
     if (role !== 'admin') {
-      mainTabs.unshift({ id: 'devotee', label: 'Devotee Vault', icon: UserCheck, protected: true });
+      mainTabs.unshift({ id: 'devotee', label: 'User Profile & Vault', icon: User, protected: true });
     }
   }
 
@@ -96,19 +96,23 @@ export default function Navbar({ activeTab, setActiveTab, queueCount, auth, onAd
             {isLoggedIn ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {/* User Avatar & Info Pill */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '4px 12px', borderRadius: 20,
-                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(245,158,11,0.25)',
-                  fontSize: 12, color: '#f8fafc'
-                }}>
+                <div 
+                  onClick={() => setActiveTab('devotee')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '4px 12px', borderRadius: 20, cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(245,158,11,0.25)',
+                    fontSize: 12, color: '#f8fafc', transition: 'all 0.2s'
+                  }}
+                  title="Click to view & edit your User Profile"
+                >
                   <span style={{ fontSize: 16 }}>{auth?.user?.avatar || '👤'}</span>
                   <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
                     <span style={{ fontWeight: 700, fontSize: 12, color: '#f8fafc' }}>
                       {auth?.user?.name || auth?.user?.username || ''}
                     </span>
                     <span style={{ fontSize: 9, color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase' }}>
-                      {role === 'admin' ? '👑 Admin' : '🕉️ Devotee'}
+                      {role === 'admin' ? '👑 Admin' : '👤 User'}
                     </span>
                   </div>
                 </div>

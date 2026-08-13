@@ -123,7 +123,9 @@ function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = 
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <td style={{ padding: '12px 12px', fontSize: 11, fontFamily: 'monospace', color: '#f59e0b' }}>{b.id}</td>
-                  <td style={{ padding: '12px 12px', fontSize: 12, color: '#e2e8f0', whiteSpace: 'nowrap' }}>{b.devoteeName}</td>
+                  <td style={{ padding: '12px 12px', fontSize: 12, color: '#e2e8f0', whiteSpace: 'nowrap' }}>
+                    {b.devoteeName} {b.devoteePhone && <span style={{ fontSize: 10, color: '#38bdf8', fontFamily: 'monospace' }}>({b.devoteePhone})</span>}
+                  </td>
                   <td style={{ padding: '12px 12px', fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>{b.purohitName}</td>
                   <td style={{ padding: '12px 12px', fontSize: 12, color: '#94a3b8', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.ritualName}</td>
                   <td style={{ padding: '12px 12px', fontSize: 11, fontFamily: 'monospace', color: '#64748b', whiteSpace: 'nowrap' }}>{b.date}</td>
@@ -424,7 +426,7 @@ function BookingsTab({ bookings, onUpdateStatus, onDelete, onClearAllMeetLinks }
                   </div>
                   <h4 style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginBottom: 6 }}>{b.ritualName}</h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: 12, color: '#94a3b8' }}>
-                    <span>👤 Devotee: <strong style={{ color: '#e2e8f0' }}>{b.devoteeName}</strong></span>
+                    <span>👤 User: <strong style={{ color: '#e2e8f0' }}>{b.devoteeName}</strong> {b.devoteePhone && <span style={{ color: '#38bdf8', fontWeight: 700 }}> (📞 {b.devoteePhone})</span>}</span>
                     <span>🪔 Status: <strong style={{ color: isPending ? '#fbbf24' : '#34d399' }}>{b.purohitName || 'Pending Admin Assignment'}</strong></span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {b.date} · {b.muhurtaTime}</span>
                   </div>

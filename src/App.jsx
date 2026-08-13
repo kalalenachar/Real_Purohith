@@ -249,14 +249,12 @@ export default function App() {
   const handleTriggerSOS = useCallback(() => {
     backgroundQueue.enqueueTask('SOS_APARA_DISPATCH', { location: 'Bengaluru' });
     setToast({ msg: '⚡ Emergency SOS dispatched! Guaranteed 30-minute response protocol activated.', type: 'danger' });
-    setQueueOpen(true);
     setTimeout(() => setToast(null), 8000);
   }, []);
 
   const handleRunBackgroundTithi = useCallback((devotee) => {
     backgroundQueue.enqueueTask('TIME_ALLOTMENT_CALCULATION', devotee);
-    showToast('🪔 Tithi calculation queued. AI is pre-allotting Mutt-matched Acharyas…', 'info');
-    setQueueOpen(true);
+    showToast('🪔 Tithi calculation updated for Mutt-matched Acharyas…', 'info');
   }, [showToast]);
 
   const handleSubmitFeedback = useCallback((payload) => {
@@ -274,18 +272,16 @@ export default function App() {
           reviewText: payload.reviewText,
           aiSentiment: result.sentiment,
           aiConfidence: result.aiConfidence,
-          status: 'Processed by AI Queue',
+          status: 'Processed',
           dateSubmitted: 'Just now'
         };
         setFeedbacks(prev => [newFb, ...prev]);
       }
     });
-    showToast('✅ Review submitted! AI processing sentiment and updating Trust Score.', 'success');
-    setQueueOpen(true);
+    showToast('✅ Review submitted! Updating Acharya Trust Score.', 'success');
   }, [showToast]);
 
   const handleSetTab = useCallback(tab => {
-    if (tab === 'background') { setQueueOpen(true); return; }
     setActiveTab(tab);
   }, []);
 
@@ -299,6 +295,17 @@ export default function App() {
       setActiveTab('devotee');
     }
     showToast(` Namaste ${newAuth.user?.name || newAuth.user?.username || ''}! Logged in successfully.`, 'success');
+  }, [showToast]);
+
+  const handleUpdateUser = useCallback((updatedUser) => {
+    setAuth(prev => ({
+      ...prev,
+      user: {
+        ...prev.user,
+        ...updatedUser
+      }
+    }));
+    showToast('Your user profile details have been saved!', 'success');
   }, [showToast]);
 
   const handleLogout = useCallback(() => {
@@ -355,6 +362,7 @@ export default function App() {
           auth={auth}
           onClose={() => setShowBookingModal(false)}
           onBookingSuccess={(msg) => showToast(msg, 'success')}
+          onOpenLogin={handleAdminLoginClick}
         />
       )}
 
@@ -391,7 +399,7 @@ export default function App() {
       {/* Main Views */}
       <main style={{ flex: 1 }}>
         {activeTab === 'home'        && <HomePage onNavigate={handleSetTab} onTriggerSOS={handleTriggerSOS} onOpenBooking={handleOpenBookingModal} />}
-        {activeTab === 'devotee'     && <DevoteeDashboard auth={auth} onOpenLogin={handleAdminLoginClick} onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} onOpenBooking={handleOpenBookingModal} />}
+        {activeTab === 'devotee'     && <DevoteeDashboard auth={auth} onUpdateUser={handleUpdateUser} onOpenLogin={handleAdminLoginClick} onTriggerSOS={handleTriggerSOS} onRunBackgroundTithi={handleRunBackgroundTithi} onOpenFeedback={setFeedbackPurohit} onOpenBooking={handleOpenBookingModal} />}
         {activeTab === 'pravachanam' && <PravachanamView onTriggerSOS={handleTriggerSOS} onOpenBooking={handleOpenBookingModal} />}
         {activeTab === 'apara'       && <AparaView onTriggerSOS={handleTriggerSOS} onOpenBooking={handleOpenBookingModal} />}
         {activeTab === 'freeSeva'    && <FreeSeva onOpenFreeSeva={handleOpenFreeSevaModal} />}
@@ -406,9 +414,6 @@ export default function App() {
           0% PLATFORM FEE · DIRECT ON-SPOT DAKSHINA · NO GPS TRACKING · 30-MIN EMERGENCY SOS
         </p>
       </footer>
-
-      {/* Background Worker Monitor */}
-      {queueOpen && <BackgroundWorkerMonitor tasks={tasks} onClose={() => setQueueOpen(false)} />}
 
       {/* Feedback Modal */}
       {feedbackPurohit && (

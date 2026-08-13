@@ -11,6 +11,7 @@ router.get('/', (req, res) => {
       id: r.id,
       devoteeId: r.devotee_id,
       devoteeName: r.devotee_name,
+      devoteePhone: r.devotee_phone || '',
       purohitId: r.purohit_id,
       purohitName: r.purohit_name,
       sampradaya: r.sampradaya,
@@ -34,17 +35,18 @@ router.get('/', (req, res) => {
 // CREATE a booking
 router.post('/', (req, res) => {
   try {
-    const { devoteeId, devoteeName, purohitId, purohitName, sampradaya, ritualName, date, muhurtaTime, dakshinaAmount, samagriMode, isAparaKaryam, location } = req.body;
+    const { devoteeId, devoteeName, devoteePhone, purohitId, purohitName, sampradaya, ritualName, date, muhurtaTime, dakshinaAmount, samagriMode, isAparaKaryam, location } = req.body;
 
     const id = `BK-${Math.floor(8900 + Math.random() * 9000)}`;
 
     db.prepare(`
-      INSERT INTO bookings (id, devotee_id, devotee_name, purohit_id, purohit_name, sampradaya, ritual_name, date, muhurta_time, dakshina_amount, dakshina_status, samagri_mode, status, is_apara_karyam, location)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO bookings (id, devotee_id, devotee_name, devotee_phone, purohit_id, purohit_name, sampradaya, ritual_name, date, muhurta_time, dakshina_amount, dakshina_status, samagri_mode, status, is_apara_karyam, location)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
-      devoteeId || 'dev-1',
-      devoteeName || 'Sri Devotee',
+      devoteeId || 'dev-guest',
+      devoteeName || 'Guest User',
+      devoteePhone || '',
       purohitId || null,
       purohitName || 'Unassigned Acharya',
       sampradaya || 'uttaradhi',
@@ -54,7 +56,7 @@ router.post('/', (req, res) => {
       dakshinaAmount || '₹ 3,500',
       'Direct On-the-Spot (0% Platform Fee)',
       samagriMode || 'Pandit Hand-Carried Custom Kit',
-      'Scheduled',
+      'Pending Admin Review',
       isAparaKaryam ? 1 : 0,
       location || 'Bengaluru'
     );

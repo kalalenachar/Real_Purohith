@@ -150,10 +150,10 @@ export default function FeedbackModal({ purohit, onClose, onSubmit }) {
             />
           </div>
 
-          {/* AI notice */}
+          {/* notice */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', fontSize: 12, color: '#c4b5fd' }}>
             <Sparkles size={15} style={{ flexShrink: 0, color: '#a78bfa' }} />
-            Submission triggers real-time background AI sentiment analysis and Mutt Trust Score update.
+            Submission updates scholar ratings and Mutt Trust Score in real time.
           </div>
 
           {/* Footer */}
@@ -163,7 +163,7 @@ export default function FeedbackModal({ purohit, onClose, onSubmit }) {
               style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: submitted ? 0.7 : 1 }}
               disabled={submitted}>
               {submitted ? <CheckCircle2 size={15} /> : <Send size={15} />}
-              {submitted ? 'Sending to AI Queue…' : 'Submit Review'}
+              {submitted ? 'Submitting Review…' : 'Submit Review'}
             </button>
           </div>
         </form>

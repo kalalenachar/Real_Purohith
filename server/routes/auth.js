@@ -60,7 +60,16 @@ router.post('/register', (req, res) => {
       db.prepare(`
         INSERT INTO devotees (id, user_id, name, gotram, veda_shakha, sutram, sampradaya, mutt, kula_daivam, location)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(devId, id, name, gotram || 'Kashyapa', 'Rigveda', 'Ashvalayana Sutram', sampradaya || 'uttaradhi', 'Uttaradhi Mutt', 'Tirupati Venkateswara Swamy', 'Bengaluru, Karnataka');
+      `).run(
+        devId, id, name,
+        gotram || 'Not Specified',
+        'Not Specified',
+        'Not Specified',
+        sampradaya || 'uttaradhi',
+        'Not Specified',
+        'Not Specified',
+        'Not Specified'
+      );
     }
 
     // Generate JWT token
@@ -130,9 +139,76 @@ router.get('/me', authenticateToken, (req, res) => {
     const user = db.prepare('SELECT id, username, email, role, name, gotram, sampradaya, avatar, created_at FROM users WHERE id = ?').get(req.user.id);
     if (!user) return res.status(404).json({ error: 'User profile not found.' });
 
-    res.json({ user });
+    // Try to fetch additional devotee attributes if existing
+    const dev = db.prepare('SELECT veda_shakha, sutram, kula_daivam, location FROM devotees WHERE user_id = ? OR id = ?').get(user.id, user.id);
+
+    res.json({
+      user: {
+        ...user,
+        vedaShakha: dev?.veda_shakha || '',
+        sutram: dev?.sutram || '',
+        kulaDaivam: dev?.kula_daivam || '',
+        location: dev?.location || ''
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: 'Database fetch error.' });
+  }
+});
+
+// 4. UPDATE USER PROFILE (/api/auth/profile)
+router.put('/profile', authenticateToken, (req, res) => {
+  try {
+    const { name, gotram, sampradaya, avatar, vedaShakha, sutram, kulaDaivam, location } = req.body;
+    const userId = req.user.id;
+
+    // Update users table
+    db.prepare(`
+      UPDATE users 
+      SET name = COALESCE(?, name),
+          gotram = COALESCE(?, gotram),
+          sampradaya = COALESCE(?, sampradaya),
+          avatar = COALESCE(?, avatar)
+      WHERE id = ?
+    `).run(name, gotram, sampradaya, avatar, userId);
+
+    // Also update or insert in devotees table
+    const existingDev = db.prepare('SELECT id FROM devotees WHERE user_id = ? OR id = ?').get(userId, userId);
+    if (existingDev) {
+      db.prepare(`
+        UPDATE devotees
+        SET name = COALESCE(?, name),
+            gotram = COALESCE(?, gotram),
+            sampradaya = COALESCE(?, sampradaya),
+            veda_shakha = COALESCE(?, veda_shakha),
+            sutram = COALESCE(?, sutram),
+            kula_daivam = COALESCE(?, kula_daivam),
+            location = COALESCE(?, location)
+        WHERE id = ?
+      `).run(name, gotram, sampradaya, vedaShakha, sutram, kulaDaivam, location, existingDev.id);
+    } else {
+      const devId = `dev-${Date.now()}`;
+      db.prepare(`
+        INSERT INTO devotees (id, user_id, name, gotram, veda_shakha, sutram, sampradaya, mutt, kula_daivam, location)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(devId, userId, name || req.user.name, gotram || '', vedaShakha || '', sutram || '', sampradaya || '', '', kulaDaivam || '', location || '');
+    }
+
+    const updatedUser = db.prepare('SELECT id, username, email, role, name, gotram, sampradaya, avatar FROM users WHERE id = ?').get(userId);
+
+    res.json({
+      message: 'Profile updated successfully!',
+      user: {
+        ...updatedUser,
+        vedaShakha,
+        sutram,
+        kulaDaivam,
+        location
+      }
+    });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Failed to update user profile in database.' });
   }
 });
 

@@ -338,7 +338,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
                     }}
                   >
-                    <span>🕉️ Devotee</span>
+                    <span>👤 User Account</span>
                     <span style={{ fontSize: 9, color: '#94a3b8' }}>venkatesh</span>
                   </button>
                 </div>
@@ -352,8 +352,8 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
           {mode === 'register' && (
             <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#fbbf24' }}>
-                <span>🕉️</span>
-                <span>Registering Devotee / Householder Account</span>
+                <span>👤</span>
+                <span>Registering User / Householder Account</span>
               </div>
 
 
