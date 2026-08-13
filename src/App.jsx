@@ -212,23 +212,13 @@ export default function App() {
   }, []);
 
   const handleOpenBookingModal = useCallback((ritual = null) => {
-    if (!auth?.isLoggedIn) {
-      showToast('🔒 Please Sign In or Register to schedule a sacred ritual booking.', 'info');
-      setShowLogin(true);
-      return;
-    }
     setBookingRitual(typeof ritual === 'string' ? ritual : null);
     setShowBookingModal(true);
-  }, [auth, showToast]);
+  }, []);
 
   const handleOpenFreeSevaModal = useCallback((type) => {
-    if (!auth?.isLoggedIn) {
-      showToast('🔒 Please Sign In or Register to register for Free Digital Sevas.', 'info');
-      setShowLogin(true);
-      return;
-    }
     setFreeSevaType(type);
-  }, [auth, showToast]);
+  }, []);
 
   // Check auth and load feedbacks on mount from database
   useEffect(() => {

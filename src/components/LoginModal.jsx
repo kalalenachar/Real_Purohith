@@ -308,41 +308,6 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                 )}
               </button>
 
-              {/* Quick System Accounts Header */}
-              <div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
-                <p style={{ fontSize: 11, color: '#64748b', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>
-                  🔑 Database Test Accounts
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('admin', 'admin123')}
-                    style={{
-                      padding: '8px 6px', borderRadius: 10,
-                      background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
-                      fontSize: 11, color: '#fbbf24', cursor: 'pointer', textAlign: 'center',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
-                    }}
-                  >
-                    <span>👑 Admin</span>
-                    <span style={{ fontSize: 9, color: '#94a3b8' }}>admin</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('venkatesh', 'user123')}
-                    style={{
-                      padding: '8px 6px', borderRadius: 10,
-                      background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)',
-                      fontSize: 11, color: '#38bdf8', cursor: 'pointer', textAlign: 'center',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
-                    }}
-                  >
-                    <span>👤 User Account</span>
-                    <span style={{ fontSize: 9, color: '#94a3b8' }}>venkatesh</span>
-                  </button>
-                </div>
-              </div>
             </form>
           )}
 

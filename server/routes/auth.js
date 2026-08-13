@@ -62,13 +62,13 @@ router.post('/register', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         devId, id, name,
-        gotram || 'Not Specified',
-        'Not Specified',
-        'Not Specified',
-        sampradaya || 'uttaradhi',
-        'Not Specified',
-        'Not Specified',
-        'Not Specified'
+        gotram || '',
+        '',
+        '',
+        sampradaya || 'secular',
+        '',
+        '',
+        ''
       );
     }
 

@@ -82,8 +82,8 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
           setSelectedDevotee({
             ...match,
             name: auth.user.name || match.name,
-            gotram: auth.user.gotram || (match.gotram !== 'Kashyapa' ? match.gotram : 'Not Specified'),
-            sampradaya: auth.user.sampradaya || match.sampradaya || 'vadagalai'
+            gotram: (auth.user.gotram && auth.user.gotram !== 'Kashyapa') ? auth.user.gotram : (match.gotram && match.gotram !== 'Kashyapa' && match.gotram !== 'Not Specified' ? match.gotram : ''),
+            sampradaya: auth.user.sampradaya || match.sampradaya || 'secular'
           });
           return;
         }
@@ -93,13 +93,13 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
       setSelectedDevotee({
         id: auth.user.id || `dev-${Date.now()}`,
         name: auth.user.name || auth.user.username || 'Devotee',
-        gotram: auth.user.gotram || 'Not Specified',
-        vedaShakha: auth.user.vedaShakha || 'Not Specified',
-        sutram: auth.user.sutram || 'Not Specified',
-        sampradaya: auth.user.sampradaya || 'vadagalai',
-        mutt: auth.user.mutt || 'Not Specified',
-        kulaDaivam: auth.user.kulaDaivam || 'Not Specified',
-        location: auth.user.location || 'Not Specified',
+        gotram: (auth.user.gotram && auth.user.gotram !== 'Kashyapa') ? auth.user.gotram : '',
+        vedaShakha: auth.user.vedaShakha && auth.user.vedaShakha !== 'Not Specified' ? auth.user.vedaShakha : '',
+        sutram: auth.user.sutram && auth.user.sutram !== 'Not Specified' ? auth.user.sutram : '',
+        sampradaya: auth.user.sampradaya || 'secular',
+        mutt: auth.user.mutt || '',
+        kulaDaivam: auth.user.kulaDaivam || '',
+        location: auth.user.location || '',
         ancestors: auth.user.ancestors || []
       });
     });
@@ -109,10 +109,13 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
   React.useEffect(() => {
     if (auth?.user) {
       setProfileName(auth.user.name || auth.user.username || '');
-      setProfileGotram(auth.user.gotram || selectedDevotee?.gotram || '');
-      setProfileSampradaya(auth.user.sampradaya || selectedDevotee?.sampradaya || 'vadagalai');
-      setProfileVedaShakha(selectedDevotee?.vedaShakha || auth.user.vedaShakha || 'Rigveda');
-      setProfileSutram(selectedDevotee?.sutram || auth.user.sutram || 'Ashvalayana Sutram');
+      const userGotram = auth.user.gotram || selectedDevotee?.gotram || '';
+      setProfileGotram(userGotram !== 'Kashyapa' && userGotram !== 'Not Specified' ? userGotram : '');
+      setProfileSampradaya(auth.user.sampradaya || selectedDevotee?.sampradaya || 'secular');
+      const vShakha = selectedDevotee?.vedaShakha || auth.user.vedaShakha || '';
+      setProfileVedaShakha(vShakha !== 'Not Specified' ? vShakha : '');
+      const pSutram = selectedDevotee?.sutram || auth.user.sutram || '';
+      setProfileSutram(pSutram !== 'Not Specified' ? pSutram : '');
       setProfileKulaDaivam(selectedDevotee?.kulaDaivam || auth.user.kulaDaivam || '');
       setProfileLocation(selectedDevotee?.location || auth.user.location || '');
       setProfileAvatar(auth.user.avatar || selectedDevotee?.avatar || '👤');

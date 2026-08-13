@@ -15,7 +15,7 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
   const [timeSlot, setTimeSlot] = useState('07:00 AM – 08:00 AM');
 
   // Parayanam specific
-  const [gotram, setGotram] = useState(user?.gotram || 'Kashyapa');
+  const [gotram, setGotram] = useState(user?.gotram || '');
   const [nakshatram, setNakshatram] = useState('');
   const [sankalpaIntention, setSankalpaIntention] = useState('Family Health, Peace & Spiritual Well-being');
 
