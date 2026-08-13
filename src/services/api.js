@@ -154,6 +154,16 @@ export const API = {
     return res.json();
   },
 
+  async updateBooking(id, bookingData) {
+    const res = await fetch(`${API_BASE}/bookings/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(bookingData)
+    });
+    if (!res.ok) throw new Error('Failed to update booking details');
+    return res.json();
+  },
+
   async updateBookingStatus(id, status, location) {
     const res = await fetch(`${API_BASE}/bookings/${id}/status`, {
       method: 'PUT',

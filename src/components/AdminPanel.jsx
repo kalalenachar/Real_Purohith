@@ -342,11 +342,176 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
   );
 }
 
+/* ──────────────────────────── Edit Booking Modal ───────────────── */
+function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
+  const [devoteeName, setDevoteeName] = useState(booking.devoteeName || '');
+  const [devoteePhone, setDevoteePhone] = useState(booking.devoteePhone || '');
+  const [dakshinaAmount, setDakshinaAmount] = useState(booking.dakshinaAmount || '');
+  const [sampradaya, setSampradaya] = useState(booking.sampradaya || 'secular');
+  const [date, setDate] = useState(booking.date || '');
+  const [muhurtaTime, setMuhurtaTime] = useState(booking.muhurtaTime || '');
+  const [purohitId, setPurohitId] = useState(booking.purohitId || 'unassigned');
+  const [samagriMode, setSamagriMode] = useState(booking.samagriMode || '');
+  const [location, setLocation] = useState(booking.location || '');
+  const [status, setStatus] = useState(booking.status || 'Pending Admin Review');
+  const [isApara, setIsApara] = useState(Boolean(booking.isAparaKaryam));
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const selectedPurohit = purohits.find(p => p.id === purohitId);
+    const purohitName = selectedPurohit ? selectedPurohit.name : (purohitId === 'unassigned' ? 'Pending Admin Assignment' : booking.purohitName);
+
+    const updatedData = {
+      devoteeName,
+      devoteePhone,
+      dakshinaAmount,
+      sampradaya,
+      date,
+      muhurtaTime,
+      purohitId,
+      purohitName,
+      samagriMode,
+      location,
+      status,
+      isAparaKaryam: isApara
+    };
+
+    try {
+      await onSave(booking.id, updatedData);
+      onClose();
+    } catch (err) {
+      alert('Failed to save booking edits: ' + err.message);
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="card-premium" style={{ maxWidth: 640, width: '100%', padding: 28, borderRadius: 20 }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div>
+            <h3 style={{ fontSize: 18, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
+              ✏️ Edit Booking Requirement Details ({booking.id})
+            </h3>
+            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+              Update Dakshina, Muhurtam, Sampradaya, Assigned Acharya & Location after discussion with party.
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#94a3b8', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* User Name & Mobile Number */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Devotee Full Name</label>
+              <input type="text" className="input" value={devoteeName} onChange={e => setDevoteeName(e.target.value)} required />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Contact Mobile Number</label>
+              <input type="text" className="input" value={devoteePhone} onChange={e => setDevoteePhone(e.target.value)} placeholder="e.g. +91 9876543210" required />
+            </div>
+          </div>
+
+          {/* Dakshina Amount & Booking Status */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Confirmed Dakshina Honorarium</label>
+              <input type="text" className="input" value={dakshinaAmount} onChange={e => setDakshinaAmount(e.target.value)} placeholder="e.g. ₹4,000 (Confirmed)" required />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Booking Status</label>
+              <select className="select" value={status} onChange={e => setStatus(e.target.value)}>
+                <option value="Pending Admin Review">⚡ Pending Admin Review</option>
+                <option value="Confirmed">✅ Confirmed</option>
+                <option value="Scheduled">📅 Scheduled</option>
+                <option value="In Progress">🔥 In Progress</option>
+                <option value="Completed">🎉 Completed</option>
+                <option value="Cancelled">❌ Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Sampradaya Lineage & Assigned Acharya */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Sampradaya Tradition</label>
+              <select className="select" value={sampradaya} onChange={e => setSampradaya(e.target.value)}>
+                {Object.entries(SAMPRADAYA_MATRIX).map(([key, item]) => (
+                  <option key={key} value={key}>{item.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Assigned Purohit / Acharya</label>
+              <select className="select" value={purohitId} onChange={e => setPurohitId(e.target.value)}>
+                <option value="unassigned">⏳ Unassigned (Pending Admin Assignment)</option>
+                {purohits.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.mutt || p.sampradaya})</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Date & Muhurta Time */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Sacred Date</label>
+              <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} required />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Muhurta Time Slot</label>
+              <select className="select" value={muhurtaTime} onChange={e => setMuhurtaTime(e.target.value)}>
+                <option value="Pending Discussion with Admin">Pending Discussion with Admin</option>
+                <option value="05:30 AM – 07:30 AM (Brahma Muhurtam)">05:30 AM – 07:30 AM (Brahma Muhurtam)</option>
+                <option value="06:30 AM – 09:00 AM (Pratah Kala)">06:30 AM – 09:00 AM (Pratah Kala)</option>
+                <option value="11:45 AM – 12:30 PM (Abhijit Muhurtam)">11:45 AM – 12:30 PM (Abhijit Muhurtam)</option>
+                <option value="05:30 PM – 07:30 PM (Sayam Kala)">05:30 PM – 07:30 PM (Sayam Kala)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Samagri Mode */}
+          <div>
+            <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Pooja Samagri Logistics</label>
+            <select className="select" value={samagriMode} onChange={e => setSamagriMode(e.target.value)}>
+              <option value="Pandit Hand-Carried Custom Kit (100% Pure Dravya)">Pandit Hand-Carried Kit</option>
+              <option value="Householder Self-Arranged Dravya (Vedic Checklist Emailed)">Householder Self-Arranged</option>
+              <option value="Pending Admin Call (Pandit Kit vs Self-Arranged)">Pending Admin Call</option>
+            </select>
+          </div>
+
+          {/* Location / Google Meet URL */}
+          <div>
+            <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Venue Address / Google Meet Link / Directions</label>
+            <input type="text" className="input" value={location} onChange={e => setLocation(e.target.value)} placeholder="Venue address or https://meet.google.com/xyz" required />
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 10 }}>
+            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={submitting}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              {submitting ? 'Saving Changes...' : 'Save Booking Modifications'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ──────────────────────────── Bookings Tab ─────────────────────── */
-function BookingsTab({ bookings, onUpdateStatus, onDelete, onClearAllMeetLinks }) {
+function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking, onDelete, onClearAllMeetLinks }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [editingBooking, setEditingBooking] = useState(null);
   const [meetInputs, setMeetInputs] = useState({});
 
   const filtered = bookings.filter(b => {
@@ -488,16 +653,33 @@ function BookingsTab({ bookings, onUpdateStatus, onDelete, onClearAllMeetLinks }
                       <option key={s} value={s}>{s}</option>)}
                   </select>
 
-                  <button onClick={() => setConfirmDelete(b.id)}
-                    style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#f87171', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Trash2 size={12} /> Remove
-                  </button>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <button
+                      onClick={() => setEditingBooking(b)}
+                      style={{ padding: '5px 12px', borderRadius: 8, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24', cursor: 'pointer', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}
+                    >
+                      <Edit2 size={12} /> Edit Details
+                    </button>
+                    <button onClick={() => setConfirmDelete(b.id)}
+                      style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#f87171', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <Trash2 size={12} /> Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {editingBooking && (
+        <EditBookingModal
+          booking={editingBooking}
+          purohits={purohits}
+          onClose={() => setEditingBooking(null)}
+          onSave={onUpdateBooking}
+        />
+      )}
 
       {confirmDelete && (
         <ConfirmDialog
@@ -865,6 +1047,12 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
     if (Array.isArray(updated)) setBookings(updated);
   }, []);
 
+  const handleUpdateBookingDetails = useCallback(async (id, bookingData) => {
+    await DataStore.updateBooking(id, bookingData);
+    const updated = await DataStore.getBookings();
+    if (Array.isArray(updated)) setBookings(updated);
+  }, []);
+
   const handleClearAllMeetLinks = useCallback(async () => {
     if (window.confirm('Clear all active Google Meet links across all user bookings in SQLite database?')) {
       await DataStore.clearAllMeetLinks();
@@ -878,6 +1066,7 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
     const updated = await DataStore.getBookings();
     if (Array.isArray(updated)) setBookings(updated);
   }, []);
+
   // Devotee ops
   const handleDeleteDevotee = useCallback((id) => {
     setDevotees(prev => prev.filter(d => d.id !== id));
@@ -1016,7 +1205,14 @@ export default function AdminPanel({ auth, onLogout, onSwitchToPublic }) {
             <PurohitsTab purohits={purohits} onSave={handleSavePurohit} onDelete={handleDeletePurohit} />
           )}
           {activeTab === 'bookings' && (
-            <BookingsTab bookings={bookings} onUpdateStatus={handleUpdateBookingStatus} onDelete={handleDeleteBooking} onClearAllMeetLinks={handleClearAllMeetLinks} />
+            <BookingsTab
+              bookings={bookings}
+              purohits={purohits}
+              onUpdateStatus={handleUpdateBookingStatus}
+              onUpdateBooking={handleUpdateBookingDetails}
+              onDelete={handleDeleteBooking}
+              onClearAllMeetLinks={handleClearAllMeetLinks}
+            />
           )}
           {activeTab === 'devotees' && (
             <DevoteesTab devotees={devotees} onDelete={handleDeleteDevotee} />

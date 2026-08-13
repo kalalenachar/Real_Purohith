@@ -68,6 +68,47 @@ router.post('/', (req, res) => {
   }
 });
 
+// UPDATE entire booking details (Admin Edit)
+router.put('/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      devoteeName, devoteePhone, purohitId, purohitName, sampradaya,
+      ritualName, date, muhurtaTime, dakshinaAmount, dakshinaStatus,
+      samagriMode, status, isAparaKaryam, location
+    } = req.body;
+
+    db.prepare(`
+      UPDATE bookings SET
+        devotee_name = COALESCE(?, devotee_name),
+        devotee_phone = COALESCE(?, devotee_phone),
+        purohit_id = COALESCE(?, purohit_id),
+        purohit_name = COALESCE(?, purohit_name),
+        sampradaya = COALESCE(?, sampradaya),
+        ritual_name = COALESCE(?, ritual_name),
+        date = COALESCE(?, date),
+        muhurta_time = COALESCE(?, muhurta_time),
+        dakshina_amount = COALESCE(?, dakshina_amount),
+        dakshina_status = COALESCE(?, dakshina_status),
+        samagri_mode = COALESCE(?, samagri_mode),
+        status = COALESCE(?, status),
+        is_apara_karyam = COALESCE(?, is_apara_karyam),
+        location = COALESCE(?, location)
+      WHERE id = ?
+    `).run(
+      devoteeName, devoteePhone, purohitId, purohitName, sampradaya,
+      ritualName, date, muhurtaTime, dakshinaAmount, dakshinaStatus,
+      samagriMode, status, isAparaKaryam !== undefined ? (isAparaKaryam ? 1 : 0) : null,
+      location, id
+    );
+
+    res.json({ message: `Booking ${id} details successfully updated in SQLite database.` });
+  } catch (err) {
+    console.error('Booking update error:', err);
+    res.status(500).json({ error: 'Failed to update booking details.' });
+  }
+});
+
 // UPDATE booking status and/or meet link location
 router.put('/:id/status', (req, res) => {
   try {

@@ -113,6 +113,10 @@ export class DataStore {
     return await API.createBooking(booking);
   }
 
+  static async updateBooking(id, bookingData) {
+    return await API.updateBooking(id, bookingData);
+  }
+
   static async updateBookingStatus(id, status, location) {
     return await API.updateBookingStatus(id, status, location);
   }
