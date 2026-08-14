@@ -178,21 +178,20 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="card-premium"
+        className="modal-box"
         style={{
-          maxWidth: 640, width: '100%', borderRadius: 24, padding: 32,
-          position: 'relative', overflow: 'hidden', animation: 'fadeInUp 0.25s ease',
-          background: '#0c1220', border: '1px solid rgba(245,158,11,0.4)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(245,158,11,0.15)'
+          maxWidth: 640,
+          border: '1px solid rgba(245,158,11,0.4)',
+          boxShadow: '0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(245,158,11,0.15)'
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Sticky Header */}
+        <div className="modal-header-sticky">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,#f59e0b,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, boxShadow: '0 4px 15px rgba(245,158,11,0.3)' }}>🪔</div>
+            <div style={{ width: 42, height: 42, borderRadius: 14, background: 'linear-gradient(135deg,#f59e0b,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, boxShadow: '0 4px 15px rgba(245,158,11,0.3)' }}>🪔</div>
             <div>
-              <h2 style={{ fontSize: 20, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
+              <h2 style={{ fontSize: 18, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
                 {step === 1 ? 'Request Sacred Vedic Ritual' : 'Step 2: Contact Details & Confirmation'}
               </h2>
               <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
@@ -206,14 +205,15 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
         </div>
 
         {/* Step Indicator Bar */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 8, padding: '12px 24px 0 24px', background: '#0c1220' }}>
           <div style={{ flex: 1, height: 4, borderRadius: 4, background: step >= 1 ? '#f59e0b' : 'rgba(255,255,255,0.1)' }} />
           <div style={{ flex: 1, height: 4, borderRadius: 4, background: step >= 2 ? '#f59e0b' : 'rgba(255,255,255,0.1)' }} />
         </div>
 
         {/* ── STEP 1: RITUAL & LOGISTICS DETAILS ── */}
         {step === 1 && (
-          <form onSubmit={handleProceedToStep2} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <form onSubmit={handleProceedToStep2} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+            <div className="modal-body-scroll">
             {/* Prominent Selected Ritual Card (No Dropdown needed) */}
             <div style={{
               padding: '16px 20px', borderRadius: 16,
@@ -395,21 +395,29 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-              <button type="button" className="btn btn-ghost" onClick={onClose}>
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary btn-lg" style={{ gap: 8 }}>
-                Proceed to Contact Details <ArrowRight size={16} />
-              </button>
+            </div>
+
+            {/* Sticky Step 1 Footer */}
+            <div className="modal-footer-sticky">
+              <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                Step 1 of 2 · Ritual & Venue Details
+              </span>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="button" className="btn btn-ghost" onClick={onClose}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ gap: 8 }}>
+                  Proceed to Contact Details <ArrowRight size={15} />
+                </button>
+              </div>
             </div>
           </form>
         )}
 
         {/* ── STEP 2: CONTACT DETAILS & FINAL SUBMISSION ── */}
         {step === 2 && (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+            <div className="modal-body-scroll">
             {/* Booking Summary Box */}
             <div style={{ padding: '14px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>
@@ -542,13 +550,15 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
               </span>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 4 }}>
+            </div>
+
+            {/* Sticky Step 2 Footer */}
+            <div className="modal-footer-sticky">
               <button type="button" className="btn btn-ghost" onClick={() => setStep(1)} disabled={submitting} style={{ gap: 6 }}>
-                <ArrowLeft size={16} /> Back
+                <ArrowLeft size={15} /> Back to Step 1
               </button>
-              <button type="submit" className="btn btn-primary btn-lg" disabled={submitting}>
-                {submitting ? 'Submitting to Admin Desk...' : 'Confirm & Submit Booking to Admin'}
+              <button type="submit" className="btn btn-primary" disabled={submitting}>
+                {submitting ? 'Submitting to Admin Desk...' : 'Confirm & Submit Booking'}
               </button>
             </div>
           </form>

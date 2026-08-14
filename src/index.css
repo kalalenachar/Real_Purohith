@@ -352,7 +352,26 @@ h1, h2, h3, h4, .heading { font-family: 'Outfit', sans-serif; line-height: 1.2; 
 
 .input:focus, .select:focus, textarea.input:focus {
   border-color: var(--gold-500);
-  box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+}
+
+/* Force dark styling on browser autofill & autocomplete */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+select:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #0c1220 inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  caret-color: #f8fafc !important;
+  border-color: rgba(245,158,11,0.4) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  cursor: pointer;
 }
 
 /* ========================
@@ -1135,31 +1154,69 @@ h1, h2, h3, h4, .heading { font-family: 'Outfit', sans-serif; line-height: 1.2; 
 .terminal-text.info { color: #38bdf8; }
 
 /* ========================
-   FEEDBACK MODAL
+   MODALS & DIALOGS
 ======================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  z-index: 500;
+  background: rgba(3, 6, 14, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  animation: fadeIn 0.25s ease;
+  padding: 16px;
+  overflow-y: auto;
+  animation: fadeIn 0.2s ease;
 }
 
-.modal-box {
-  background: var(--bg-card);
+.modal-box,
+.modal-card {
+  background: #0c1220;
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-2xl);
   width: 100%;
-  max-width: 640px;
-  max-height: 90vh;
+  max-width: 620px;
+  max-height: min(92vh, 800px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-gold), 0 30px 70px rgba(0,0,0,0.85);
+  animation: fadeInUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.modal-header-sticky {
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0c1220;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.modal-body-scroll {
+  padding: 20px 24px;
   overflow-y: auto;
-  box-shadow: var(--shadow-gold), 0 40px 80px rgba(0,0,0,0.7);
-  animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.modal-footer-sticky {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: #080c17;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 2;
+  gap: 12px;
 }
 
 /* ========================

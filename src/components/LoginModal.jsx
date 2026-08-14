@@ -156,6 +156,9 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
         background: 'rgba(12, 18, 32, 0.96)',
         border: '1px solid rgba(245,158,11,0.3)',
         borderRadius: 28,
+        maxHeight: 'min(92vh, 820px)',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
         boxShadow: '0 0 70px rgba(245,158,11,0.15), 0 40px 80px rgba(0,0,0,0.8)',
         animation: 'fadeInUp 0.35s ease',
@@ -163,7 +166,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
         margin: 'auto 0'
       }}>
         {/* Top Gold Shimmer */}
-        <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #f59e0b, #ea580c, transparent)' }} />
+        <div style={{ height: 3, background: 'linear-gradient(90deg, transparent, #f59e0b, #ea580c, transparent)', flexShrink: 0 }} />
 
         {/* Modal Close Button */}
         {onClose && (
@@ -183,22 +186,22 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
         )}
 
         {/* Header / Brand */}
-        <div style={{ padding: '30px 32px 20px', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '26px 32px 18px', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
           <div style={{
-            width: 64, height: 64, borderRadius: 20, margin: '0 auto 14px',
+            width: 56, height: 56, borderRadius: 18, margin: '0 auto 12px',
             background: 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(234,88,12,0.18))',
             border: '1px solid rgba(245,158,11,0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 32, boxShadow: '0 8px 32px rgba(245,158,11,0.25)'
+            fontSize: 28, boxShadow: '0 8px 32px rgba(245,158,11,0.25)'
           }}>🪔</div>
-          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 24, fontWeight: 900, color: '#f8fafc', letterSpacing: 0.5 }}>REAL-PUROHIT</h1>
-          <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Sacred Multi-Sampradaya Ecosystem</p>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 22, fontWeight: 900, color: '#f8fafc', letterSpacing: 0.5 }}>REAL-PUROHIT</h1>
+          <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>Sacred Multi-Sampradaya Ecosystem</p>
 
           {/* Mode Switcher Tabs */}
           <div style={{
             display: 'flex', background: 'rgba(255,255,255,0.03)',
             padding: 4, borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)',
-            marginTop: 18
+            marginTop: 14
           }}>
             <button
               type="button"
@@ -231,7 +234,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
         </div>
 
         {/* Form Container */}
-        <div style={{ padding: '24px 32px 32px' }}>
+        <div style={{ padding: '20px 28px 28px', overflowY: 'auto', flex: 1 }}>
           {/* Error Banner */}
           {error && (
             <div style={{
