@@ -501,8 +501,8 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
 
                 {/* Country Code & Mobile Number */}
                 <div>
-                  <label style={{ fontSize: 11, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
-                    Country Code & Mobile Number (WhatsApp / Phone) *
+                  <label style={{ fontSize: 11, color: '#25D366', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+                    <span>💬</span> WhatsApp Number * (Mandatory)
                   </label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <select
@@ -518,15 +518,15 @@ export default function BookingModal({ initialRitual, auth, onClose, onBookingSu
                     <input
                       type="tel"
                       className="input"
-                      style={{ flex: 1 }}
-                      placeholder="Enter mobile number"
+                      style={{ flex: 1, borderColor: 'rgba(37, 211, 102, 0.4)' }}
+                      placeholder="e.g. 98765 43210 (WhatsApp active)"
                       value={phoneNum}
                       onChange={e => { setPhoneNum(e.target.value); setPhoneError(''); }}
                       required
                     />
                   </div>
-                  <p style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
-                    Admin desk will reach you on WhatsApp / Phone to discuss your preferences and confirm Muhurtam.
+                  <p style={{ fontSize: 11, color: '#86efac', marginTop: 5, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span>🟢</span> Admin desk will coordinate your Muhurtam and dispatch live session links directly to this WhatsApp number.
                   </p>
                 </div>
               </div>

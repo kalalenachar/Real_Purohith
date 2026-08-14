@@ -527,9 +527,21 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
 
   const statusList = ['all', 'Pending Admin Review', 'Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'];
 
-  const handleSendMeetLink = (bId, currentStatus) => {
-    const meetUrl = meetInputs[bId] || 'https://meet.google.com/real-purohit-seva';
+  const handleSendMeetLink = (booking) => {
+    const bId = booking.id;
+    const currentStatus = booking.status;
+    const meetUrl = (meetInputs[bId] !== undefined ? meetInputs[bId] : booking.meetLink) || 'https://meet.google.com/real-purohit-seva';
+    
+    // 1. Instantly save Meet Link to SQLite Database / Devotee In-App Vault
     onUpdateStatus(bId, currentStatus, meetUrl);
+
+    // 2. Instantly launch WhatsApp with pre-filled sacred invitation in the same click
+    const devPhoneDigits = (booking.devoteePhone || '').replace(/\D/g, '');
+    if (devPhoneDigits.length >= 7) {
+      const waPhone = devPhoneDigits.length === 10 ? `91${devPhoneDigits}` : devPhoneDigits;
+      const waText = `Hari Om ${booking.devoteeName || 'Devotee'} Ji,\n\nNamaskaram from Real-Purohit.\n\nYour 1-on-1 Google Meet session link for *${booking.ritualName}* scheduled on *${booking.date}* (${booking.muhurtaTime}) is:\n👉 ${meetUrl}\n\nPlease join 5 minutes prior to the session. Vedic Ashirvadam! 🙏`;
+      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(waText)}`, '_blank');
+    }
   };
 
   const handleClearMeetLink = (bId, currentStatus) => {
@@ -611,7 +623,7 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
                     📍 Physical Venue: <strong style={{ color: '#f8fafc' }}>{b.location || 'Bengaluru'}</strong>
                   </p>
                   
-                  {/* Google Meet Link Dispatch & Clear Controls */}
+                  {/* Google Meet Link Dual Dispatch (Vault + WhatsApp) & Clear Controls */}
                   <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <Video size={12} /> Google Meet Link:
@@ -626,10 +638,11 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
                     />
                     <button
                       className="btn btn-sm"
-                      style={{ background: '#10b981', color: 'white', fontSize: 11, padding: '4px 12px' }}
-                      onClick={() => handleSendMeetLink(b.id, b.status)}
+                      style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 800, fontSize: 11, padding: '5px 14px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 5, boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                      onClick={() => handleSendMeetLink(b)}
+                      title="Saves link to In-App Devotee Vault AND sends via WhatsApp in 1 click"
                     >
-                      🚀 Dispatch Link
+                      🚀 Send to Vault & WhatsApp (1-Click)
                     </button>
                     {hasMeetUrl && (
                       <button

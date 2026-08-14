@@ -3,7 +3,7 @@ import { X, CheckCircle2, Calendar, Clock, Video, Phone, Sparkles, User, Mail, M
 import { DataStore } from '../services/store.js';
 import { RASHI_LIST, NAKSHATRA_LIST, getNakshatrasForRashi, getRashisForNakshatra, handleRashiSelection, handleNakshatraSelection } from '../services/vedicAstrologyService.js';
 
-export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
+export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess, onLoginSuccess, onOpenVault }) {
   const isAstrology = sevaType === 'astrology';
   const isLoggedIn = auth?.isLoggedIn;
   const user = auth?.user;
@@ -11,7 +11,9 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
   // Form State
   const [name, setName] = useState(user?.name || user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [date, setDate] = useState(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState('07:00 AM – 08:00 AM');
 
@@ -41,14 +43,42 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
 
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [registeredAccount, setRegisteredAccount] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      const devoteeId = user?.id || 'devotee-guest';
-      const devoteeName = user?.name || user?.username || name || 'Devotee';
+      let devoteeId = user?.id || 'devotee-guest';
+      let devoteeName = user?.name || user?.username || name || 'Devotee';
+      const cleanPhone = phone.trim();
+
+      // If guest provided password, auto-register them to unlock In-App Vault
+      if (!isLoggedIn && password.trim().length >= 4) {
+        try {
+          const regRes = await DataStore.registerUser({
+            name: devoteeName,
+            phone: cleanPhone,
+            password: password.trim(),
+            role: 'devotee',
+            gotram: gotram || '',
+            sampradaya: user?.sampradaya || 'uttaradhi',
+            rashi: rashi || '',
+            nakshatra: nakshatram || ''
+          });
+          if (regRes.success && regRes.auth) {
+            devoteeId = regRes.auth.user.id;
+            setRegisteredAccount(regRes.auth.user);
+            if (onLoginSuccess) {
+              onLoginSuccess(regRes.auth);
+            }
+          }
+        } catch (regErr) {
+          console.warn('Auto-registration note:', regErr);
+          // If already registered or failed, proceed with guest booking
+        }
+      }
 
       const sevaTitle = isAstrology
         ? 'Free 1-on-1 Jyotisha Vedic Astrology Consultation'
@@ -57,6 +87,7 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
       const bookingPayload = {
         devoteeId,
         devoteeName,
+        devoteePhone: cleanPhone,
         purohitId: 'unassigned',
         purohitName: isAstrology ? 'Verified Daivajna Astrologer' : 'Vedic Parayanam Acharya',
         sampradaya: user?.sampradaya || 'uttaradhi',
@@ -70,14 +101,14 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
           : `Gotram: ${gotram} | Nakshatra: ${nakshatram} | Sankalpa: ${sankalpaIntention}`,
         status: 'Scheduled (Link in App Vault)',
         isAparaKaryam: 0,
-        location: 'In-App Live Stream (Google Meet Link Sent to Devotee Vault)'
+        location: 'In-App Live Stream & WhatsApp (Google Meet Link Sent to Devotee)'
       };
 
       await DataStore.createBooking(bookingPayload);
       setSubmitting(false);
       setCompleted(true);
       if (onSuccess) {
-        onSuccess(`Registered for ${sevaTitle}! The video session link is delivered directly inside your App Vault.`);
+        onSuccess(`Registered for ${sevaTitle}! The Google Meet session link will be delivered directly via WhatsApp & inside your Devotee Vault.`);
       }
     } catch (err) {
       console.error('Free seva registration error:', err);
@@ -113,24 +144,36 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
 
           <p style={{ fontSize: 13, color: '#6ee7b7', lineHeight: 1.6, marginBottom: 20 }}>
             {isAstrology
-              ? 'Your Free 1-on-1 Jyotisha Consultation is registered. The Google Meet link will be delivered directly inside your Devotee Vault in the app.'
-              : 'Your Free 1-on-1 Vishnu Sahasranama Parayanam is registered. The Google Meet link will be delivered directly inside your Devotee Vault in the app.'}
+              ? 'Your Free 1-on-1 Jyotisha Consultation is registered. The Google Meet link will be sent to your WhatsApp number & delivered directly inside your Devotee Vault.'
+              : 'Your Free 1-on-1 Vishnu Sahasranama Parayanam is registered. The Google Meet link will be sent to your WhatsApp number & delivered directly inside your Devotee Vault.'}
           </p>
 
           <div style={{
             padding: '16px 20px', borderRadius: 16, background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.08)', textAlign: 'left', marginBottom: 24,
-            display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: '#94a3b8'
+            display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12, color: '#94a3b8'
           }}>
             <div><strong style={{ color: '#f8fafc' }}>Devotee:</strong> {user?.name || user?.username || name}</div>
             <div><strong style={{ color: '#f8fafc' }}>Scheduled Date:</strong> {date} ({timeSlot})</div>
             <div><strong style={{ color: '#34d399' }}>Fee:</strong> 100% Truly Free (0% Platform Fee)</div>
-            <div><strong style={{ color: '#fbbf24' }}>Delivery:</strong> In-App Direct Link (Devotee Vault)</div>
+            <div>
+              <strong style={{ color: '#25D366' }}>💬 WhatsApp Delivery:</strong> {phone || user?.phone || 'Your Registered WhatsApp Number'} (Session Link will be sent here)
+            </div>
+            <div>
+              <strong style={{ color: '#fbbf24' }}>🪔 In-App Delivery:</strong> Delivered to Devotee Vault {registeredAccount ? '(Account Active)' : ''}
+            </div>
           </div>
 
-          <button className="btn btn-primary btn-lg" onClick={onClose} style={{ width: '100%', justifyContent: 'center' }}>
-            Got it
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {onOpenVault && (isLoggedIn || registeredAccount) ? (
+              <button className="btn btn-primary btn-lg" onClick={onOpenVault} style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                Open My Sacred Vault 🪔
+              </button>
+            ) : null}
+            <button className="btn btn-ghost btn-lg" onClick={onClose} style={{ flex: 1, justifyContent: 'center' }}>
+              Done
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -165,7 +208,7 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
                 {isAstrology ? 'Free 1-on-1 Jyotisha Astrology' : 'Free 1-on-1 Vishnu Sahasranama'}
               </h2>
               <p style={{ fontSize: 11, color: isAstrology ? '#38bdf8' : '#6ee7b7', marginTop: 2, fontWeight: 700 }}>
-                100% Truly Free Seva · Direct In-App Link Delivery
+                100% Truly Free Seva · WhatsApp & Devotee Vault Delivery
               </p>
             </div>
           </div>
@@ -187,7 +230,9 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
                 <span style={{ fontSize: 20 }}>{user?.avatar || '🕉️'}</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc' }}>{user?.name || user?.username}</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}>{user?.email || 'Logged in Devotee'}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    {user?.phone ? `📞 WhatsApp: ${user.phone}` : (user?.email || 'Logged in Devotee')}
+                  </div>
                 </div>
               </div>
               <span className="badge badge-uttaradhi" style={{ fontSize: 10 }}>
@@ -195,32 +240,72 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
               </span>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-                  Devotee Full Name *
-                </label>
-                <input
-                  type="text"
-                  className="input"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="e.g. Sri Sundar Rao"
-                  required
-                />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
+                    Devotee Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    className="input"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="e.g. Sri Sundar Rao"
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#25D366', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6, textTransform: 'uppercase' }}>
+                    <span>💬</span> WhatsApp Number * (Mandatory)
+                  </label>
+                  <input
+                    type="tel"
+                    className="input"
+                    style={{ borderColor: 'rgba(37, 211, 102, 0.45)' }}
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="e.g. +91 98765 43210"
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 6, textTransform: 'uppercase' }}>
-                  Mobile Number * (Mandatory)
-                </label>
+
+              {/* Context Note explaining why WhatsApp is needed */}
+              <div style={{
+                padding: '8px 12px', borderRadius: 10,
+                background: 'rgba(37, 211, 102, 0.08)', border: '1px solid rgba(37, 211, 102, 0.25)',
+                fontSize: 11, color: '#86efac', display: 'flex', alignItems: 'center', gap: 8
+              }}>
+                <span style={{ fontSize: 14 }}>💬</span>
+                <span>
+                  <strong>WhatsApp Notification:</strong> The 1-on-1 Google Meet session link & Muhurtam reminder will be sent directly to this WhatsApp number before the seva.
+                </span>
+              </div>
+
+              {/* Optional Vault Password Creation for Guests */}
+              <div style={{
+                padding: '12px 14px', borderRadius: 12,
+                background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.2)',
+                display: 'flex', flexDirection: 'column', gap: 6
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={14} /> Optional: Set Password to unlock In-App Sacred Vault
+                  </label>
+                  <span style={{ fontSize: 10, color: '#94a3b8' }}>Instant Login</span>
+                </div>
                 <input
-                  type="tel"
+                  type={showPassword ? 'text' : 'password'}
                   className="input"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  placeholder="e.g. +91 9876543210"
-                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Create a password to access your In-App Vault (optional)"
+                  style={{ fontSize: 11, padding: '6px 12px' }}
                 />
+                <span style={{ fontSize: 10, color: '#94a3b8' }}>
+                  Setting a password automatically creates your devotee profile so you can join live Google Meet sessions directly inside the app.
+                </span>
               </div>
             </div>
           )}
@@ -373,16 +458,16 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Direct In-App Link Delivery Notice */}
+          {/* Direct WhatsApp & In-App Link Delivery Notice */}
           <div style={{
             padding: '12px 16px', borderRadius: 14,
             background: isAstrology ? 'rgba(14,165,233,0.08)' : 'rgba(16,185,129,0.08)',
             border: `1px solid ${isAstrology ? 'rgba(14,165,233,0.25)' : 'rgba(16,185,129,0.25)'}`,
             display: 'flex', alignItems: 'center', gap: 10
           }}>
-            <span style={{ fontSize: 18 }}>📱</span>
+            <span style={{ fontSize: 18 }}>💬</span>
             <span style={{ fontSize: 11, color: isAstrology ? '#38bdf8' : '#34d399', fontWeight: 700, lineHeight: 1.4 }}>
-              100% Free Seva · Your Google Meet session link will be sent directly to your Devotee Vault inside the app.
+              100% Free Seva · Your 1-on-1 Google Meet session link will be sent to your WhatsApp number and delivered to your Devotee Vault.
             </span>
           </div>
 

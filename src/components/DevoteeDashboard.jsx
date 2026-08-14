@@ -75,14 +75,22 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
   React.useEffect(() => {
     if (!auth?.isLoggedIn || !auth?.user) return;
 
-    // 1. Fetch user bookings and filter for this user ONLY
+    // 1. Fetch user bookings and filter for this user (matching by user ID, devoteePhone, or name)
     DataStore.getBookings().then(res => {
       if (Array.isArray(res)) {
-        const userBookings = res.filter(b => 
-          (auth.user.id && (b.devoteeId === auth.user.id || b.userId === auth.user.id)) ||
-          (auth.user.name && b.devoteeName?.toLowerCase() === auth.user.name.toLowerCase()) ||
-          (auth.user.username && b.devoteeName?.toLowerCase() === auth.user.username.toLowerCase())
-        );
+        const userPhoneDigits = (auth.user.phone || '').replace(/\D/g, '');
+        const userBookings = res.filter(b => {
+          const bookingPhoneDigits = (b.devoteePhone || '').replace(/\D/g, '');
+          const isPhoneMatch = userPhoneDigits.length >= 7 && bookingPhoneDigits.length >= 7 && (
+            userPhoneDigits === bookingPhoneDigits ||
+            userPhoneDigits.endsWith(bookingPhoneDigits) ||
+            bookingPhoneDigits.endsWith(userPhoneDigits)
+          );
+          const isIdMatch = auth.user.id && (b.devoteeId === auth.user.id || b.userId === auth.user.id);
+          const isNameMatch = auth.user.name && b.devoteeName && b.devoteeName.toLowerCase() === auth.user.name.toLowerCase();
+          const isUsernameMatch = auth.user.username && b.devoteeName && b.devoteeName.toLowerCase() === auth.user.username.toLowerCase();
+          return isPhoneMatch || isIdMatch || isNameMatch || isUsernameMatch;
+        });
         setMyBookings(userBookings);
       }
     });
