@@ -357,6 +357,7 @@ function PurohitsTab({ purohits, onSave, onDelete }) {
 
 /* ──────────────────────────── Edit Booking Modal ───────────────── */
 function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
+  const isParayanaBooking = isVishnuSahasranamaBooking(booking);
   const [devoteeName, setDevoteeName] = useState(booking.devoteeName || '');
   const [devoteePhone, setDevoteePhone] = useState(booking.devoteePhone || '');
   const [dakshinaAmount, setDakshinaAmount] = useState(booking.dakshinaAmount || '');
@@ -369,6 +370,7 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
   const [meetLink, setMeetLink] = useState(booking.meetLink || '');
   const [status, setStatus] = useState(booking.status || 'Pending Admin Review');
   const [isApara, setIsApara] = useState(Boolean(booking.isAparaKaryam));
+  const [adminNotes, setAdminNotes] = useState(booking.adminNotes || '');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -391,7 +393,8 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
       location,
       meetLink,
       status,
-      isAparaKaryam: isApara
+      isAparaKaryam: isApara,
+      adminNotes
     };
 
     try {
@@ -435,11 +438,7 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
           </div>
 
           {/* Dakshina Amount & Booking Status */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Confirmed Dakshina Honorarium</label>
-              <input type="text" className="input" value={dakshinaAmount} onChange={e => setDakshinaAmount(e.target.value)} placeholder="e.g. ₹4,000 (Confirmed)" required />
-            </div>
+          {isParayanaBooking ? (
             <div>
               <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Booking Status</label>
               <select className="select" value={status} onChange={e => setStatus(e.target.value)}>
@@ -451,28 +450,58 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
                 <option value="Cancelled">❌ Cancelled</option>
               </select>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Confirmed Dakshina Honorarium</label>
+                <input type="text" className="input" value={dakshinaAmount} onChange={e => setDakshinaAmount(e.target.value)} placeholder="e.g. ₹4,000 (Confirmed)" required />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Booking Status</label>
+                <select className="select" value={status} onChange={e => setStatus(e.target.value)}>
+                  <option value="Pending Admin Review">⚡ Pending Admin Review</option>
+                  <option value="Confirmed">✅ Confirmed</option>
+                  <option value="Scheduled">📅 Scheduled</option>
+                  <option value="In Progress">🔥 In Progress</option>
+                  <option value="Completed">🎉 Completed</option>
+                  <option value="Cancelled">❌ Cancelled</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Sampradaya Lineage & Assigned Acharya */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {isParayanaBooking ? (
             <div>
-              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Sampradaya Tradition</label>
-              <select className="select" value={sampradaya} onChange={e => setSampradaya(e.target.value)}>
-                {Object.entries(SAMPRADAYA_MATRIX).map(([key, item]) => (
-                  <option key={key} value={key}>{item.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Assigned Purohit / Acharya</label>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Assigned Parayana Acharya</label>
               <select className="select" value={purohitId} onChange={e => setPurohitId(e.target.value)}>
                 <option value="unassigned">⏳ Unassigned (Pending Admin Assignment)</option>
                 {purohits.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.mutt || p.sampradaya})</option>
+                  <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Sampradaya Tradition</label>
+                <select className="select" value={sampradaya} onChange={e => setSampradaya(e.target.value)}>
+                  {Object.entries(SAMPRADAYA_MATRIX).map(([key, item]) => (
+                    <option key={key} value={key}>{item.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Assigned Purohit / Acharya</label>
+                <select className="select" value={purohitId} onChange={e => setPurohitId(e.target.value)}>
+                  <option value="unassigned">⏳ Unassigned (Pending Admin Assignment)</option>
+                  {purohits.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.mutt || p.sampradaya})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Date & Muhurta Time */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -492,26 +521,58 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
             </div>
           </div>
 
-          {/* Samagri Mode */}
-          <div>
-            <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Pooja Samagri Logistics</label>
-            <select className="select" value={samagriMode} onChange={e => setSamagriMode(e.target.value)}>
-              <option value="Pandit Hand-Carried Custom Kit (100% Pure Dravya)">Pandit Hand-Carried Kit</option>
-              <option value="Householder Self-Arranged Dravya (Vedic Checklist Emailed)">Householder Self-Arranged</option>
-              <option value="Pending Admin Call (Pandit Kit vs Self-Arranged)">Pending Admin Call</option>
-            </select>
-          </div>
+          {/* Details / Sankalpa Mode */}
+          {isParayanaBooking ? (
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Devotee Sankalpa & Intention Details</label>
+              <input
+                type="text"
+                className="input"
+                value={samagriMode}
+                onChange={e => setSamagriMode(e.target.value)}
+                placeholder="Gotram, Nakshatra, and Sankalpa Intention"
+              />
+            </div>
+          ) : (
+            <div>
+              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Pooja Samagri Logistics</label>
+              <select className="select" value={samagriMode} onChange={e => setSamagriMode(e.target.value)}>
+                <option value="Pandit Hand-Carried Custom Kit (100% Pure Dravya)">Pandit Hand-Carried Kit</option>
+                <option value="Householder Self-Arranged Dravya (Vedic Checklist Emailed)">Householder Self-Arranged</option>
+                <option value="Pending Admin Call (Pandit Kit vs Self-Arranged)">Pending Admin Call</option>
+              </select>
+            </div>
+          )}
 
           {/* Location & Google Meet URL */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Physical Venue / Address / Directions</label>
-              <input type="text" className="input" value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Malleshwaram, Bengaluru" required />
-            </div>
+          {isParayanaBooking ? (
             <div>
               <label style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700, display: 'block', marginBottom: 4 }}>Google Meet Video Link (Online Call)</label>
               <input type="text" className="input" value={meetLink} onChange={e => setMeetLink(e.target.value)} placeholder="e.g. https://meet.google.com/xyz-pdqr-abc" />
             </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>Physical Venue / Address / Directions</label>
+                <input type="text" className="input" value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Malleshwaram, Bengaluru" required />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700, display: 'block', marginBottom: 4 }}>Google Meet Video Link (Online Call)</label>
+                <input type="text" className="input" value={meetLink} onChange={e => setMeetLink(e.target.value)} placeholder="e.g. https://meet.google.com/xyz-pdqr-abc" />
+              </div>
+            </div>
+          )}
+
+          {/* Admin Internal Notes */}
+          <div>
+            <label style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'block', marginBottom: 4 }}>📝 Admin Internal Notes</label>
+            <textarea
+              className="input"
+              style={{ fontSize: 12, minHeight: 60, resize: 'vertical', width: '100%' }}
+              value={adminNotes}
+              onChange={e => setAdminNotes(e.target.value)}
+              placeholder="Enter internal admin notes for this request (e.g. devotee preferences, follow-up calls, special requests)..."
+            />
           </div>
 
           {/* Action Buttons */}
@@ -545,6 +606,11 @@ function BookingsTab({
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
   const [meetInputs, setMeetInputs] = useState({});
+  const [dailyParayanaMeetLink, setDailyParayanaMeetLink] = useState('https://meet.google.com/real-purohit-parayana');
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [noteInputs, setNoteInputs] = useState({});
+  const [noteStatus, setNoteStatus] = useState({});
 
   const activeBookingsCount = bookings.filter(b => {
     const s = (b?.status || '').toLowerCase().trim();
@@ -561,7 +627,9 @@ function BookingsTab({
     return matchSearch && matchStatus;
   });
 
-  const statusList = ['all', 'Pending Admin Review', 'Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'];
+  const statusList = isParayana
+    ? ['all', 'Confirmed', 'Completed', 'Cancelled']
+    : ['all', 'Pending Admin Review', 'Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'];
 
   const handleSendMeetLink = (booking) => {
     const bId = booking.id;
@@ -583,6 +651,48 @@ function BookingsTab({
   const handleClearMeetLink = (bId, currentStatus) => {
     onUpdateStatus(bId, currentStatus, '');
     setMeetInputs(prev => ({ ...prev, [bId]: '' }));
+  };
+
+  const handleBroadcastDailyParayanaLink = async () => {
+    const cleanUrl = dailyParayanaMeetLink.trim();
+    if (!cleanUrl) {
+      alert("Please enter today's Google Meet link.");
+      return;
+    }
+    setBroadcasting(true);
+    setBroadcastMsg('');
+    try {
+      const activeParayanaList = bookings.filter(b => {
+        const isP = isParayana || isVishnuSahasranamaBooking(b);
+        const s = (b?.status || '').toLowerCase().trim();
+        return isP && s !== 'completed' && s !== 'cancelled';
+      });
+
+      for (const b of activeParayanaList) {
+        await onUpdateStatus(b.id, b.status === 'Pending Admin Review' ? 'Scheduled' : b.status, cleanUrl);
+      }
+
+      setBroadcasting(false);
+      setBroadcastMsg(`Successfully updated & published today's Google Meet link to ${activeParayanaList.length} active Parayana devotees in 1 click!`);
+      setTimeout(() => setBroadcastMsg(''), 7000);
+    } catch (err) {
+      console.error(err);
+      alert('Broadcast failed: ' + err.message);
+      setBroadcasting(false);
+    }
+  };
+
+  const handleSaveAdminNote = async (b) => {
+    const noteVal = noteInputs[b.id] !== undefined ? noteInputs[b.id] : (b.adminNotes || '');
+    try {
+      await onUpdateBooking(b.id, { ...b, adminNotes: noteVal });
+      setNoteStatus(prev => ({ ...prev, [b.id]: '✓ Saved!' }));
+      setTimeout(() => {
+        setNoteStatus(prev => ({ ...prev, [b.id]: '' }));
+      }, 3000);
+    } catch (err) {
+      alert('Failed to save note: ' + err.message);
+    }
   };
 
   return (
@@ -615,11 +725,62 @@ function BookingsTab({
           <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)', fontWeight: 800 }}>
             🟢 {activeBookingsCount} Active {badgeLabel}
           </span>
-          <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>
-            {bookings.filter(b => b.status === 'Pending Admin Review' || b.purohitId === 'unassigned').length} Pending {isParayana ? 'Parayana' : ''} Requests
-          </span>
+          {!isParayana && (
+            <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>
+              {bookings.filter(b => b.status === 'Pending Admin Review').length} Pending Requests
+            </span>
+          )}
         </div>
       </div>
+
+      {/* Single Daily Google Meet Link Broadcast Card for Parayana */}
+      {isParayana && (
+        <div className="card-premium" style={{
+          padding: '18px 22px', borderRadius: 16,
+          background: 'linear-gradient(135deg, rgba(167,139,250,0.12), rgba(139,92,246,0.06))',
+          border: '1px solid rgba(167,139,250,0.3)',
+          display: 'flex', flexDirection: 'column', gap: 12
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(167,139,250,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c4b5fd' }}>
+              <Video size={18} />
+            </div>
+            <div>
+              <h4 style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', fontFamily: 'Outfit,sans-serif' }}>
+                📅 Today's Master Google Meet Link (Shared Daily Session)
+              </h4>
+              <p style={{ fontSize: 11, color: '#94a3b8' }}>
+                Single daily link delivered instantly to all today's active Parayana Seva devotees in 1 click.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="input"
+              style={{ flex: 1, minWidth: 260, height: 38, fontSize: 12, borderColor: 'rgba(167,139,250,0.4)' }}
+              placeholder="Enter Today's Google Meet Link (e.g. https://meet.google.com/xyz-pdqr-abc)"
+              value={dailyParayanaMeetLink}
+              onChange={e => setDailyParayanaMeetLink(e.target.value)}
+            />
+            <button
+              className="btn"
+              style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: 'white', fontWeight: 800, fontSize: 12, padding: '0 18px', height: 38, borderRadius: 10, display: 'inline-flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 15px rgba(139,92,246,0.4)', border: 'none', cursor: 'pointer' }}
+              onClick={handleBroadcastDailyParayanaLink}
+              disabled={broadcasting}
+            >
+              🚀 {broadcasting ? 'Publishing Link...' : "Deliver Today's Meet Link to All Active Parayana Devotees"}
+            </button>
+          </div>
+
+          {broadcastMsg && (
+            <div style={{ fontSize: 12, color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(16,185,129,0.1)', padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(16,185,129,0.25)' }}>
+              <CheckCircle2 size={14} /> {broadcastMsg}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Toolbar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
@@ -640,8 +801,9 @@ function BookingsTab({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {filtered.map(b => {
-          const sm = SAMPRADAYA_MATRIX[b.sampradaya];
-          const isPending = b.status === 'Pending Admin Review' || b.purohitId === 'unassigned';
+          const isItemParayana = isParayana || isVishnuSahasranamaBooking(b);
+          const sm = !isItemParayana ? SAMPRADAYA_MATRIX[b.sampradaya] : null;
+          const isPending = b.status === 'Pending Admin Review';
           const hasMeetUrl = Boolean(b.meetLink && b.meetLink.trim().length > 0);
 
           return (
@@ -659,61 +821,154 @@ function BookingsTab({
                     {isPending && <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>⚡ PENDING ADMIN REVIEW</span>}
                     {b.isAparaKaryam ? <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 20, background: '#dc2626', color: 'white', fontWeight: 700 }}>APARA</span> : null}
                   </div>
-                  <h4 style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginBottom: 6 }}>{b.ritualName}</h4>
+                  {isItemParayana ? (
+                    <h4 style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      👤 {b.devoteeName} {b.devoteePhone && <span style={{ color: '#38bdf8', fontSize: 13, fontWeight: 700 }}> (📞 {b.devoteePhone})</span>}
+                    </h4>
+                  ) : (
+                    <h4 style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc', fontFamily: 'Outfit,sans-serif', marginBottom: 6 }}>{b.ritualName}</h4>
+                  )}
+
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: 12, color: '#94a3b8' }}>
-                    <span>👤 Devotee: <strong style={{ color: '#e2e8f0' }}>{b.devoteeName}</strong> {b.devoteePhone && <span style={{ color: '#38bdf8', fontWeight: 700 }}> (📞 {b.devoteePhone})</span>}</span>
+                    {!isItemParayana && (
+                      <span>👤 Devotee: <strong style={{ color: '#e2e8f0' }}>{b.devoteeName}</strong> {b.devoteePhone && <span style={{ color: '#38bdf8', fontWeight: 700 }}> (📞 {b.devoteePhone})</span>}</span>
+                    )}
                     <span>🪔 Status: <strong style={{ color: isPending ? '#fbbf24' : '#34d399' }}>{b.purohitName || 'Pending Admin Assignment'}</strong></span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={11} /> {b.date} · {b.muhurtaTime}</span>
                   </div>
-                  <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Logistics: {b.samagriMode}</p>
-                  <p style={{ fontSize: 12, color: '#fcd34d', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    📍 Physical Venue: <strong style={{ color: '#f8fafc' }}>{b.location || 'Bengaluru'}</strong>
-                  </p>
                   
-                  {/* Google Meet Link Dual Dispatch (Vault + WhatsApp) & Clear Controls */}
-                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Video size={12} /> Google Meet Link:
-                    </span>
-                    <input
-                      type="text"
-                      className="input"
-                      style={{ fontSize: 11, padding: '4px 10px', height: 30, flex: 1, minWidth: 220 }}
-                      value={meetInputs[b.id] !== undefined ? meetInputs[b.id] : (b.meetLink || '')}
-                      placeholder="Enter Google Meet link (e.g. https://meet.google.com/xyz-pdqr-abc)"
-                      onChange={e => setMeetInputs({ ...meetInputs, [b.id]: e.target.value })}
-                    />
-                    <button
-                      className="btn btn-sm"
-                      style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 800, fontSize: 11, padding: '5px 14px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 5, boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
-                      onClick={() => handleSendMeetLink(b)}
-                      title="Saves link to In-App Devotee Vault AND sends via WhatsApp in 1 click"
-                    >
-                      🚀 Send to Vault & WhatsApp (1-Click)
-                    </button>
-                    {hasMeetUrl && (
+                  {isItemParayana ? (
+                    <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>
+                      🌸 Devotee Sankalpa Details: <strong style={{ color: '#e2e8f0' }}>{b.samagriMode || 'General Family Wellbeing'}</strong>
+                    </p>
+                  ) : (
+                    <>
+                      <p style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>Logistics: {b.samagriMode}</p>
+                      <p style={{ fontSize: 12, color: '#fcd34d', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        📍 Physical Venue: <strong style={{ color: '#f8fafc' }}>{b.location || 'Bengaluru'}</strong>
+                      </p>
+                    </>
+                  )}
+                  
+                  {/* Google Meet Link Display / Individual Dispatch Controls */}
+                  {isItemParayana ? (
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                      <span style={{ fontSize: 11, color: b.meetLink ? '#34d399' : '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Video size={12} /> Today's Meet Link: {b.meetLink ? (
+                          <a href={b.meetLink} target="_blank" rel="noreferrer" style={{ color: '#fbbf24', textDecoration: 'underline', fontFamily: 'monospace' }}>{b.meetLink}</a>
+                        ) : (
+                          <span style={{ color: '#64748b', fontStyle: 'italic', fontWeight: 400 }}>Awaiting today's master link broadcast above</span>
+                        )}
+                      </span>
+                      {b.meetLink && b.devoteePhone && (
+                        <button
+                          className="btn btn-sm btn-ghost"
+                          style={{ color: '#38bdf8', fontSize: 10, padding: '3px 8px', borderColor: 'rgba(56,189,248,0.3)' }}
+                          onClick={() => {
+                            const devPhoneDigits = (b.devoteePhone || '').replace(/\D/g, '');
+                            const waPhone = devPhoneDigits.length === 10 ? `91${devPhoneDigits}` : devPhoneDigits;
+                            const waText = `Hari Om ${b.devoteeName || 'Devotee'} Ji,\n\nNamaskaram from Real-Purohit.\n\nYour Google Meet session link for today's *${b.ritualName}* is:\n👉 ${b.meetLink}\n\nPlease join 5 minutes prior to the session. Vedic Ashirvadam! 🙏`;
+                            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(waText)}`, '_blank');
+                          }}
+                        >
+                          📲 Resend WhatsApp
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Video size={12} /> Google Meet Link:
+                      </span>
+                      <input
+                        type="text"
+                        className="input"
+                        style={{ fontSize: 11, padding: '4px 10px', height: 30, flex: 1, minWidth: 220 }}
+                        value={meetInputs[b.id] !== undefined ? meetInputs[b.id] : (b.meetLink || '')}
+                        placeholder="Enter Google Meet link (e.g. https://meet.google.com/xyz-pdqr-abc)"
+                        onChange={e => setMeetInputs({ ...meetInputs, [b.id]: e.target.value })}
+                      />
                       <button
-                        className="btn btn-sm btn-ghost"
-                        style={{ color: '#f87171', fontSize: 11, padding: '4px 10px', borderColor: 'rgba(220,38,38,0.3)' }}
-                        onClick={() => handleClearMeetLink(b.id, b.status)}
+                        className="btn btn-sm"
+                        style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 800, fontSize: 11, padding: '5px 14px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 5, boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                        onClick={() => handleSendMeetLink(b)}
+                        title="Saves link to In-App Devotee Vault AND sends via WhatsApp in 1 click"
                       >
-                        ❌ Clear Link
+                        🚀 Send to Vault & WhatsApp (1-Click)
                       </button>
-                    )}
+                      {hasMeetUrl && (
+                        <button
+                          className="btn btn-sm btn-ghost"
+                          style={{ color: '#f87171', fontSize: 11, padding: '4px 10px', borderColor: 'rgba(220,38,38,0.3)' }}
+                          onClick={() => handleClearMeetLink(b.id, b.status)}
+                        >
+                          ❌ Clear Link
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Admin Internal Notes Bar */}
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <FileText size={12} /> Admin Internal Notes:
+                      </span>
+                      {noteStatus[b.id] && (
+                        <span style={{ fontSize: 10, color: '#34d399', fontWeight: 700 }}>{noteStatus[b.id]}</span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        className="input"
+                        style={{ fontSize: 11, padding: '4px 10px', height: 30, flex: 1, background: 'rgba(15,23,42,0.6)', borderColor: 'rgba(255,255,255,0.1)' }}
+                        value={noteInputs[b.id] !== undefined ? noteInputs[b.id] : (b.adminNotes || '')}
+                        placeholder="Type internal notes here (e.g. Prefers Kannada, called on 18th, special sankalpa)..."
+                        onChange={e => setNoteInputs({ ...noteInputs, [b.id]: e.target.value })}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSaveAdminNote(b);
+                          }
+                        }}
+                      />
+                      <button
+                        className="btn btn-sm"
+                        style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24', fontSize: 10, padding: '4px 12px', height: 30, borderRadius: 8, whiteSpace: 'nowrap', fontWeight: 700 }}
+                        onClick={() => handleSaveAdminNote(b)}
+                        title="Save note to database"
+                      >
+                        💾 Save Note
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>{b.dakshinaAmount}</div>
-                  <span style={{ fontSize: 10, color: '#64748b' }}>{b.dakshinaStatus}</span>
+                  {!isItemParayana && (
+                    <>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>{b.dakshinaAmount}</div>
+                      <span style={{ fontSize: 10, color: '#64748b' }}>{b.dakshinaStatus}</span>
+                    </>
+                  )}
 
                   {/* Admin Action Status Selector */}
-                  <select className="select" style={{ width: 'auto', padding: '6px 12px', fontSize: 11, background: isPending ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)', borderColor: isPending ? '#f59e0b' : '#10b981', color: isPending ? '#fbbf24' : '#34d399', fontWeight: 700 }}
-                    value={b.status}
-                    onChange={e => onUpdateStatus(b.id, e.target.value)}>
-                    {['Pending Admin Review', 'Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'].map(s =>
-                      <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  {isItemParayana ? (
+                    <select className="select" style={{ width: 'auto', padding: '6px 12px', fontSize: 11, background: 'rgba(16,185,129,0.15)', borderColor: '#10b981', color: '#34d399', fontWeight: 700 }}
+                      value={b.status || 'Confirmed'}
+                      onChange={e => onUpdateStatus(b.id, e.target.value)}>
+                      {['Confirmed', 'Completed', 'Cancelled'].map(s =>
+                        <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  ) : (
+                    <select className="select" style={{ width: 'auto', padding: '6px 12px', fontSize: 11, background: isPending ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)', borderColor: isPending ? '#f59e0b' : '#10b981', color: isPending ? '#fbbf24' : '#34d399', fontWeight: 700 }}
+                      value={b.status}
+                      onChange={e => onUpdateStatus(b.id, e.target.value)}>
+                      {['Pending Admin Review', 'Scheduled', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'].map(s =>
+                        <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  )}
 
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <button

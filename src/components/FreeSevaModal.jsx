@@ -249,7 +249,7 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess, onOp
         devoteeId, devoteeName, devoteePhone: cleanPhone,
         purohitId: 'unassigned',
         purohitName: isAstrology ? 'Verified Daivajna Astrologer' : 'Vedic Parayanam Acharya',
-        sampradaya: user?.sampradaya || 'uttaradhi',
+        sampradaya: isAstrology ? (user?.sampradaya || '') : '',
         ritualName: sevaTitle, date,
         muhurtaTime: isAstrology ? selectedTimeSlot : '6:00 PM – 6:30 PM',
         dakshinaAmount: '₹0 (100% Free Seva)',
@@ -257,7 +257,7 @@ export default function FreeSevaModal({ sevaType, auth, onClose, onSuccess, onOp
         samagriMode: isAstrology
           ? `Birth: ${dob || '—'} ${tob || '—'} @ ${pob || '—'} | Focus: ${focusArea}`
           : `Gotram: ${gotram || '—'} | Nakshatra: ${nakshatram || '—'} | Sankalpa: ${sankalpaIntention}`,
-        status: 'Scheduled (Link in App Vault)',
+        status: 'Confirmed',
         isAparaKaryam: 0,
         location: 'In-App Live Stream & WhatsApp (Google Meet Link Sent to Devotee)'
       });

@@ -114,6 +114,10 @@ export function initDb() {
   } catch (e) {}
 
   try {
+    db.exec(`ALTER TABLE bookings ADD COLUMN admin_notes TEXT`);
+  } catch (e) {}
+
+  try {
     db.exec(`ALTER TABLE users ADD COLUMN rashi TEXT`);
   } catch (e) {}
 

@@ -25,6 +25,7 @@ router.get('/', (req, res) => {
       isAparaKaryam: Boolean(r.is_apara_karyam),
       location: r.location,
       meetLink: r.meet_link || '',
+      adminNotes: r.admin_notes || '',
       createdAt: r.created_at
     }));
     res.json(result);
@@ -36,13 +37,13 @@ router.get('/', (req, res) => {
 // CREATE a booking
 router.post('/', (req, res) => {
   try {
-    const { devoteeId, devoteeName, devoteePhone, purohitId, purohitName, sampradaya, ritualName, date, muhurtaTime, dakshinaAmount, samagriMode, isAparaKaryam, location, meetLink } = req.body;
+    const { devoteeId, devoteeName, devoteePhone, purohitId, purohitName, sampradaya, ritualName, date, muhurtaTime, dakshinaAmount, samagriMode, isAparaKaryam, location, meetLink, adminNotes } = req.body;
 
     const id = `BK-${Math.floor(8900 + Math.random() * 9000)}`;
 
     db.prepare(`
-      INSERT INTO bookings (id, devotee_id, devotee_name, devotee_phone, purohit_id, purohit_name, sampradaya, ritual_name, date, muhurta_time, dakshina_amount, dakshina_status, samagri_mode, status, is_apara_karyam, location, meet_link)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO bookings (id, devotee_id, devotee_name, devotee_phone, purohit_id, purohit_name, sampradaya, ritual_name, date, muhurta_time, dakshina_amount, dakshina_status, samagri_mode, status, is_apara_karyam, location, meet_link, admin_notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       devoteeId || 'dev-guest',
@@ -50,17 +51,18 @@ router.post('/', (req, res) => {
       devoteePhone || '',
       purohitId || null,
       purohitName || 'Unassigned Acharya',
-      sampradaya || 'uttaradhi',
+      sampradaya || '',
       ritualName,
       date || new Date().toISOString().split('T')[0],
       muhurtaTime || '08:00 AM',
       dakshinaAmount || '₹ 3,500',
       'Direct On-the-Spot (0% Platform Fee)',
       samagriMode || 'Pandit Hand-Carried Custom Kit',
-      'Pending Admin Review',
+      (ritualName || '').toLowerCase().match(/vishnu|sahasranama|parayana/) ? 'Confirmed' : 'Pending Admin Review',
       isAparaKaryam ? 1 : 0,
       location || 'Bengaluru',
-      meetLink || null
+      meetLink || null,
+      adminNotes || ''
     );
 
     res.status(201).json({ id, message: 'Booking record saved in database!' });
@@ -77,7 +79,7 @@ router.put('/:id', (req, res) => {
     const {
       devoteeName, devoteePhone, purohitId, purohitName, sampradaya,
       ritualName, date, muhurtaTime, dakshinaAmount, dakshinaStatus,
-      samagriMode, status, isAparaKaryam, location, meetLink
+      samagriMode, status, isAparaKaryam, location, meetLink, adminNotes
     } = req.body;
 
     db.prepare(`
@@ -96,13 +98,14 @@ router.put('/:id', (req, res) => {
         status = COALESCE(?, status),
         is_apara_karyam = COALESCE(?, is_apara_karyam),
         location = COALESCE(?, location),
-        meet_link = COALESCE(?, meet_link)
+        meet_link = COALESCE(?, meet_link),
+        admin_notes = COALESCE(?, admin_notes)
       WHERE id = ?
     `).run(
       devoteeName, devoteePhone, purohitId, purohitName, sampradaya,
       ritualName, date, muhurtaTime, dakshinaAmount, dakshinaStatus,
       samagriMode, status, isAparaKaryam !== undefined ? (isAparaKaryam ? 1 : 0) : null,
-      location, meetLink, id
+      location, meetLink, adminNotes, id
     );
 
     res.json({ message: `Booking ${id} details successfully updated in SQLite database.` });
