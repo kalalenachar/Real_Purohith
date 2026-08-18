@@ -180,6 +180,7 @@ export const INITIAL_BOOKINGS = [
     id: 'BK-8901',
     devoteeName: 'Sri Venkatesh Rao',
     devoteeId: 'dev-1',
+    devoteePhone: '+91 98450 11223',
     purohitName: 'Vidwan Raghavendra Acharya',
     purohitId: 'pur-101',
     sampradaya: 'uttaradhi',
@@ -197,6 +198,7 @@ export const INITIAL_BOOKINGS = [
     id: 'BK-8902',
     devoteeName: 'Sri Venkatesh Rao',
     devoteeId: 'dev-1',
+    devoteePhone: '+91 98450 11223',
     purohitName: 'Srinivasa Sampath Kumaran Acharya',
     purohitId: 'pur-103',
     sampradaya: 'vadagalai',
@@ -209,8 +211,45 @@ export const INITIAL_BOOKINGS = [
     status: 'Confirmed',
     isAparaKaryam: false,
     location: 'T. Nagar, Chennai'
+  },
+  {
+    id: 'VSP-9001',
+    devoteeName: 'Smt. Gayatri Devi',
+    devoteeId: 'dev-2',
+    devoteePhone: '+91 98450 44556',
+    purohitName: 'Pending Parayana Acharya',
+    purohitId: 'unassigned',
+    sampradaya: 'uttaradhi',
+    ritualName: 'Free 1-on-1 Vishnu Sahasranama Parayanam',
+    date: '2026-08-20',
+    muhurtaTime: '06:00 PM – 06:30 PM',
+    dakshinaAmount: '₹0 (100% Free Seva)',
+    dakshinaStatus: '100% Truly Free Seva',
+    samagriMode: 'Gotram: Bharadwaja | Nakshatra: Hasta | Sankalpa: Family Wellbeing & Health',
+    status: 'Pending Admin Review',
+    isAparaKaryam: false,
+    location: 'In-App Live Stream & WhatsApp (Google Meet Link Sent to Devotee)'
+  },
+  {
+    id: 'VSP-9002',
+    devoteeName: 'Sri Ramesh Kumar',
+    devoteeId: 'dev-3',
+    devoteePhone: '+91 97312 77889',
+    purohitName: 'Vidwan Raghavendra Acharya',
+    purohitId: 'pur-101',
+    sampradaya: 'shankara',
+    ritualName: 'Free 1-on-1 Vishnu Sahasranama Parayanam',
+    date: '2026-08-21',
+    muhurtaTime: '06:00 PM – 06:30 PM',
+    dakshinaAmount: '₹0 (100% Free Seva)',
+    dakshinaStatus: '100% Truly Free Seva',
+    samagriMode: 'Gotram: Kashyapa | Nakshatra: Rohini | Sankalpa: Peace & Spiritual Growth',
+    status: 'Scheduled',
+    isAparaKaryam: false,
+    location: 'In-App Live Stream & WhatsApp (Google Meet Link Sent to Devotee)'
   }
 ];
+
 
 export const INITIAL_FEEDBACKS = [
   {

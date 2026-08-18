@@ -12,6 +12,12 @@ import { SAMPRADAYA_MATRIX, INITIAL_DEVOTEES, INITIAL_PUROHITS, INITIAL_BOOKINGS
 /* ──────────────────────────── helpers ─────────────────────────── */
 const generateId = prefix => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+export function isVishnuSahasranamaBooking(b) {
+  if (!b) return false;
+  const name = (b.ritualName || '').toLowerCase();
+  return name.includes('vishnu') || name.includes('sahasranama') || name.includes('parayana') || name.includes('parayanam');
+}
+
 function ConfirmDialog({ message, onConfirm, onCancel }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -43,7 +49,15 @@ function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = 
   const safeBookings = Array.isArray(bookings) ? bookings : [];
   const safeFeedbacks = Array.isArray(feedbacks) ? feedbacks : [];
 
-  const activeBookingsCount = safeBookings.filter(b => {
+  const generalBookings = safeBookings.filter(b => !isVishnuSahasranamaBooking(b));
+  const parayanaBookings = safeBookings.filter(b => isVishnuSahasranamaBooking(b));
+
+  const activeGeneralCount = generalBookings.filter(b => {
+    const s = (b?.status || '').toLowerCase().trim();
+    return s !== 'completed' && s !== 'cancelled';
+  }).length;
+
+  const activeParayanaCount = parayanaBookings.filter(b => {
     const s = (b?.status || '').toLowerCase().trim();
     return s !== 'completed' && s !== 'cancelled';
   }).length;
@@ -56,12 +70,12 @@ function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = 
     : '4.92';
 
   const kpis = [
-    { label: 'Verified Acharyas', value: safePurohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    { label: 'Devotee Accounts',  value: safeDevotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
-    { label: 'Active Bookings',   value: activeBookingsCount,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
-    { label: 'Vedic Sampradayas', value: '7 Lineages',          icon: Award,         color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
-    { label: 'Admin Allocation',  value: '100% Centralized',    icon: ShieldCheck,   color: '#38bdf8', bg: 'rgba(56,189,248,0.1)' },
-    { label: 'Platform Fee',      value: '0% Pure Bridge',      icon: Wallet,        color: '#34d399', bg: 'rgba(16,185,129,0.08)' },
+    { label: 'Verified Acharyas',         value: safePurohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    { label: 'Devotee Accounts',         value: safeDevotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
+    { label: 'Devotee Bookings',         value: activeGeneralCount,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
+    { label: 'Vishnu Sahasranama',       value: activeParayanaCount,  icon: BookOpen,      color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
+    { label: 'Vedic Sampradayas',        value: '7 Lineages',          icon: Award,         color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
+    { label: 'Platform Fee',             value: '0% Pure Bridge',      icon: Wallet,        color: '#38bdf8', bg: 'rgba(56,189,248,0.08)' },
   ];
 
   const recentBookings = safeBookings.slice(0, 5);
@@ -514,7 +528,18 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
 }
 
 /* ──────────────────────────── Bookings Tab ─────────────────────── */
-function BookingsTab({ bookings = [], purohits = [], onUpdateStatus, onUpdateBooking, onDelete, onClearAllMeetLinks }) {
+function BookingsTab({
+  bookings = [],
+  purohits = [],
+  onUpdateStatus,
+  onUpdateBooking,
+  onDelete,
+  onClearAllMeetLinks,
+  title = "📥 Devotee Ritual Booking Requests",
+  subtitle = "All ritual requests land at Admin Desk. Admin controls Google Meet link dispatch and time-based link clearing.",
+  badgeLabel = "Bookings",
+  isParayana = false
+}) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -527,10 +552,11 @@ function BookingsTab({ bookings = [], purohits = [], onUpdateStatus, onUpdateBoo
   }).length;
 
   const filtered = bookings.filter(b => {
-    const matchSearch = b.devoteeName.toLowerCase().includes(search.toLowerCase()) ||
+    const matchSearch = (b.devoteeName || '').toLowerCase().includes(search.toLowerCase()) ||
       (b.purohitName || '').toLowerCase().includes(search.toLowerCase()) ||
-      b.ritualName.toLowerCase().includes(search.toLowerCase()) ||
-      b.id.toLowerCase().includes(search.toLowerCase());
+      (b.ritualName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (b.samagriMode || '').toLowerCase().includes(search.toLowerCase()) ||
+      (b.id || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || b.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -562,13 +588,18 @@ function BookingsTab({ bookings = [], purohits = [], onUpdateStatus, onUpdateBoo
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header Banner */}
-      <div style={{ padding: '16px 20px', borderRadius: 16, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div style={{
+        padding: '16px 20px', borderRadius: 16,
+        background: isParayana ? 'rgba(167,139,250,0.08)' : 'rgba(245,158,11,0.08)',
+        border: `1px solid ${isParayana ? 'rgba(167,139,250,0.25)' : 'rgba(245,158,11,0.25)'}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12
+      }}>
         <div>
           <h3 style={{ fontSize: 16, fontFamily: 'Outfit,sans-serif', fontWeight: 800, color: '#f8fafc' }}>
-            📥 Incoming Devotee Booking Requests
+            {title}
           </h3>
           <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-            All ritual requests land at Admin Desk. Admin controls Google Meet link dispatch and time-based link clearing.
+            {subtitle}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -582,10 +613,10 @@ function BookingsTab({ bookings = [], purohits = [], onUpdateStatus, onUpdateBoo
             </button>
           )}
           <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)', fontWeight: 800 }}>
-            🟢 {activeBookingsCount} Active Bookings
+            🟢 {activeBookingsCount} Active {badgeLabel}
           </span>
           <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>
-            {bookings.filter(b => b.status === 'Pending Admin Review' || b.purohitId === 'unassigned').length} Pending Requests
+            {bookings.filter(b => b.status === 'Pending Admin Review' || b.purohitId === 'unassigned').length} Pending {isParayana ? 'Parayana' : ''} Requests
           </span>
         </div>
       </div>
@@ -594,7 +625,8 @@ function BookingsTab({ bookings = [], purohits = [], onUpdateStatus, onUpdateBoo
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-          <input className="input" style={{ paddingLeft: 38 }} placeholder="Search by devotee, ritual, or ID…"
+          <input className="input" style={{ paddingLeft: 38 }}
+            placeholder={isParayana ? "Search Parayana requests by devotee, sankalpa, or ID…" : "Search by devotee, ritual, or ID…"}
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="select" style={{ width: 'auto', minWidth: 180 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
@@ -603,7 +635,7 @@ function BookingsTab({ bookings = [], purohits = [], onUpdateStatus, onUpdateBoo
       </div>
 
       <p style={{ fontSize: 12, color: '#64748b' }}>
-        Showing {filtered.length} of {bookings.length} devotee booking requests (<strong style={{ color: '#34d399' }}>{activeBookingsCount} active</strong>)
+        Showing {filtered.length} of {bookings.length} {isParayana ? 'parayana' : 'devotee booking'} requests (<strong style={{ color: '#34d399' }}>{activeBookingsCount} active</strong>)
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1934,19 +1966,28 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
   );
 }
 
-  const activeBookingsCount = (bookings || []).filter(b => {
+  const generalBookings = (bookings || []).filter(b => !isVishnuSahasranamaBooking(b));
+  const parayanaBookings = (bookings || []).filter(b => isVishnuSahasranamaBooking(b));
+
+  const activeGeneralCount = generalBookings.filter(b => {
+    const s = (b?.status || '').toLowerCase().trim();
+    return s !== 'completed' && s !== 'cancelled';
+  }).length;
+
+  const activeParayanaCount = parayanaBookings.filter(b => {
     const s = (b?.status || '').toLowerCase().trim();
     return s !== 'completed' && s !== 'cancelled';
   }).length;
 
   const SIDEBAR_ITEMS = [
-    { id: 'overview',     label: 'Overview',                 icon: LayoutDashboard },
-    { id: 'bookings',     label: 'Devotee Booking Requests', icon: CalendarCheck, badge: activeBookingsCount },
-    { id: 'sampradayas',  label: 'Sampradaya Traditions',    icon: Award },
-    { id: 'purohits',     label: 'Acharya Directory',     icon: Users },
-    { id: 'devotees',     label: 'Devotee Records',       icon: BookOpen },
-    { id: 'dbAccess',     label: 'Full DB Access',        icon: Database },
-    { id: 'settings',     label: 'Settings',              icon: Settings },
+    { id: 'overview',     label: 'Overview',                   icon: LayoutDashboard },
+    { id: 'bookings',     label: 'Devotee Booking Requests',    icon: CalendarCheck, badge: activeGeneralCount },
+    { id: 'parayana',     label: 'Vishnusahasranama Parayana',  icon: BookOpen,      badge: activeParayanaCount },
+    { id: 'sampradayas',  label: 'Sampradaya Traditions',       icon: Award },
+    { id: 'purohits',     label: 'Acharya Directory',        icon: Users },
+    { id: 'devotees',     label: 'Devotee Records',          icon: BookOpen },
+    { id: 'dbAccess',     label: 'Full DB Access',           icon: Database },
+    { id: 'settings',     label: 'Settings',                 icon: Settings },
   ];
 
   return (
@@ -2073,12 +2114,30 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
           )}
           {activeTab === 'bookings' && (
             <BookingsTab
-              bookings={bookings}
+              bookings={generalBookings}
               purohits={purohits}
               onUpdateStatus={handleUpdateBookingStatus}
               onUpdateBooking={handleUpdateBookingDetails}
               onDelete={handleDeleteBooking}
               onClearAllMeetLinks={handleClearAllMeetLinks}
+              title="📥 Devotee Ritual Booking Requests"
+              subtitle="All Vedic pooja, homam, and shraaddha ritual booking requests land at Admin Desk. Admin controls Acharya assignment, Dakshina honorariums, and Google Meet video links."
+              badgeLabel="Devotee Bookings"
+              isParayana={false}
+            />
+          )}
+          {activeTab === 'parayana' && (
+            <BookingsTab
+              bookings={parayanaBookings}
+              purohits={purohits}
+              onUpdateStatus={handleUpdateBookingStatus}
+              onUpdateBooking={handleUpdateBookingDetails}
+              onDelete={handleDeleteBooking}
+              onClearAllMeetLinks={handleClearAllMeetLinks}
+              title="🌸 Vishnusahasranama Parayana Requests"
+              subtitle="1-on-1 Free Vishnu Sahasranama Parayana & Stotra requests. Manage assigned Parayana Acharyas, live Google Meet session links, and 1-Click WhatsApp dispatches."
+              badgeLabel="Parayana Sessions"
+              isParayana={true}
             />
           )}
           {activeTab === 'devotees' && (
