@@ -386,10 +386,6 @@ export default function App() {
           auth={auth}
           onClose={() => setFreeSevaType(null)}
           onSuccess={(msg) => showToast(msg, 'success')}
-          onLoginSuccess={(authData) => {
-            setAuth(authData);
-            showToast(`Welcome, ${authData.user?.name || 'Devotee'}! Your Sacred Devotee Vault is now active.`, 'success');
-          }}
           onOpenVault={() => {
             setFreeSevaType(null);
             handleSetTab('devotee');

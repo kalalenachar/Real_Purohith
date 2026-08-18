@@ -43,6 +43,11 @@ function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = 
   const safeBookings = Array.isArray(bookings) ? bookings : [];
   const safeFeedbacks = Array.isArray(feedbacks) ? feedbacks : [];
 
+  const activeBookingsCount = safeBookings.filter(b => {
+    const s = (b?.status || '').toLowerCase().trim();
+    return s !== 'completed' && s !== 'cancelled';
+  }).length;
+
   const avgRating = safeFeedbacks.length
     ? (safeFeedbacks.reduce((acc, f) => {
         const vals = typeof f.ratings === 'object' ? Object.values(f.ratings) : [5];
@@ -53,7 +58,7 @@ function OverviewTab({ purohits = [], devotees = [], bookings = [], feedbacks = 
   const kpis = [
     { label: 'Verified Acharyas', value: safePurohits.length,   icon: Users,         color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
     { label: 'Devotee Accounts',  value: safeDevotees.length,   icon: BookOpen,      color: '#a78bfa', bg: 'rgba(139,92,246,0.1)' },
-    { label: 'Active Bookings',   value: safeBookings.length,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
+    { label: 'Active Bookings',   value: activeBookingsCount,   icon: CalendarCheck, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
     { label: 'Vedic Sampradayas', value: '7 Lineages',          icon: Award,         color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
     { label: 'Admin Allocation',  value: '100% Centralized',    icon: ShieldCheck,   color: '#38bdf8', bg: 'rgba(56,189,248,0.1)' },
     { label: 'Platform Fee',      value: '0% Pure Bridge',      icon: Wallet,        color: '#34d399', bg: 'rgba(16,185,129,0.08)' },
@@ -509,12 +514,17 @@ function EditBookingModal({ booking, purohits = [], onClose, onSave }) {
 }
 
 /* ──────────────────────────── Bookings Tab ─────────────────────── */
-function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking, onDelete, onClearAllMeetLinks }) {
+function BookingsTab({ bookings = [], purohits = [], onUpdateStatus, onUpdateBooking, onDelete, onClearAllMeetLinks }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
   const [meetInputs, setMeetInputs] = useState({});
+
+  const activeBookingsCount = bookings.filter(b => {
+    const s = (b?.status || '').toLowerCase().trim();
+    return s !== 'completed' && s !== 'cancelled';
+  }).length;
 
   const filtered = bookings.filter(b => {
     const matchSearch = b.devoteeName.toLowerCase().includes(search.toLowerCase()) ||
@@ -571,6 +581,9 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
               🧹 Clear All Active Meet Links
             </button>
           )}
+          <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)', fontWeight: 800 }}>
+            🟢 {activeBookingsCount} Active Bookings
+          </span>
           <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: '#f59e0b', color: '#1a0a00', fontWeight: 800 }}>
             {bookings.filter(b => b.status === 'Pending Admin Review' || b.purohitId === 'unassigned').length} Pending Requests
           </span>
@@ -589,7 +602,9 @@ function BookingsTab({ bookings, purohits = [], onUpdateStatus, onUpdateBooking,
         </select>
       </div>
 
-      <p style={{ fontSize: 12, color: '#64748b' }}>Showing {filtered.length} of {bookings.length} devotee booking requests</p>
+      <p style={{ fontSize: 12, color: '#64748b' }}>
+        Showing {filtered.length} of {bookings.length} devotee booking requests (<strong style={{ color: '#34d399' }}>{activeBookingsCount} active</strong>)
+      </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {filtered.map(b => {
@@ -1919,9 +1934,14 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
   );
 }
 
+  const activeBookingsCount = (bookings || []).filter(b => {
+    const s = (b?.status || '').toLowerCase().trim();
+    return s !== 'completed' && s !== 'cancelled';
+  }).length;
+
   const SIDEBAR_ITEMS = [
     { id: 'overview',     label: 'Overview',                 icon: LayoutDashboard },
-    { id: 'bookings',     label: 'Devotee Booking Requests', icon: CalendarCheck },
+    { id: 'bookings',     label: 'Devotee Booking Requests', icon: CalendarCheck, badge: activeBookingsCount },
     { id: 'sampradayas',  label: 'Sampradaya Traditions',    icon: Award },
     { id: 'purohits',     label: 'Acharya Directory',     icon: Users },
     { id: 'devotees',     label: 'Devotee Records',       icon: BookOpen },
@@ -1977,7 +1997,20 @@ function EditRowModal({ tableName, columns, row, onClose, onSuccess }) {
                 onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; } }}
               >
                 <Icon size={16} />
-                {item.label}
+                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
+                {item.badge !== undefined && (
+                  <span style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: 12,
+                    background: isActive ? '#f59e0b' : 'rgba(16,185,129,0.15)',
+                    color: isActive ? '#1a0a00' : '#34d399',
+                    border: isActive ? '1px solid #f59e0b' : '1px solid rgba(16,185,129,0.3)'
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
