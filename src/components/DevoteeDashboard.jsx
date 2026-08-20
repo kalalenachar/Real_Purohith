@@ -50,9 +50,9 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
   const [profileGotram, setProfileGotram] = useState('');
   const [profileRashi, setProfileRashi] = useState('');
   const [profileNakshatra, setProfileNakshatra] = useState('');
-  const [profileSampradaya, setProfileSampradaya] = useState('vadagalai');
-  const [profileVedaShakha, setProfileVedaShakha] = useState('Rigveda');
-  const [profileSutram, setProfileSutram] = useState('Ashvalayana Sutram');
+  const [profileSampradaya, setProfileSampradaya] = useState('');
+  const [profileVedaShakha, setProfileVedaShakha] = useState('');
+  const [profileSutram, setProfileSutram] = useState('');
   const [profileKulaDaivam, setProfileKulaDaivam] = useState('');
   const [profileLocation, setProfileLocation] = useState('');
   const [profileAvatar, setProfileAvatar] = useState('👤');
@@ -119,7 +119,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
         gotram: (auth.user.gotram && auth.user.gotram !== 'Kashyapa') ? auth.user.gotram : '',
         vedaShakha: auth.user.vedaShakha && auth.user.vedaShakha !== 'Not Specified' ? auth.user.vedaShakha : '',
         sutram: auth.user.sutram && auth.user.sutram !== 'Not Specified' ? auth.user.sutram : '',
-        sampradaya: auth.user.sampradaya || 'secular',
+        sampradaya: auth.user.sampradaya || '',
         mutt: auth.user.mutt || '',
         kulaDaivam: auth.user.kulaDaivam || '',
         location: auth.user.location || '',
@@ -136,7 +136,7 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
       setProfileGotram(userGotram !== 'Kashyapa' && userGotram !== 'Not Specified' ? userGotram : '');
       setProfileRashi(auth.user.rashi || selectedDevotee?.rashi || '');
       setProfileNakshatra(auth.user.nakshatra || selectedDevotee?.nakshatra || '');
-      setProfileSampradaya(auth.user.sampradaya || selectedDevotee?.sampradaya || 'secular');
+      setProfileSampradaya(auth.user.sampradaya || selectedDevotee?.sampradaya || '');
       const vShakha = selectedDevotee?.vedaShakha || auth.user.vedaShakha || '';
       setProfileVedaShakha(vShakha !== 'Not Specified' ? vShakha : '');
       const pSutram = selectedDevotee?.sutram || auth.user.sutram || '';
@@ -200,18 +200,18 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
   const currentDevotee = selectedDevotee || {
     id: auth?.user?.id || 'dev-user',
     name: auth?.user?.name || auth?.user?.username || 'User',
-    gotram: auth?.user?.gotram || 'Not Specified',
-    vedaShakha: 'Not Specified',
-    sutram: 'Not Specified',
-    sampradaya: auth?.user?.sampradaya || 'vadagalai',
-    mutt: 'Not Specified',
-    kulaDaivam: 'Not Specified',
-    location: 'Not Specified',
+    gotram: auth?.user?.gotram || '',
+    vedaShakha: auth?.user?.vedaShakha || '',
+    sutram: auth?.user?.sutram || '',
+    sampradaya: auth?.user?.sampradaya || 'secular',
+    mutt: '',
+    kulaDaivam: '',
+    location: '',
     ancestors: []
   };
 
   const tithiData = calculateNextTithiAllotments(currentDevotee);
-  const sampradaya = SAMPRADAYA_MATRIX[currentDevotee.sampradaya || 'vadagalai'] || SAMPRADAYA_MATRIX['vadagalai'];
+  const sampradaya = SAMPRADAYA_MATRIX[currentDevotee.sampradaya || 'secular'] || SAMPRADAYA_MATRIX['secular'];
   const total = samagri.filter(i => i.checked).reduce((s, i) => s + i.price, 0);
 
   const handleBook = () => {
@@ -376,19 +376,24 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
               </div>
 
               <div>
-                <label className="input-label">Sampradaya / Tradition</label>
+                <label className="input-label">Default Tradition / Sampradaya (Optional)</label>
                 <select
                   className="select"
                   value={profileSampradaya}
                   onChange={e => setProfileSampradaya(e.target.value)}
                 >
-                  <option value="vadagalai">Sri Vaishnava (Vadagalai)</option>
-                  <option value="thengalai">Sri Vaishnava (Thengalai)</option>
-                  <option value="uttaradhi">Madhva (Uttaradhi Mutt)</option>
-                  <option value="udupi">Madhva (Udupi Ashta Mutt)</option>
-                  <option value="smartha">Smartha / Bhagavata Paddhati</option>
-                  <option value="secular">Modern Secular / Multi-Lingual</option>
+                  <option value="">-- No Default (Select per booking) --</option>
+                  <option value="secular">🌿 Modern Secular / Universal</option>
+                  <option value="vadagalai">🪔 Sri Vaishnava (Vadagalai)</option>
+                  <option value="thengalai">⚜️ Sri Vaishnava (Thengalai)</option>
+                  <option value="uttaradhi">🛕 Madhva (Uttaradhi Mutt)</option>
+                  <option value="udupi">🚩 Madhva (Udupi Ashta Mutt)</option>
+                  <option value="shankara">☸️ Shankara Mutt (Smartha / Advaita)</option>
+                  <option value="orthodox">👑 High-Level Orthodox Acharyas</option>
                 </select>
+                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                  Pre-fills your lineage when booking poojas. Can always be customized for each individual booking.
+                </p>
               </div>
             </div>
 
@@ -425,34 +430,34 @@ export default function DevoteeDashboard({ onTriggerSOS, onRunBackgroundTithi, o
 
             <div className="grid-2">
               <div>
-                <label className="input-label">Veda Shakha</label>
+                <label className="input-label">Veda Shakha (Optional)</label>
                 <select
                   className="select"
                   value={profileVedaShakha}
                   onChange={e => setProfileVedaShakha(e.target.value)}
                 >
+                  <option value="">-- Select Veda Shakha (Optional) --</option>
                   <option value="Rigveda">Rigveda</option>
                   <option value="Yajurveda (Krishna)">Yajurveda (Krishna)</option>
                   <option value="Yajurveda (Shukla)">Yajurveda (Shukla)</option>
                   <option value="Samaveda">Samaveda</option>
                   <option value="Atharvaveda">Atharvaveda</option>
-                  <option value="Not Specified">Not Specified</option>
                 </select>
               </div>
 
               <div>
-                <label className="input-label">Sutram</label>
+                <label className="input-label">Sutram (Optional)</label>
                 <select
                   className="select"
                   value={profileSutram}
                   onChange={e => setProfileSutram(e.target.value)}
                 >
+                  <option value="">-- Select Sutram (Optional) --</option>
                   <option value="Ashvalayana Sutram">Ashvalayana Sutram</option>
                   <option value="Apastamba Sutram">Apastamba Sutram</option>
                   <option value="Katyayana Sutram">Katyayana Sutram</option>
                   <option value="Drahyayana Sutram">Drahyayana Sutram</option>
                   <option value="Bodhayana Sutram">Bodhayana Sutram</option>
-                  <option value="Not Specified">Not Specified</option>
                 </select>
               </div>
             </div>

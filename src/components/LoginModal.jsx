@@ -416,39 +416,23 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                 </div>
               </div>
 
-              {/* Gotram, Sampradaya, Rashi & Nakshatra (for Devotee/Purohit) */}
+              {/* Gotram, Rashi & Nakshatra (Optional for Devotee/Purohit) */}
               {role !== 'admin' && (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Gotram (Optional)</label>
-                      <input
-                        type="text"
-                        value={gotram}
-                        onChange={e => setGotram(e.target.value)}
-                        placeholder="e.g. Kashyapa"
-                        className="input"
-                      />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Sampradaya</label>
-                      <select
-                        value={sampradaya}
-                        onChange={e => setSampradaya(e.target.value)}
-                        className="select"
-                        style={{ fontSize: 12 }}
-                      >
-                        <option value="">-- Select Sampradaya / Tradition --</option>
-                        {Object.values(SAMPRADAYA_MATRIX).map(s => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Gotram (Optional)</label>
+                    <input
+                      type="text"
+                      value={gotram}
+                      onChange={e => setGotram(e.target.value)}
+                      placeholder="e.g. Kashyapa, Bharadwaja, Kaushika..."
+                      className="input"
+                    />
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Rashi (Zodiac)</label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Rashi (Optional)</label>
                       <select
                         value={rashi}
                         onChange={e => onSelectRegRashi(e.target.value)}
@@ -462,7 +446,7 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                       </select>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Nakshatra (Star)</label>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Janma Nakshatra (Optional)</label>
                       <select
                         value={nakshatra}
                         onChange={e => onSelectRegNakshatra(e.target.value)}
