@@ -416,18 +416,34 @@ export default function LoginModal({ onLoginSuccess, onClose, initialMode = 'log
                 </div>
               </div>
 
-              {/* Gotram, Rashi & Nakshatra (Optional for Devotee/Purohit) */}
+              {/* Gotram, Sampradaya, Rashi & Nakshatra (Optional for Devotee/Purohit) */}
               {role !== 'admin' && (
                 <>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Gotram (Optional)</label>
-                    <input
-                      type="text"
-                      value={gotram}
-                      onChange={e => setGotram(e.target.value)}
-                      placeholder="e.g. Kashyapa, Bharadwaja, Kaushika..."
-                      className="input"
-                    />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Gotram (Optional)</label>
+                      <input
+                        type="text"
+                        value={gotram}
+                        onChange={e => setGotram(e.target.value)}
+                        placeholder="e.g. Kashyapa"
+                        className="input"
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Sampradaya (Optional)</label>
+                      <select
+                        value={sampradaya}
+                        onChange={e => setSampradaya(e.target.value)}
+                        className="select"
+                        style={{ fontSize: 12 }}
+                      >
+                        <option value="">-- Select Sampradaya (Optional) --</option>
+                        {Object.values(SAMPRADAYA_MATRIX).map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
